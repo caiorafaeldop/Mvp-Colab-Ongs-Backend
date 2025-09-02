@@ -3,15 +3,10 @@ require("dotenv").config();
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.DATABASE_URL, {
-      // These options are to handle deprecation warnings
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.DATABASE_URL, {});
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-    // testandooo
-    // Error handling after initial connection
+
     mongoose.connection.on("error", (err) => {
       console.error(`MongoDB connection error: ${err}`);
     });
@@ -23,8 +18,7 @@ const connectDB = async () => {
     mongoose.connection.on("reconnected", () => {
       console.info("MongoDB reconnected");
     });
-    // comentario
-    // Graceful shutdown
+
     process.on("SIGINT", async () => {
       try {
         await mongoose.connection.close();
