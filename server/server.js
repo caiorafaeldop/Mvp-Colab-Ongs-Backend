@@ -16,10 +16,32 @@ app.enable("json spaces");
 app.enable("strict routing");
 
 // Middleware
-app.use(cors({
-  origin: true, // Allow all origins for development - configure properly for production
-  credentials: true // Allow cookies to be sent
-}));
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://rede-feminina-colab.onrender.com', // Frontend em produção
+      'https://mvp-colab-ongs-backend.onrender.com' // Backend em produção
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('[CORS] Origin não permitida:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

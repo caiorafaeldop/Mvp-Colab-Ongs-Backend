@@ -28,10 +28,11 @@ class AuthController {
       console.log("[REGISTER] Registration result:", result);
 
       // Set refresh token as httpOnly cookie for security
+      const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true, // Cannot be accessed via JavaScript
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        sameSite: 'strict', // CSRF protection
+        secure: isProduction, // HTTPS only in production
+        sameSite: isProduction ? 'none' : 'lax', // 'none' para cross-origin em produção
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       });
 
@@ -78,12 +79,18 @@ class AuthController {
       console.log("[LOGIN] Login result:", result);
 
       // Set refresh token as httpOnly cookie for security
+      const isProduction = process.env.NODE_ENV === 'production';
+      console.log('[LOGIN] Configurando cookie - NODE_ENV:', process.env.NODE_ENV);
+      console.log('[LOGIN] isProduction:', isProduction);
+      
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true, // Cannot be accessed via JavaScript
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        sameSite: 'strict', // CSRF protection
+        secure: isProduction, // HTTPS only in production
+        sameSite: isProduction ? 'none' : 'lax', // 'none' para cross-origin em produção
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       });
+      
+      console.log('[LOGIN] Cookie configurado com sameSite:', isProduction ? 'none' : 'lax');
 
       // Return access token and user data (not refresh token)
       res.status(200).json({
