@@ -73,6 +73,23 @@ app.on("error", (error) => {
   console.error(error.stack);
 });
 
+
+const path = require("path");
+
+// Servir React build (em produção)
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "..", "build")));
+
+  // Qualquer rota que não seja API cai aqui
+  app.get("*", (req, res) => {
+    // Se for rota da API, não faz nada (passa para próximo middleware)
+    if (req.path.startsWith("/api")) return res.status(404).json({ success: false, message: "Route not found" });
+
+    res.sendFile(path.join(__dirname, "..", "build", "index.html"));
+  });
+}
+
+
 // If no routes handled the request, it's a 404
 app.use((req, res, next) => {
   res.status(404).json({
