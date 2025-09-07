@@ -27,10 +27,21 @@ class AuthController {
       const result = await this.authService.register(userData);
       console.log("[REGISTER] Registration result:", result);
 
+      // Set refresh token as httpOnly cookie for security
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true, // Cannot be accessed via JavaScript
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict', // CSRF protection
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      });
+
       res.status(201).json({
         success: true,
         message: "User registered successfully",
-        data: result,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+        },
       });
     } catch (error) {
       console.error("[REGISTER] Error:", error);
@@ -66,10 +77,22 @@ class AuthController {
       );
       console.log("[LOGIN] Login result:", result);
 
+      // Set refresh token as httpOnly cookie for security
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true, // Cannot be accessed via JavaScript
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict', // CSRF protection
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      });
+
+      // Return access token and user data (not refresh token)
       res.status(200).json({
         success: true,
         message: "Login successful",
-        data: result,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+        },
       });
     } catch (error) {
       console.error("[LOGIN] Error:", error);
@@ -82,18 +105,104 @@ class AuthController {
 
   getProfile = async (req, res) => {
     try {
+      console.log("[PROFILE CONTROLLER] req.user:", req.user);
+      console.log("[PROFILE CONTROLLER] req.user.id:", req.user.id);
+      console.log("[PROFILE CONTROLLER] req.user._id:", req.user._id);
+      
+      const userData = {
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        userType: req.user.userType,
+        phone: req.user.phone,
+        createdAt: req.user.createdAt,
+        updatedAt: req.user.updatedAt
+      };
+      
+      console.log("[PROFILE CONTROLLER] userData preparado:", userData);
+      
       res.status(200).json({
         success: true,
-        data: {
-          id: req.user.id,
-          email: req.user.email,
-          userType: req.user.userType,
-        },
+        message: "Profile retrieved successfully",
+        data: userData,
       });
     } catch (error) {
+      console.error("[PROFILE CONTROLLER] Erro:", error);
       res.status(500).json({
         success: false,
         message: "Error fetching profile",
+      });
+    }
+  };
+
+  refreshToken = async (req, res) => {
+    try {
+      console.log("[REFRESH CONTROLLER] Cookies recebidos:", req.cookies);
+      const refreshToken = req.cookies.refreshToken;
+      console.log("[REFRESH CONTROLLER] Refresh token extraído:", refreshToken ? 'PRESENTE' : 'AUSENTE');
+      
+      if (!refreshToken) {
+        console.log("[REFRESH CONTROLLER] Refresh token não encontrado nos cookies");
+        return res.status(401).json({
+          success: false,
+          message: "Refresh token not found",
+        });
+      }
+
+      console.log("[REFRESH CONTROLLER] Chamando authService.refreshAccessToken");
+      const result = await this.authService.refreshAccessToken(refreshToken);
+      console.log("[REFRESH CONTROLLER] Resultado do refresh:", result);
+      
+      console.log("[REFRESH CONTROLLER] User object antes do JSON:", result.user);
+      console.log("[REFRESH CONTROLLER] user.id:", result.user.id);
+      console.log("[REFRESH CONTROLLER] user._id:", result.user._id);
+      
+      const userData = {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        userType: result.user.userType,
+        phone: result.user.phone,
+        createdAt: result.user.createdAt,
+        updatedAt: result.user.updatedAt
+      };
+      
+      console.log("[REFRESH CONTROLLER] userData preparado:", userData);
+
+      res.json({
+        success: true,
+        message: "Token refreshed successfully",
+        data: {
+          user: userData,
+          accessToken: result.accessToken,
+        },
+      });
+    } catch (error) {
+      console.error("[REFRESH CONTROLLER] Erro no refresh:", error);
+      console.error("[REFRESH CONTROLLER] Erro message:", error.message);
+      // Clear invalid refresh token
+      res.clearCookie('refreshToken');
+      res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+  };
+
+  logout = async (req, res) => {
+    try {
+      // Clear the refresh token cookie
+      res.clearCookie('refreshToken');
+      
+      res.status(200).json({
+        success: true,
+        message: "Logout successful",
+      });
+    } catch (error) {
+      console.error("[LOGOUT] Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error during logout",
       });
     }
   };

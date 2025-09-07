@@ -2,6 +2,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/database");
 const AppFactory = require("./src/main/factories");
 const uploadRouter = require("./src/presentation/routes/UploadRoutes");
@@ -15,9 +16,14 @@ app.enable("json spaces");
 app.enable("strict routing");
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins for development - configure properly for production
+  credentials: true // Allow cookies to be sent
+}));
+app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
 // Database connection
 connectDB();

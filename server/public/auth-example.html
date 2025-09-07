@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Login Persistente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .logout-btn {
+            background: #dc3545;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .hidden {
+            display: none;
+        }
+        .user-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Sistema de Login Persistente</h1>
+        
+        <div id="status"></div>
+        
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h2>Login</h2>
+            <form id="loginFormElement">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit">Fazer Login</button>
+            </form>
+        </div>
+        
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="hidden">
+            <h2>Dashboard do Usuário</h2>
+            <div id="userInfo" class="user-info"></div>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+            <button id="testProtectedBtn">Testar Rota Protegida</button>
+        </div>
+        
+        <div class="info" style="margin-top: 30px;">
+            <h3>🎯 Como Funciona a Persistência:</h3>
+            <ul>
+                <li><strong>Refresh Token:</strong> Armazenado em cookie httpOnly seguro (7 dias)</li>
+                <li><strong>Access Token:</strong> Armazenado na memória (15 minutos)</li>
+                <li><strong>Auto-renovação:</strong> Token é renovado automaticamente quando expira</li>
+                <li><strong>Persistência:</strong> Login mantido mesmo após fechar/reabrir navegador</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        class AuthManager {
+            constructor() {
+                this.baseURL = 'http://localhost:3000/api/auth';
+                this.accessToken = null;
+                this.user = null;
+                this.init();
+            }
+
+            async init() {
+                // Tentar restaurar sessão ao carregar a página
+                await this.tryRestoreSession();
+                this.updateUI();
+            }
+
+            async tryRestoreSession() {
+                try {
+                    showStatus('Verificando sessão existente...', 'info');
+                    const response = await this.refreshToken();
+                    if (response.success) {
+                        this.accessToken = response.data.accessToken;
+                        this.user = response.data.user;
+                        showStatus('Sessão restaurada com sucesso!', 'success');
+                        return true;
+                    }
+                } catch (error) {
+                    console.log('Nenhuma sessão válida encontrada');
+                }
+                return false;
+            }
+
+            async login(email, password) {
+                try {
+                    showStatus('Fazendo login...', 'info');
+                    
+                    const response = await fetch(`${this.baseURL}/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include', // Importante para cookies
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.accessToken = data.data.accessToken;
+                        this.user = data.data.user;
+                        showStatus('Login realizado com sucesso!', 'success');
+                        this.updateUI();
+                        return data;
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    showStatus(`Erro no login: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+
+            async refreshToken() {
+                const response = await fetch(`${this.baseURL}/refresh`, {
+                    method: 'POST',
+                    credentials: 'include', // Importante para cookies
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.accessToken = data.data.accessToken;
+                    this.user = data.data.user;
+                    return data;
+                } else {
+                    throw new Error(data.message);
+                }
+            }
+
+            async logout() {
+                try {
+                    showStatus('Fazendo logout...', 'info');
+                    
+                    await fetch(`${this.baseURL}/logout`, {
+                        method: 'POST',
+                        credentials: 'include',
+                    });
+
+                    this.accessToken = null;
+                    this.user = null;
+                    showStatus('Logout realizado com sucesso!', 'success');
+                    this.updateUI();
+                } catch (error) {
+                    showStatus(`Erro no logout: ${error.message}`, 'error');
+                }
+            }
+
+            async makeAuthenticatedRequest(url, options = {}) {
+                // Adicionar token de acesso ao cabeçalho
+                const headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${this.accessToken}`
+                };
+
+                let response = await fetch(url, {
+                    ...options,
+                    headers,
+                    credentials: 'include'
+                });
+
+                // Se token expirou, tentar renovar
+                if (response.status === 401) {
+                    try {
+                        await this.refreshToken();
+                        // Tentar novamente com novo token
+                        headers['Authorization'] = `Bearer ${this.accessToken}`;
+                        response = await fetch(url, {
+                            ...options,
+                            headers,
+                            credentials: 'include'
+                        });
+                    } catch (error) {
+                        // Refresh falhou, redirecionar para login
+                        this.logout();
+                        throw new Error('Sessão expirada');
+                    }
+                }
+
+                return response;
+            }
+
+            updateUI() {
+                const loginForm = document.getElementById('loginForm');
+                const userDashboard = document.getElementById('userDashboard');
+                const userInfo = document.getElementById('userInfo');
+
+                if (this.user) {
+                    loginForm.classList.add('hidden');
+                    userDashboard.classList.remove('hidden');
+                    userInfo.innerHTML = `
+                        <h4>Bem-vindo, ${this.user.name}!</h4>
+                        <p><strong>Email:</strong> ${this.user.email}</p>
+                        <p><strong>Tipo:</strong> ${this.user.userType}</p>
+                        <p><strong>ID:</strong> ${this.user.id}</p>
+                    `;
+                } else {
+                    loginForm.classList.remove('hidden');
+                    userDashboard.classList.add('hidden');
+                }
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            
+            // Limpar status após 5 segundos
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Inicializar sistema de autenticação
+        const authManager = new AuthManager();
+
+        // Event Listeners
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                await authManager.login(email, password);
+            } catch (error) {
+                console.error('Login failed:', error);
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            authManager.logout();
+        });
+
+        document.getElementById('testProtectedBtn').addEventListener('click', async () => {
+            try {
+                showStatus('Testando rota protegida...', 'info');
+                const response = await authManager.makeAuthenticatedRequest('http://localhost:3000/api/auth/profile');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Rota protegida acessada com sucesso!', 'success');
+                } else {
+                    showStatus('Erro ao acessar rota protegida', 'error');
+                }
+            } catch (error) {
+                showStatus(`Erro: ${error.message}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

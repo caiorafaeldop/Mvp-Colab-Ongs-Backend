@@ -22,9 +22,17 @@ class MongoUserRepository extends IUserRepository {
 
   async findById(id) {
     try {
+      console.log("[MONGO USER REPO] Buscando usuário por ID:", id);
+      console.log("[MONGO USER REPO] Tipo do ID:", typeof id);
+      console.log("[MONGO USER REPO] Tamanho do ID:", id ? id.length : 0);
+      
       const user = await UserModel.findById(id);
+      console.log("[MONGO USER REPO] Usuário encontrado no MongoDB:", !!user);
+      console.log("[MONGO USER REPO] Detalhes do usuário:", user ? { _id: user._id, email: user.email } : 'NENHUM');
+      
       return user ? this._mapToEntity(user) : null;
     } catch (error) {
+      console.error("[MONGO USER REPO] Erro ao buscar usuário:", error.message);
       throw new Error(`Error finding user by id: ${error.message}`);
     }
   }
@@ -81,7 +89,10 @@ class MongoUserRepository extends IUserRepository {
   }
 
   _mapToEntity(userDoc) {
-    return new User(
+    console.log("[MONGO USER REPO] _mapToEntity - userDoc._id:", userDoc._id);
+    console.log("[MONGO USER REPO] _mapToEntity - userDoc._id.toString():", userDoc._id.toString());
+    
+    const user = new User(
       userDoc._id.toString(),
       userDoc.name,
       userDoc.email,
@@ -91,6 +102,16 @@ class MongoUserRepository extends IUserRepository {
       userDoc.createdAt,
       userDoc.updatedAt
     );
+    
+    console.log("[MONGO USER REPO] _mapToEntity - user.id:", user.id);
+    console.log("[MONGO USER REPO] _mapToEntity - user completo:", {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      userType: user.userType
+    });
+    
+    return user;
   }
 }
 

@@ -1,6 +1,6 @@
 const MongoUserRepository = require("../../infra/repositories/MongoUserRepository");
 const MongoProductRepository = require("../../infra/repositories/MongoProductRepository");
-const JwtAuthService = require("../../infra/services/JwtAuthService");
+const EnhancedJwtAuthService = require("../../infra/services/EnhancedJwtAuthService");
 const ProductService = require("../../domain/services/ProductService");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
@@ -32,7 +32,8 @@ class AppFactory {
     if (!this.authService) {
       const userRepository = this.createUserRepository();
       const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
-      this.authService = new JwtAuthService(userRepository, jwtSecret);
+      const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
+      this.authService = new EnhancedJwtAuthService(userRepository, jwtSecret, jwtRefreshSecret);
     }
     return this.authService;
   }
