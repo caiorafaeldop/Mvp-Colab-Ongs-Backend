@@ -30,11 +30,12 @@ class AuthController {
       // Set refresh token as httpOnly cookie for security
       const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true, // Cannot be accessed via JavaScript
-        secure: isProduction, // HTTPS only in production
-        sameSite: isProduction ? 'none' : 'lax', // 'none' para cross-origin em produção
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        httpOnly: true,
+        secure: isProduction,               // false em dev
+        sameSite: isProduction ? 'none' : 'lax', // lax em dev
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
+      
 
       res.status(201).json({
         success: true,
@@ -80,15 +81,14 @@ class AuthController {
 
       // Set refresh token as httpOnly cookie for security
       const isProduction = process.env.NODE_ENV === 'production';
-      console.log('[LOGIN] Configurando cookie - NODE_ENV:', process.env.NODE_ENV);
-      console.log('[LOGIN] isProduction:', isProduction);
-      
-      res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true, // Cannot be accessed via JavaScript
-        secure: isProduction, // HTTPS only in production
-        sameSite: isProduction ? 'none' : 'lax', // 'none' para cross-origin em produção
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-      });
+
+res.cookie('refreshToken', result.refreshToken, {
+  httpOnly: true,
+  secure: isProduction,               // false em dev
+  sameSite: isProduction ? 'none' : 'lax', // lax em dev
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
+
       
       console.log('[LOGIN] Cookie configurado com sameSite:', isProduction ? 'none' : 'lax');
 
