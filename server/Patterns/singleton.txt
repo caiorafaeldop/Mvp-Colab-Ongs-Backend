@@ -1,0 +1,18 @@
+PADRÃO SINGLETON (Criacional)
+
+CONTEXTO NO PROJETO:
+- Conexão única com banco de dados
+- Configurações globais da aplicação
+- Cache compartilhado entre requisições
+
+APLICAÇÃO PRÁTICA:
+1. DatabaseConnection - instância única de conexão MongoDB
+2. ConfigManager - gerenciamento centralizado de configurações
+3. CacheManager - cache global da aplicação
+4. LoggerManager - sistema de logs centralizado
+5. MetricsCollector - coleta de métricas do sistema
+
+BENEFÍCIOS:
+- Controle de recursos compartilhados
+- Ponto único de acesso
+- Economia de memória

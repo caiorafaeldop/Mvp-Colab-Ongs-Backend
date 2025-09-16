@@ -1,0 +1,18 @@
+PADRÃO CHAIN OF RESPONSIBILITY (Comportamental)
+
+CONTEXTO NO PROJETO:
+- Pipeline de validação de dados com múltiplas etapas
+- Processamento de requisições com diferentes níveis de autorização
+- Filtros de matching entre ONGs com critérios em cascata
+
+APLICAÇÃO PRÁTICA:
+1. ValidationChain - cadeia de validadores (formato, regras de negócio, segurança)
+2. AuthorizationChain - diferentes níveis de permissão (user, admin, super-admin)
+3. MatchingChain - filtros de compatibilidade (localização, causa, recursos, tamanho)
+4. ProcessingChain - pipeline de processamento de uploads
+5. NotificationChain - cadeia de decisão para tipos de notificação
+
+BENEFÍCIOS:
+- Flexibilidade para adicionar/remover handlers
+- Desacoplamento entre remetente e receptor
+- Facilita configuração de pipelines

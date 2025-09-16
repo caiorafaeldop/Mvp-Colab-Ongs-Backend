@@ -1,0 +1,18 @@
+PADRÃO TEMPLATE METHOD (Comportamental)
+
+CONTEXTO NO PROJETO:
+- Geração de relatórios com estrutura comum mas conteúdo específico
+- Processamento de uploads com etapas padronizadas
+- Validação de dados com fluxo comum
+
+APLICAÇÃO PRÁTICA:
+1. ReportTemplate - estrutura base para relatórios de ONGs
+2. UploadProcessTemplate - fluxo padrão de upload (validar, processar, salvar)
+3. AuthenticationTemplate - fluxo de autenticação (validar, verificar, gerar token)
+4. ValidationTemplate - estrutura comum de validação de entidades
+5. EmailTemplate - template para diferentes tipos de email
+
+BENEFÍCIOS:
+- Reutilização de código comum
+- Padronização de processos
+- Facilita manutenção e extensão

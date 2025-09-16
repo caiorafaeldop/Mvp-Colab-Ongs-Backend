@@ -1,0 +1,18 @@
+PADRÃO FACADE (Estrutural)
+
+CONTEXTO NO PROJETO:
+- Simplificação de operações complexas envolvendo múltiplos services
+- Interface única para operações de colaboração entre ONGs
+- Abstração de processos complexos de matching
+
+APLICAÇÃO PRÁTICA:
+1. CollaborationFacade - simplifica processo completo de parceria
+2. AuthFacade - unifica login, registro e refresh de tokens
+3. UploadFacade - processo completo de upload (validação, storage, metadata)
+4. ReportFacade - geração completa de relatórios com dados agregados
+5. MatchingFacade - processo completo de matching entre ONGs
+
+BENEFÍCIOS:
+- Interface simples para operações complexas
+- Reduz acoplamento do cliente com subsistemas
+- Facilita uso da API
