@@ -1,0 +1,18 @@
+PADRÃO STRATEGY (Comportamental)
+
+CONTEXTO NO PROJETO:
+- Diferentes algoritmos de matching entre ONGs
+- Múltiplas estratégias de processamento de IA
+- Variadas formas de cálculo de compatibilidade
+
+APLICAÇÃO PRÁTICA:
+1. MatchingStrategy - algoritmos para conectar ONGs (por localização, causa, recursos)
+2. LLMStrategy - diferentes provedores de IA (OpenAI, Anthropic, local)
+3. ValidationStrategy - diferentes regras de validação por tipo de usuário
+4. PricingStrategy - diferentes modelos de cobrança/doação
+5. RecommendationStrategy - algoritmos de recomendação de parcerias
+
+BENEFÍCIOS:
+- Facilita adição de novos algoritmos
+- Permite escolha dinâmica de estratégia
+- Código mais limpo e testável
