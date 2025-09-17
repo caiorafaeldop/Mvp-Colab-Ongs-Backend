@@ -1,0 +1,107 @@
+PADRÃO DECORATOR (Estrutural) - IMPLEMENTADO ✅
+
+CONTEXTO NO PROJETO:
+- Adição de funcionalidades extras a objetos sem modificar estrutura
+- Middleware automático para logging, cache, validação, rate limiting
+- Decoração transparente de serviços, repositories e facades
+- Composição flexível de comportamentos no marketplace
+
+IMPLEMENTAÇÕES REALIZADAS:
+
+1. **LoggingDecorator** ✅
+   - Logs automáticos de entrada, saída e erros
+   - Sanitização de dados sensíveis (passwords, tokens)
+   - Medição de duração de execução
+   - Níveis configuráveis de log
+
+2. **CachingDecorator** ✅
+   - Cache automático de resultados de métodos
+   - TTL configurável por componente
+   - Suporte a cache em memória e externo (Redis)
+   - Geração automática de chaves de cache
+   - Limpeza automática de cache expirado
+
+3. **ValidationDecorator** ✅
+   - Validação automática de entrada e saída
+   - Regras configuráveis por método
+   - Validação de tipos, tamanhos, padrões
+   - Validação customizada via funções
+   - Suporte a objetos complexos e arrays
+
+4. **RateLimitingDecorator** ✅
+   - Controle automático de taxa de execução
+   - Janela deslizante configurável
+   - Chaves personalizáveis para rate limiting
+   - Estatísticas de uso em tempo real
+   - Cálculo automático de retry-after
+
+5. **DecoratorFactory** ✅
+   - Criação centralizada de todos os decorators
+   - Aplicação múltipla de decorators
+   - Configurações padrão por tipo de componente
+   - Composição automática via proxy
+
+ESTRUTURA IMPLEMENTADA:
+```
+src/domain/contracts/
+  └── Decorator.js (contrato base)
+
+src/infra/decorators/
+  ├── LoggingDecorator.js
+  ├── CachingDecorator.js
+  ├── ValidationDecorator.js
+  └── RateLimitingDecorator.js
+
+src/main/factories/
+  └── DecoratorFactory.js
+```
+
+FUNCIONALIDADES AVANÇADAS:
+- **Proxy Automático**: Interceptação transparente de métodos
+- **Composição**: Múltiplos decorators aplicados em sequência
+- **Configuração**: Opções específicas por decorator e componente
+- **Sanitização**: Remoção automática de dados sensíveis
+- **Estatísticas**: Monitoramento de cache, rate limit, performance
+
+CONFIGURAÇÕES PADRÃO:
+- **Service**: logging + caching + validation
+- **Repository**: logging + caching (TTL maior)
+- **Controller**: logging + rateLimit + validation
+- **Facade**: logging + validation
+
+BENEFÍCIOS ALCANÇADOS:
+- ✅ Funcionalidades extras sem modificar código original
+- ✅ Composição flexível e reutilizável
+- ✅ Logging automático e estruturado
+- ✅ Cache transparente com TTL
+- ✅ Validação robusta e configurável
+- ✅ Rate limiting inteligente
+- ✅ Monitoramento e observabilidade
+
+INTEGRAÇÃO:
+- Integrado no AppFactory principal
+- Configurações automáticas por tipo de componente
+- Disponível para decorar qualquer serviço
+- Suporte a decorators customizados
+
+USO PRÁTICO:
+```javascript
+// Decorar componente individual
+const decoratedService = decoratorFactory.decorateComponent(
+  productService,
+  ['logging', 'caching', 'validation'],
+  {
+    logging: { logLevel: 'info' },
+    caching: { ttl: 300000 },
+    validation: { validateInput: true }
+  },
+  { logger, cacheProvider }
+);
+
+// Aplicar configuração padrão
+const decoratedRepository = decoratorFactory.applyDefaultConfiguration(
+  userRepository,
+  'repository',
+  { logger, cacheProvider }
+);
+```
