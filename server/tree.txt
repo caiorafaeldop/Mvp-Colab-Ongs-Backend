@@ -7,6 +7,7 @@ server/
   package.json
   tree.txt
   yarn.lock
+  node_modules/
   docs/
     Patterns/
       adapter.txt
@@ -49,10 +50,13 @@ server/
         UploadFacadeContract.js
         UserRepositoryContract.js
       entities/
+        Collaboration.js
         File.js
         Notification.js
         Product.js
         User.js
+      repositories/
+        IUserRepository.js
       validators/
         validators.js
     application/
@@ -115,6 +119,8 @@ server/
         AdapterFactory.js
         BridgeFactory.js
         FacadeFactory.js
+        RepositoryFactory.js
+        ServiceFactory.js
         StrategyFactory.js
         index.js
       server.js

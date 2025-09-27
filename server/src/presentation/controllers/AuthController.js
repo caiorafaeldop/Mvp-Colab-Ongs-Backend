@@ -1,42 +1,41 @@
-const Validators = require("../../utils/validators");
-
+/**
+ * Controller de Autenticação seguindo Clean Architecture
+ * Responsável apenas por receber requests HTTP e delegar para o service
+ * Não contém lógica de negócio ou validações complexas
+ */
 class AuthController {
   constructor(authService) {
+    if (!authService) {
+      throw new Error('AuthService is required');
+    }
     this.authService = authService;
+    console.log('[AUTH CONTROLLER] Inicializado com AuthService');
   }
 
+  /**
+   * Endpoint de registro de usuário
+   * Delega toda a lógica para o AuthService
+   */
   register = async (req, res) => {
     try {
-      console.log("[REGISTER] Request body:", req.body);
-      const userData = Validators.sanitizeObject(req.body);
-      const { name, email, password, userType, phone } = userData;
-      console.log("[REGISTER] Sanitized userData:", userData);
-
-      // Validate user data
-      const validation = Validators.validateUserRegistration(userData);
-      console.log("[REGISTER] Validation result:", validation);
-      if (!validation.isValid) {
-        console.log("[REGISTER] Validation failed:", validation.errors);
+      console.log("[AUTH CONTROLLER] Registro iniciado");
+      
+      // Validação básica de entrada
+      if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({
           success: false,
-          message: "Validation failed",
-          errors: validation.errors,
+          message: "Request body is required",
         });
       }
 
-      const result = await this.authService.register(userData);
-      console.log("[REGISTER] Registration result:", result);
+      // Delega para o service (que fará validações e lógica de negócio)
+      const result = await this.authService.register(req.body);
+      console.log("[AUTH CONTROLLER] Registro concluído com sucesso");
 
-      // Set refresh token as httpOnly cookie for security
-      const isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true,
-        secure: isProduction,               // false em dev
-        sameSite: isProduction ? 'none' : 'lax', // lax em dev
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-      
+      // Configurar cookie seguro para refresh token
+      this._setRefreshTokenCookie(res, result.refreshToken);
 
+      // Retornar resposta de sucesso
       res.status(201).json({
         success: true,
         message: "User registered successfully",
@@ -45,54 +44,37 @@ class AuthController {
           accessToken: result.accessToken,
         },
       });
+      
     } catch (error) {
-      console.error("[REGISTER] Error:", error);
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      console.error("[AUTH CONTROLLER] Erro no registro:", error.message);
+      this._handleError(res, error, 400);
     }
   };
 
+  /**
+   * Endpoint de login de usuário
+   * Delega toda a lógica para o AuthService
+   */
   login = async (req, res) => {
     try {
-      console.log("[LOGIN] Request body:", req.body);
-      const loginData = Validators.sanitizeObject(req.body);
-      const { email, password } = loginData;
-      console.log("[LOGIN] Sanitized loginData:", loginData);
-
-      // Validate login data
-      const validation = Validators.validateLogin(loginData);
-      console.log("[LOGIN] Validation result:", validation);
-      if (!validation.isValid) {
-        console.log("[LOGIN] Validation failed:", validation.errors);
+      console.log("[AUTH CONTROLLER] Login iniciado");
+      
+      // Validação básica de entrada
+      if (!req.body || !req.body.email || !req.body.password) {
         return res.status(400).json({
           success: false,
-          message: "Validation failed",
-          errors: validation.errors,
+          message: "Email and password are required",
         });
       }
 
-      const result = await this.authService.login(
-        loginData.email,
-        loginData.password
-      );
-      console.log("[LOGIN] Login result:", result);
+      // Delega para o service (que fará validações e lógica de negócio)
+      const result = await this.authService.login(req.body.email, req.body.password);
+      console.log("[AUTH CONTROLLER] Login concluído com sucesso");
 
-      // Set refresh token as httpOnly cookie for security
-      const isProduction = process.env.NODE_ENV === 'production';
+      // Configurar cookie seguro para refresh token
+      this._setRefreshTokenCookie(res, result.refreshToken);
 
-res.cookie('refreshToken', result.refreshToken, {
-  httpOnly: true,
-  secure: isProduction,               // false em dev
-  sameSite: isProduction ? 'none' : 'lax', // lax em dev
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-
-      
-      console.log('[LOGIN] Cookie configurado com sameSite:', isProduction ? 'none' : 'lax');
-
-      // Return access token and user data (not refresh token)
+      // Retornar resposta de sucesso
       res.status(200).json({
         success: true,
         message: "Login successful",
@@ -101,21 +83,28 @@ res.cookie('refreshToken', result.refreshToken, {
           accessToken: result.accessToken,
         },
       });
+      
     } catch (error) {
-      console.error("[LOGIN] Error:", error);
-      res.status(401).json({
-        success: false,
-        message: error.message,
-      });
+      console.error("[AUTH CONTROLLER] Erro no login:", error.message);
+      this._handleError(res, error, 401);
     }
   };
 
+  /**
+   * Endpoint para obter perfil do usuário autenticado
+   */
   getProfile = async (req, res) => {
     try {
-      console.log("[PROFILE CONTROLLER] req.user:", req.user);
-      console.log("[PROFILE CONTROLLER] req.user.id:", req.user.id);
-      console.log("[PROFILE CONTROLLER] req.user._id:", req.user._id);
+      console.log("[AUTH CONTROLLER] Obtendo perfil do usuário");
       
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "User not authenticated",
+        });
+      }
+
+      // Preparar dados do usuário (remover informações sensíveis)
       const userData = {
         id: req.user.id,
         name: req.user.name,
@@ -126,44 +115,41 @@ res.cookie('refreshToken', result.refreshToken, {
         updatedAt: req.user.updatedAt
       };
       
-      console.log("[PROFILE CONTROLLER] userData preparado:", userData);
-      
       res.status(200).json({
         success: true,
         message: "Profile retrieved successfully",
         data: userData,
       });
+      
     } catch (error) {
-      console.error("[PROFILE CONTROLLER] Erro:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error fetching profile",
-      });
+      console.error("[AUTH CONTROLLER] Erro ao obter perfil:", error.message);
+      this._handleError(res, error, 500);
     }
   };
 
+  /**
+   * Endpoint para renovar access token usando refresh token
+   */
   refreshToken = async (req, res) => {
     try {
-      console.log("[REFRESH CONTROLLER] Cookies recebidos:", req.cookies);
-      const refreshToken = req.cookies.refreshToken;
-      console.log("[REFRESH CONTROLLER] Refresh token extraído:", refreshToken ? 'PRESENTE' : 'AUSENTE');
+      console.log("[AUTH CONTROLLER] Renovação de token iniciada");
       
+      const refreshToken = req.cookies.refreshToken;
       if (!refreshToken) {
-        console.log("[REFRESH CONTROLLER] Refresh token não encontrado nos cookies");
+        console.log("[AUTH CONTROLLER] Refresh token não encontrado, limpando cookie");
+        res.clearCookie('refreshToken');
         return res.status(401).json({
           success: false,
           message: "Refresh token not found",
+          shouldLogout: true // Sinaliza para o frontend fazer logout
         });
       }
 
-      console.log("[REFRESH CONTROLLER] Chamando authService.refreshAccessToken");
+      // Delega para o service
       const result = await this.authService.refreshAccessToken(refreshToken);
-      console.log("[REFRESH CONTROLLER] Resultado do refresh:", result);
+      console.log("[AUTH CONTROLLER] Token renovado com sucesso");
       
-      console.log("[REFRESH CONTROLLER] User object antes do JSON:", result.user);
-      console.log("[REFRESH CONTROLLER] user.id:", result.user.id);
-      console.log("[REFRESH CONTROLLER] user._id:", result.user._id);
-      
+      // Preparar dados do usuário
       const userData = {
         id: result.user.id,
         name: result.user.name,
@@ -173,8 +159,6 @@ res.cookie('refreshToken', result.refreshToken, {
         createdAt: result.user.createdAt,
         updatedAt: result.user.updatedAt
       };
-      
-      console.log("[REFRESH CONTROLLER] userData preparado:", userData);
 
       res.json({
         success: true,
@@ -184,35 +168,80 @@ res.cookie('refreshToken', result.refreshToken, {
           accessToken: result.accessToken,
         },
       });
+      
     } catch (error) {
-      console.error("[REFRESH CONTROLLER] Erro no refresh:", error);
-      console.error("[REFRESH CONTROLLER] Erro message:", error.message);
-      // Clear invalid refresh token
+      console.error("[AUTH CONTROLLER] Erro na renovação:", error.message);
+      // Limpar refresh token inválido
       res.clearCookie('refreshToken');
+      
+      // Resposta específica para evitar loops
       res.status(401).json({
         success: false,
         message: "Invalid refresh token",
+        shouldLogout: true // Sinaliza para o frontend fazer logout completo
       });
     }
   };
 
+  /**
+   * Endpoint de logout
+   */
   logout = async (req, res) => {
     try {
-      // Clear the refresh token cookie
+      console.log("[AUTH CONTROLLER] Logout iniciado");
+      
+      // Limpar refresh token cookie
       res.clearCookie('refreshToken');
       
       res.status(200).json({
         success: true,
         message: "Logout successful",
       });
+      
+      console.log("[AUTH CONTROLLER] Logout concluído com sucesso");
     } catch (error) {
-      console.error("[LOGOUT] Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error during logout",
-      });
+      console.error("[AUTH CONTROLLER] Erro no logout:", error.message);
+      this._handleError(res, error, 500);
     }
   };
+
+  /**
+   * Método privado para configurar cookie de refresh token
+   * @param {Response} res - Objeto de resposta Express
+   * @param {string} refreshToken - Token de refresh
+   * @private
+   */
+  _setRefreshTokenCookie(res, refreshToken) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
+    });
+    
+    console.log('[AUTH CONTROLLER] Cookie configurado:', {
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax'
+    });
+  }
+
+  /**
+   * Método privado para tratamento de erros
+   * @param {Response} res - Objeto de resposta Express
+   * @param {Error} error - Erro ocorrido
+   * @param {number} statusCode - Código de status HTTP
+   * @private
+   */
+  _handleError(res, error, statusCode = 500) {
+    const errorMessage = error.message || 'Internal server error';
+    
+    res.status(statusCode).json({
+      success: false,
+      message: errorMessage,
+    });
+  }
 }
 
 module.exports = AuthController;

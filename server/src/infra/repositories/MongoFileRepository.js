@@ -1,4 +1,4 @@
-const IFileRepository = require("../../domain/repositories/IFileRepository");
+const IFileRepository = require("../../domain/contracts/FileRepositoryContract");
 const File = require("../../domain/entities/File");
 const mongoose = require("mongoose");
 

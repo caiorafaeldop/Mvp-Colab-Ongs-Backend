@@ -1,3 +1,6 @@
+// CHAIN OF RESPONSIBILITY PATTERN: Este middleware implementa o padrão
+// Cada middleware é um handler na cadeia de responsabilidade
+// Se a validação passa, chama next() para o próximo handler na cadeia
 const authMiddleware = (authService) => {
   return async (req, res, next) => {
     console.log("[AUTH MIDDLEWARE] Headers Authorization:", req.headers.authorization);
@@ -28,7 +31,7 @@ const authMiddleware = (authService) => {
       const decoded = await authService.verifyToken(token);
       console.log("[AUTH MIDDLEWARE] Token decodificado com sucesso:", decoded);
       req.user = decoded;
-      next();
+      next(); // CHAIN OF RESPONSIBILITY: Passa para o próximo handler na cadeia
     } catch (error) {
       console.error("[AUTH MIDDLEWARE] Erro detalhado na verificação do token:");
       console.error("[AUTH MIDDLEWARE] Erro message:", error.message);
@@ -42,6 +45,8 @@ const authMiddleware = (authService) => {
   };
 };
 
+// CHAIN OF RESPONSIBILITY PATTERN: Segundo handler na cadeia de autorização
+// Este middleware só executa se o authMiddleware passou a requisição adiante
 const organizationMiddleware = () => {
   return (req, res, next) => {
     if (req.user.userType !== "organization") {
@@ -50,7 +55,7 @@ const organizationMiddleware = () => {
         message: "Access denied. Only organizations can perform this action.",
       });
     }
-    next();
+    next(); // CHAIN OF RESPONSIBILITY: Continua a cadeia se autorizado
   };
 };
 

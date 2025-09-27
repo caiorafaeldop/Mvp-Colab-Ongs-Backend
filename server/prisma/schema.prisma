@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User model - Usuários do sistema (pessoas físicas e organizações)
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  userType  String   // 'common' ou 'organization'
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  products                Product[]       @relation("UserProducts")
+  notifications          Notification[]  @relation("UserNotifications")
+  files                  File[]          @relation("UserFiles")
+  requestedCollaborations Collaboration[] @relation("RequesterCollaborations")
+  targetCollaborations   Collaboration[] @relation("TargetCollaborations")
+
+  @@map("users")
+}
+
+// Product model - Produtos/Serviços oferecidos pelas organizações
+model Product {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  description      String
+  price            Float
+  imageUrls        String[] // Array de URLs das imagens
+  organizationId   String   @db.ObjectId
+  organizationName String
+  isAvailable      Boolean  @default(true)
+  category         String?
+  stock            Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relacionamentos
+  organization User @relation("UserProducts", fields: [organizationId], references: [id])
+
+  @@map("products")
+}
+
+// Collaboration model - Colaborações entre organizações
+model Collaboration {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  requesterOrgId    String   @db.ObjectId
+  requesterOrgName  String
+  targetOrgId       String   @db.ObjectId
+  targetOrgName     String
+  title             String
+  description       String
+  status            String   @default("pending") // pending, accepted, rejected, completed
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relacionamentos
+  requesterOrg User @relation("RequesterCollaborations", fields: [requesterOrgId], references: [id])
+  targetOrg    User @relation("TargetCollaborations", fields: [targetOrgId], references: [id])
+
+  @@map("collaborations")
+}
+
+// Notification model - Notificações do sistema
+model Notification {
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String    @db.ObjectId
+  title               String
+  message             String
+  type                String    @default("info") // info, success, warning, error, collaboration, system
+  isRead              Boolean   @default(false)
+  readAt              DateTime?
+  relatedEntityId     String?   @db.ObjectId
+  relatedEntityType   String?   // collaboration, user, product, file
+  actionUrl           String?
+  metadata            Json      @default("{}")
+  createdAt           DateTime  @default(now())
+
+  // Relacionamentos
+  user User @relation("UserNotifications", fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// File model - Arquivos do sistema (imagens, documentos, etc.)
+model File {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  originalName String
+  fileName     String
+  fileUrl      String
+  fileType     String
+  fileSize     Int
+  ownerId      String   @db.ObjectId
+  ownerType    String   @default("user") // user, organization
+  folder       String   @default("general")
+  isPublic     Boolean  @default(false)
+  metadata     Json     @default("{}")
+  uploadedAt   DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relacionamentos
+  owner User @relation("UserFiles", fields: [ownerId], references: [id])
+
+  @@map("files")
+}

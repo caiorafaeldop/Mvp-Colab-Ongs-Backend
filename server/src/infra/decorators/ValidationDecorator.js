@@ -53,7 +53,8 @@ class ValidationDecorator extends IDecorator {
   }
 
   /**
-   * Valida argumentos de entrada
+   * CHAIN OF RESPONSIBILITY PATTERN: Validação em cadeia
+   * Cada validação é um handler que processa e passa para o próximo
    */
   validateInput(methodName, args) {
     const methodRules = this.rules[methodName];
@@ -61,7 +62,7 @@ class ValidationDecorator extends IDecorator {
 
     const inputRules = methodRules.input;
 
-    // Valida número de argumentos
+    // CHAIN STEP 1: Valida número de argumentos
     if (inputRules.minArgs && args.length < inputRules.minArgs) {
       throw new ValidationError(`${methodName} requires at least ${inputRules.minArgs} arguments`);
     }
@@ -70,7 +71,7 @@ class ValidationDecorator extends IDecorator {
       throw new ValidationError(`${methodName} accepts at most ${inputRules.maxArgs} arguments`);
     }
 
-    // Valida cada argumento
+    // CHAIN STEP 2: Valida cada argumento individualmente
     if (inputRules.args) {
       inputRules.args.forEach((rule, index) => {
         if (index < args.length) {

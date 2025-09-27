@@ -1,4 +1,4 @@
-const INotificationRepository = require("../../domain/repositories/INotificationRepository");
+const INotificationRepository = require("../../domain/contracts/NotificationRepositoryContract");
 const Notification = require("../../domain/entities/Notification");
 const mongoose = require("mongoose");
 

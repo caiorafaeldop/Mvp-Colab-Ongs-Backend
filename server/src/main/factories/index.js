@@ -1,30 +1,29 @@
-const MongoUserRepository = require("../../infra/repositories/MongoUserRepository");
-const MongoProductRepository = require("../../infra/repositories/MongoProductRepository");
-const MongoCollaborationRepository = require("../../infra/repositories/MongoCollaborationRepository");
-const MongoFileRepository = require("../../infra/repositories/MongoFileRepository");
-const MongoNotificationRepository = require("../../infra/repositories/MongoNotificationRepository");
-const EnhancedJwtAuthService = require("../../infra/services/EnhancedJwtAuthService");
-const ProductService = require("../../domain/services/ProductService");
+const RepositoryFactory = require("./RepositoryFactory");
+const ServiceFactory = require("./ServiceFactory");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
-const ObserverFactory = require("./ObserverFactory");
-const FacadeFactory = require("./FacadeFactory");
-const AdapterFactory = require("./AdapterFactory");
-const StrategyFactory = require("./StrategyFactory");
-const SingletonFactory = require("./SingletonFactory");
-const BridgeFactory = require("./BridgeFactory");
-const DecoratorFactory = require("./DecoratorFactory");
-const bcrypt = require("bcrypt");
+const uploadRoutes = require("../../presentation/routes/UploadRoutes");
+// Temporariamente comentados para focar no login
+// const ObserverFactory = require("./ObserverFactory");
+// const FacadeFactory = require("./FacadeFactory");
+// const AdapterFactory = require("./AdapterFactory");
+// const StrategyFactory = require("./StrategyFactory");
+// const SingletonFactory = require("./SingletonFactory");
+// const BridgeFactory = require("./BridgeFactory");
+// const DecoratorFactory = require("./DecoratorFactory");
 
+/**
+ * Factory principal da aplicação seguindo o Factory Pattern
+ * Coordena a criação de todos os componentes usando sub-factories
+ * Implementa Singleton pattern e Dependency Injection
+ */
 class AppFactory {
   constructor() {
-    this.userRepository = null;
-    this.productRepository = null;
-    this.collaborationRepository = null;
-    this.fileRepository = null;
-    this.notificationRepository = null;
-    this.authService = null;
-    this.productService = null;
+    // Sub-factories para diferentes tipos de componentes
+    this.repositoryFactory = new RepositoryFactory();
+    this.serviceFactory = new ServiceFactory();
+    
+    // Cache de componentes criados
     this.eventManager = null;
     this.facades = null;
     this.adapters = null;
@@ -32,65 +31,82 @@ class AppFactory {
     this.singletons = null;
     this.bridges = null;
     this.decorators = null;
+    
+    // Flag para indicar se foi inicializado
+    this.initialized = false;
+    
+    console.log('[APP FACTORY] AppFactory inicializado com sub-factories');
   }
 
-  createUserRepository() {
-    if (!this.userRepository) {
-      this.userRepository = new MongoUserRepository();
+  /**
+   * Inicializa o factory com configurações necessárias
+   */
+  async initialize() {
+    if (this.initialized) {
+      return;
     }
-    return this.userRepository;
+
+    console.log('[APP FACTORY] Inicializando AppFactory...');
+    
+    // Configura os sub-factories
+    this.repositoryFactory.configure({
+      environment: process.env.NODE_ENV || 'development',
+      database: 'mongodb'
+    });
+
+    // Cria repositories primeiro
+    const repositories = this.repositoryFactory.createAllRepositories();
+    
+    // Registra dependências no ServiceFactory
+    this.serviceFactory.registerDependencies(repositories);
+    
+    this.initialized = true;
+    console.log('[APP FACTORY] AppFactory inicializado com sucesso');
+  }
+
+  /**
+   * Métodos de criação de repositories usando RepositoryFactory
+   */
+  createUserRepository() {
+    return this.repositoryFactory.createUserRepository();
   }
 
   createProductRepository() {
-    if (!this.productRepository) {
-      this.productRepository = new MongoProductRepository();
-    }
-    return this.productRepository;
+    return this.repositoryFactory.createProductRepository();
   }
 
   createCollaborationRepository() {
-    if (!this.collaborationRepository) {
-      this.collaborationRepository = new MongoCollaborationRepository();
-    }
-    return this.collaborationRepository;
+    return this.repositoryFactory.createCollaborationRepository();
   }
 
   createFileRepository() {
-    if (!this.fileRepository) {
-      this.fileRepository = new MongoFileRepository();
-    }
-    return this.fileRepository;
+    return this.repositoryFactory.createFileRepository();
   }
 
   createNotificationRepository() {
-    if (!this.notificationRepository) {
-      this.notificationRepository = new MongoNotificationRepository();
-    }
-    return this.notificationRepository;
+    return this.repositoryFactory.createNotificationRepository();
   }
 
+  /**
+   * Métodos de criação de services usando ServiceFactory
+   */
   createAuthService() {
-    if (!this.authService) {
-      const userRepository = this.createUserRepository();
-      const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
-      const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
-      this.authService = new EnhancedJwtAuthService(userRepository, jwtSecret, jwtRefreshSecret);
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
     }
-    return this.authService;
+    return this.serviceFactory.createAuthService();
   }
 
   createProductService() {
-    if (!this.productService) {
-      const productRepository = this.createProductRepository();
-      const userRepository = this.createUserRepository();
-      this.productService = new ProductService(
-        productRepository,
-        userRepository
-      );
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
     }
-    return this.productService;
+    return this.serviceFactory.createProductService();
   }
 
+  /**
+   * Métodos de criação de rotas
+   */
   createAuthRoutes() {
     const authService = this.createAuthService();
     return createAuthRoutes(authService);
@@ -102,16 +118,39 @@ class AppFactory {
     return createProductRoutes(productService, authService);
   }
 
+  createUploadRoutes() {
+    // Upload routes não precisam de services específicos por enquanto
+    // Usa diretamente o Cloudinary configurado
+    return uploadRoutes;
+  }
+
+  /**
+   * Métodos para obter informações do factory
+   */
+  getFactoryState() {
+    return {
+      initialized: this.initialized,
+      repositories: this.repositoryFactory.getFactoryState(),
+      services: this.serviceFactory.getFactoryState(),
+      hasEventManager: !!this.eventManager,
+      hasFacades: !!this.facades,
+      hasAdapters: !!this.adapters,
+      hasStrategies: !!this.strategies,
+      hasSingletons: !!this.singletons,
+      hasBridges: !!this.bridges,
+      hasDecorators: !!this.decorators
+    };
+  }
+
   async createEventManager() {
     if (!this.eventManager) {
-      const repositories = {
-        userRepository: this.createUserRepository(),
-        productRepository: this.createProductRepository(),
-        notificationRepository: this.createNotificationRepository()
+      // Temporariamente desabilitado até implementar ObserverFactory
+      console.log('[AppFactory] EventManager temporariamente desabilitado');
+      this.eventManager = {
+        emit: async () => {},
+        getEventStats: () => ({ totalEvents: 0, recentEvents: [] }),
+        getObservers: () => []
       };
-
-      this.eventManager = await ObserverFactory.initialize(repositories);
-      console.log('[AppFactory] EventManager e Observers inicializados');
     }
     return this.eventManager;
   }
@@ -122,39 +161,27 @@ class AppFactory {
 
   async createFacades() {
     if (!this.facades) {
-      // Cria adapters e strategies primeiro
-      await this.createAdapters();
-      await this.createStrategies();
-      
-      const dependencies = {
-        productService: this.createProductService(),
-        authService: this.createAuthService(),
-        userRepository: this.createUserRepository(),
-        fileRepository: this.createFileRepository(),
-        storageAdapter: this.adapters?.cloudinary,
-        eventManager: await this.createEventManager(),
-        recommendationStrategy: this.strategies?.categoryRecommendation,
-        paymentStrategy: this.strategies?.whatsappPayment
-      };
-
-      this.facades = await FacadeFactory.initialize(dependencies);
-      console.log('[AppFactory] Facades inicializados');
+      // Temporariamente desabilitado
+      console.log('[AppFactory] Facades temporariamente desabilitados');
+      this.facades = {};
     }
     return this.facades;
   }
 
   async createAdapters() {
     if (!this.adapters) {
-      this.adapters = await AdapterFactory.initialize();
-      console.log('[AppFactory] Adapters inicializados');
+      // Temporariamente desabilitado
+      console.log('[AppFactory] Adapters temporariamente desabilitados');
+      this.adapters = {};
     }
     return this.adapters;
   }
 
   async createStrategies() {
     if (!this.strategies) {
-      this.strategies = await StrategyFactory.initialize();
-      console.log('[AppFactory] Strategies inicializados');
+      // Temporariamente desabilitado
+      console.log('[AppFactory] Strategies temporariamente desabilitados');
+      this.strategies = {};
     }
     return this.strategies;
   }
@@ -165,8 +192,9 @@ class AppFactory {
 
   async createSingletons() {
     if (!this.singletons) {
-      this.singletons = await SingletonFactory.initialize();
-      console.log('[AppFactory] Singletons inicializados');
+      // Temporariamente desabilitado
+      console.log('[AppFactory] Singletons temporariamente desabilitados');
+      this.singletons = {};
     }
     return this.singletons;
   }
@@ -177,18 +205,9 @@ class AppFactory {
 
   async createBridges() {
     if (!this.bridges) {
-      // Cria adapters primeiro
-      await this.createAdapters();
-      
-      const dependencies = {
-        cloudinaryAdapter: this.adapters?.cloudinary,
-        emailAdapter: this.adapters?.email,
-        whatsappAdapter: this.adapters?.whatsapp,
-        localStoragePath: './uploads'
-      };
-
-      this.bridges = await BridgeFactory.initialize(dependencies);
-      console.log('[AppFactory] Bridges inicializados');
+      // Temporariamente desabilitado
+      console.log('[AppFactory] Bridges temporariamente desabilitados');
+      this.bridges = {};
     }
     return this.bridges;
   }
@@ -199,16 +218,9 @@ class AppFactory {
 
   async createDecorators() {
     if (!this.decorators) {
-      // Cria singletons primeiro para obter logger
-      await this.createSingletons();
-      
-      const dependencies = {
-        logger: this.singletons?.logger,
-        cacheProvider: null // Pode ser implementado depois
-      };
-
-      this.decorators = await DecoratorFactory.initialize(dependencies);
-      console.log('[AppFactory] Decorators inicializados');
+      // Temporariamente desabilitado
+      console.log('[AppFactory] Decorators temporariamente desabilitados');
+      this.decorators = {};
     }
     return this.decorators;
   }
@@ -217,21 +229,21 @@ class AppFactory {
     return this.decorators;
   }
 
-  async comparePassword(password, hashedPassword) {
-    const isMatch = await bcrypt.compare(password, hashedPassword);
-    if (!isMatch) {
-      throw new Error("Login failed: Invalid credentials");
-    }
-  }
-
-  async jwtLogin(user, password) {
-    console.log("[JWT LOGIN] User found:", user);
-    console.log("[JWT LOGIN] Comparing password:", password, "with hash:", user.password);
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log("[JWT LOGIN] Password match result:", isMatch);
-    if (!isMatch) {
-      throw new Error("Login failed: Invalid credentials");
-    }
+  /**
+   * Limpa todos os caches (útil para testes)
+   */
+  clearAll() {
+    console.log('[APP FACTORY] Limpando todos os caches');
+    this.repositoryFactory.clearRepositories();
+    this.serviceFactory.clearServices();
+    this.eventManager = null;
+    this.facades = null;
+    this.adapters = null;
+    this.strategies = null;
+    this.singletons = null;
+    this.bridges = null;
+    this.decorators = null;
+    this.initialized = false;
   }
 }
 

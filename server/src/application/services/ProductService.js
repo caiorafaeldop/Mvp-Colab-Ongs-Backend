@@ -1,5 +1,5 @@
-const IProductService = require("./IProductService");
-const Product = require("../entities/Product");
+const IProductService = require("../../domain/contracts/ProductServiceContract");
+const Product = require("../../domain/entities/Product");
 
 class ProductService extends IProductService {
   constructor(productRepository, userRepository) {

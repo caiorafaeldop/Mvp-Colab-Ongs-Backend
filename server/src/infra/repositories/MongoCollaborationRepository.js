@@ -1,4 +1,4 @@
-const ICollaborationRepository = require("../../domain/repositories/ICollaborationRepository");
+const ICollaborationRepository = require("../../domain/contracts/CollaborationRepositoryContract");
 const Collaboration = require("../../domain/entities/Collaboration");
 const mongoose = require("mongoose");
 
