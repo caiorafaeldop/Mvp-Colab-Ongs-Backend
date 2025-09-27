@@ -1,4 +1,5 @@
 const EnhancedJwtAuthService = require("../../infra/services/EnhancedJwtAuthService");
+const SimpleJwtAuthService = require("../../infra/services/SimpleJwtAuthService");
 const ProductService = require("../../application/services/ProductService");
 
 /**
@@ -22,7 +23,7 @@ class ServiceFactory {
   }
 
   /**
-   * Cria ou retorna instância existente do AuthService
+   * Cria ou retorna instância existente do AuthService (Enhanced)
    * Implementa Singleton pattern dentro do Factory
    * @returns {EnhancedJwtAuthService}
    */
@@ -53,6 +54,37 @@ class ServiceFactory {
     }
 
     return this.services.get('authService');
+  }
+
+  /**
+   * Cria ou retorna instância existente do SimpleAuthService
+   * Sistema simplificado baseado no projeto Maia Advocacia
+   * @returns {SimpleJwtAuthService}
+   */
+  createSimpleAuthService() {
+    if (!this.services.has('simpleAuthService')) {
+      console.log('[SERVICE FACTORY] Criando SimpleAuthService');
+      
+      const userRepository = this.dependencies.get('userRepository');
+      if (!userRepository) {
+        throw new Error('UserRepository dependency not found');
+      }
+
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET not configured in environment variables');
+      }
+
+      const authService = new SimpleJwtAuthService(
+        userRepository,
+        jwtSecret
+      );
+
+      this.services.set('simpleAuthService', authService);
+      console.log('[SERVICE FACTORY] SimpleAuthService criado com sucesso');
+    }
+
+    return this.services.get('simpleAuthService');
   }
 
   /**

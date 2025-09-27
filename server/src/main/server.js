@@ -155,7 +155,20 @@ const initializeApp = async () => {
 initializeApp();
 
 // Routes - these will be created after factory initialization
+
+// NOVO SISTEMA DE AUTENTICAÇÃO SIMPLIFICADO (baseado no Maia Advocacia)
 app.use("/api/auth", (req, res, next) => {
+  if (!appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: "Server is still initializing, please try again in a moment"
+    });
+  }
+  return appFactory.createSimpleAuthRoutes()(req, res, next);
+});
+
+// Sistema antigo (mantido para compatibilidade)
+app.use("/api/auth-legacy", (req, res, next) => {
   if (!appFactory.initialized) {
     return res.status(503).json({
       success: false,

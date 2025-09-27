@@ -1,6 +1,7 @@
 const RepositoryFactory = require("./RepositoryFactory");
 const ServiceFactory = require("./ServiceFactory");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
+const createSimpleAuthRoutes = require("../../presentation/routes/simpleAuthRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
 const uploadRoutes = require("../../presentation/routes/UploadRoutes");
 // Temporariamente comentados para focar no login
@@ -97,6 +98,13 @@ class AppFactory {
     return this.serviceFactory.createAuthService();
   }
 
+  createSimpleAuthService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createSimpleAuthService();
+  }
+
   createProductService() {
     if (!this.initialized) {
       throw new Error('AppFactory must be initialized before creating services');
@@ -112,9 +120,14 @@ class AppFactory {
     return createAuthRoutes(authService);
   }
 
+  createSimpleAuthRoutes() {
+    const simpleAuthService = this.createSimpleAuthService();
+    return createSimpleAuthRoutes(simpleAuthService);
+  }
+
   createProductRoutes() {
     const productService = this.createProductService();
-    const authService = this.createAuthService();
+    const authService = this.createSimpleAuthService(); // Usar o novo sistema simplificado
     return createProductRoutes(productService, authService);
   }
 
