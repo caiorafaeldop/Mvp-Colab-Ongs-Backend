@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 TESTE RÁPIDO - DOAÇÕES</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .loading {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .payment-link {
+            background: #28a745;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .payment-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 TESTE RÁPIDO DE DOAÇÕES</h1>
+        <p><strong>API:</strong> https://mvp-colab-ongs-backend.onrender.com</p>
+        
+        <div>
+            <button class="test-btn" onclick="testHealth()">❤️ Health Check</button>
+            <button class="test-btn" onclick="testDonation1()">💰 Doação R$ 1,00</button>
+            <button class="test-btn" onclick="testDonation25()">💎 Doação R$ 25,00</button>
+            <button class="test-btn" onclick="testAll()">🚀 Todos os Testes</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://mvp-colab-ongs-backend.onrender.com';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function logJSON(obj, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = JSON.stringify(obj, null, 2);
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        async function testHealth() {
+            log('🔄 Testando Health Check...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Health Check OK!', 'success');
+                    logJSON(data, 'success');
+                } else {
+                    log('❌ Health Check falhou!', 'error');
+                    logJSON(data, 'error');
+                }
+            } catch (error) {
+                log('❌ Erro de conexão: ' + error.message, 'error');
+            }
+        }
+        
+        async function testDonation1() {
+            log('🔄 Testando doação de R$ 1,00...', 'loading');
+            
+            const payload = {
+                amount: 1.00,
+                donorName: "Caio Rafael - Teste",
+                donorEmail: "caiorafaeldop@gmail.com",
+                donorPhone: "83998632140",
+                message: "🚀 Teste automatizado - R$ 1,00"
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/donate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Doação R$ 1,00 criada com sucesso!', 'success');
+                    logJSON(data, 'success');
+                    
+                    if (data.payment && data.payment.paymentUrl) {
+                        const results = document.getElementById('results');
+                        const linkDiv = document.createElement('div');
+                        linkDiv.className = 'payment-link';
+                        linkDiv.innerHTML = `<a href="${data.payment.paymentUrl}" target="_blank">🎯 CLIQUE AQUI PARA PAGAR R$ 1,00</a>`;
+                        results.appendChild(linkDiv);
+                    }
+                } else {
+                    log('❌ Erro na doação R$ 1,00', 'error');
+                    logJSON(data, 'error');
+                }
+            } catch (error) {
+                log('❌ Erro de conexão: ' + error.message, 'error');
+            }
+        }
+        
+        async function testDonation25() {
+            log('🔄 Testando doação de R$ 25,00...', 'loading');
+            
+            const payload = {
+                amount: 25.00,
+                donorName: "Maria Silva - Teste Completo",
+                donorEmail: "maria.teste@email.com",
+                donorPhone: "11999999999",
+                donorDocument: "12345678901",
+                donorAddress: "Rua das Flores, 123",
+                donorCity: "São Paulo",
+                donorState: "SP",
+                donorZipCode: "01234-567",
+                message: "💎 Teste completo - R$ 25,00",
+                isAnonymous: false,
+                showInPublicList: true
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/donate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Doação R$ 25,00 criada com sucesso!', 'success');
+                    logJSON(data, 'success');
+                    
+                    if (data.payment && data.payment.paymentUrl) {
+                        const results = document.getElementById('results');
+                        const linkDiv = document.createElement('div');
+                        linkDiv.className = 'payment-link';
+                        linkDiv.innerHTML = `<a href="${data.payment.paymentUrl}" target="_blank">💎 CLIQUE AQUI PARA PAGAR R$ 25,00</a>`;
+                        results.appendChild(linkDiv);
+                    }
+                } else {
+                    log('❌ Erro na doação R$ 25,00', 'error');
+                    logJSON(data, 'error');
+                }
+            } catch (error) {
+                log('❌ Erro de conexão: ' + error.message, 'error');
+            }
+        }
+        
+        async function testAll() {
+            document.getElementById('results').innerHTML = '';
+            log('🚀 Iniciando todos os testes...', 'loading');
+            
+            await testHealth();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testDonation1();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testDonation25();
+            
+            log('🎉 Todos os testes concluídos!', 'success');
+        }
+        
+        // Executar health check automaticamente
+        window.onload = function() {
+            setTimeout(testHealth, 1000);
+        };
+    </script>
+</body>
+</html>

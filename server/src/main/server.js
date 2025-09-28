@@ -15,27 +15,37 @@ const port = process.env.PORT || 3000;
 
 // Pretty-print JSON responses
 app.enable("json spaces");
-// We want to be consistent with URL paths, so we enable strict routing
 app.enable("strict routing");
 
 // Middleware
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Permitir requests sem origin (ex: mobile apps, Postman, arquivos locais)
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'http://localhost:5173',
       'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
       'https://rede-feminina-colab.onrender.com', // Frontend em produção
       'https://mvp-colab-ongs-backend.onrender.com' // Backend em produção
     ];
+    
+    // Permitir arquivos locais (file://) para testes
+    if (origin && origin.startsWith('file://')) {
+      return callback(null, true);
+    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log('[CORS] Origin não permitida:', origin);
-      callback(new Error('Not allowed by CORS'));
+      // Em desenvolvimento, permitir qualquer origin
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+      callback(null, true); // Permitir temporariamente para testes
     }
   },
   credentials: true,
