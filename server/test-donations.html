@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 TESTE DE DOAÇÕES - MVP COLAB ONGS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4ECDC4;
+        }
+
+        .test-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn.success {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        }
+
+        .btn.info {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .result {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            border-color: #4ECDC4;
+            background: #f0fffe;
+        }
+
+        .result.error {
+            border-color: #FF6B6B;
+            background: #fff5f5;
+        }
+
+        .json-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status.loading {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .status.success {
+            background: #00b894;
+            color: white;
+        }
+
+        .status.error {
+            background: #d63031;
+            color: white;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .payment-link {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .payment-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .payment-link a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 TESTE DE DOAÇÕES</h1>
+            <p>MVP COLAB ONGS - Sistema de Pagamentos</p>
+            <p><strong>URL:</strong> https://mvp-colab-ongs-backend.onrender.com</p>
+        </div>
+
+        <div class="content">
+            <!-- TESTE 1: DOAÇÃO SIMPLES -->
+            <div class="test-section">
+                <h3>💰 TESTE 1: Doação Simples de R$ 1,00</h3>
+                <p>Testa o fluxo básico de doação com valor mínimo</p>
+                <button class="btn" onclick="testSimpleDonation()">🎯 Testar Doação R$ 1,00</button>
+                <div id="result1" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- TESTE 2: DOAÇÃO COMPLETA -->
+            <div class="test-section">
+                <h3>🎁 TESTE 2: Doação Completa de R$ 25,00</h3>
+                <p>Testa doação com todos os dados preenchidos</p>
+                <button class="btn success" onclick="testCompleteDonation()">💎 Testar Doação Completa</button>
+                <div id="result2" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- TESTE 3: DOAÇÃO ANÔNIMA -->
+            <div class="test-section">
+                <h3>🕶️ TESTE 3: Doação Anônima de R$ 10,00</h3>
+                <p>Testa doação anônima que não aparece publicamente</p>
+                <button class="btn info" onclick="testAnonymousDonation()">🤫 Testar Doação Anônima</button>
+                <div id="result3" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- TESTE 4: VALIDAÇÕES -->
+            <div class="test-section">
+                <h3>⚠️ TESTE 4: Validações de Erro</h3>
+                <p>Testa se as validações estão funcionando</p>
+                <button class="btn" style="background: linear-gradient(45deg, #e17055, #d63031);" onclick="testValidations()">🚫 Testar Validações</button>
+                <div id="result4" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- TESTE 5: HEALTH CHECK -->
+            <div class="test-section">
+                <h3>🏥 TESTE 5: Health Check</h3>
+                <p>Verifica se o servidor está funcionando</p>
+                <button class="btn info" onclick="testHealthCheck()">❤️ Verificar Saúde</button>
+                <div id="result5" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- RESULTADOS GERAIS -->
+            <div class="grid">
+                <div class="test-section">
+                    <h3>📊 RESUMO DOS TESTES</h3>
+                    <div id="summary">
+                        <p>Execute os testes acima para ver o resumo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://mvp-colab-ongs-backend.onrender.com';
+        let testResults = {};
+
+        // UTILITÁRIOS
+        function showResult(testId, content, isSuccess = true) {
+            const resultDiv = document.getElementById(`result${testId}`);
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.innerHTML = content;
+            updateSummary();
+        }
+
+        function showLoading(testId) {
+            const resultDiv = document.getElementById(`result${testId}`);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="status loading">🔄 Executando teste...</div>';
+        }
+
+        function formatJSON(obj) {
+            return `<div class="json-output">${JSON.stringify(obj, null, 2)}</div>`;
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const total = Object.keys(testResults).length;
+            const success = Object.values(testResults).filter(r => r.success).length;
+            const failed = total - success;
+
+            summary.innerHTML = `
+                <div style="display: flex; gap: 15px; justify-content: center; margin: 20px 0;">
+                    <div class="status success">✅ Sucessos: ${success}</div>
+                    <div class="status error">❌ Falhas: ${failed}</div>
+                    <div class="status">📊 Total: ${total}</div>
+                </div>
+            `;
+        }
+
+        // TESTE 1: DOAÇÃO SIMPLES
+        async function testSimpleDonation() {
+            showLoading(1);
+            
+            try {
+                const payload = {
+                    amount: 1.00,
+                    donorName: "Caio Rafael - Teste",
+                    donorEmail: "caiorafaeldop@gmail.com",
+                    donorPhone: "83998632140",
+                    message: "🚀 Teste automatizado - R$ 1,00"
+                };
+
+                const response = await fetch(`${API_BASE}/api/donations/donate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">
+                    ${response.ok ? '✅ SUCESSO' : '❌ ERRO'} - Status: ${response.status}
+                </div>`;
+
+                content += formatJSON(data);
+
+                if (data.payment && data.payment.paymentUrl) {
+                    content += `
+                        <div class="payment-link">
+                            🎯 <a href="${data.payment.paymentUrl}" target="_blank">
+                                CLIQUE AQUI PARA PAGAR R$ 1,00
+                            </a>
+                        </div>
+                    `;
+                }
+
+                testResults['test1'] = { success: response.ok, data };
+                showResult(1, content, response.ok);
+
+            } catch (error) {
+                testResults['test1'] = { success: false, error: error.message };
+                showResult(1, `
+                    <div class="status error">❌ ERRO DE CONEXÃO</div>
+                    ${formatJSON({ error: error.message })}
+                `, false);
+            }
+        }
+
+        // TESTE 2: DOAÇÃO COMPLETA
+        async function testCompleteDonation() {
+            showLoading(2);
+            
+            try {
+                const payload = {
+                    amount: 25.00,
+                    donorName: "Maria Silva - Teste Completo",
+                    donorEmail: "maria.teste@email.com",
+                    donorPhone: "11999999999",
+                    donorDocument: "12345678901",
+                    donorAddress: "Rua das Flores, 123",
+                    donorCity: "São Paulo",
+                    donorState: "SP",
+                    donorZipCode: "01234-567",
+                    message: "💎 Teste completo com todos os dados - R$ 25,00",
+                    isAnonymous: false,
+                    showInPublicList: true
+                };
+
+                const response = await fetch(`${API_BASE}/api/donations/donate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">
+                    ${response.ok ? '✅ SUCESSO' : '❌ ERRO'} - Status: ${response.status}
+                </div>`;
+
+                content += formatJSON(data);
+
+                if (data.payment && data.payment.paymentUrl) {
+                    content += `
+                        <div class="payment-link">
+                            💎 <a href="${data.payment.paymentUrl}" target="_blank">
+                                CLIQUE AQUI PARA PAGAR R$ 25,00
+                            </a>
+                        </div>
+                    `;
+                }
+
+                testResults['test2'] = { success: response.ok, data };
+                showResult(2, content, response.ok);
+
+            } catch (error) {
+                testResults['test2'] = { success: false, error: error.message };
+                showResult(2, `
+                    <div class="status error">❌ ERRO DE CONEXÃO</div>
+                    ${formatJSON({ error: error.message })}
+                `, false);
+            }
+        }
+
+        // TESTE 3: DOAÇÃO ANÔNIMA
+        async function testAnonymousDonation() {
+            showLoading(3);
+            
+            try {
+                const payload = {
+                    amount: 10.00,
+                    donorName: "Doador Anônimo",
+                    donorEmail: "anonimo@teste.com",
+                    message: "🤫 Doação anônima de teste - R$ 10,00",
+                    isAnonymous: true,
+                    showInPublicList: false
+                };
+
+                const response = await fetch(`${API_BASE}/api/donations/donate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">
+                    ${response.ok ? '✅ SUCESSO' : '❌ ERRO'} - Status: ${response.status}
+                </div>`;
+
+                content += formatJSON(data);
+
+                if (data.payment && data.payment.paymentUrl) {
+                    content += `
+                        <div class="payment-link">
+                            🤫 <a href="${data.payment.paymentUrl}" target="_blank">
+                                CLIQUE AQUI PARA PAGAR R$ 10,00 (ANÔNIMO)
+                            </a>
+                        </div>
+                    `;
+                }
+
+                testResults['test3'] = { success: response.ok, data };
+                showResult(3, content, response.ok);
+
+            } catch (error) {
+                testResults['test3'] = { success: false, error: error.message };
+                showResult(3, `
+                    <div class="status error">❌ ERRO DE CONEXÃO</div>
+                    ${formatJSON({ error: error.message })}
+                `, false);
+            }
+        }
+
+        // TESTE 4: VALIDAÇÕES
+        async function testValidations() {
+            showLoading(4);
+            
+            const tests = [
+                {
+                    name: "Valor inválido (R$ 0)",
+                    payload: { amount: 0, donorName: "Teste", donorEmail: "test@test.com" }
+                },
+                {
+                    name: "Email inválido",
+                    payload: { amount: 10, donorName: "Teste", donorEmail: "email-invalido" }
+                },
+                {
+                    name: "Dados faltando",
+                    payload: { amount: 10 }
+                }
+            ];
+
+            let results = [];
+            
+            for (let test of tests) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/donations/donate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(test.payload)
+                    });
+
+                    const data = await response.json();
+                    
+                    results.push({
+                        test: test.name,
+                        status: response.status,
+                        success: !response.ok, // Esperamos erro!
+                        data
+                    });
+                } catch (error) {
+                    results.push({
+                        test: test.name,
+                        error: error.message,
+                        success: false
+                    });
+                }
+            }
+
+            const allPassed = results.every(r => r.success);
+            let content = `<div class="status ${allPassed ? 'success' : 'error'}">
+                ${allPassed ? '✅ TODAS VALIDAÇÕES OK' : '❌ ALGUMAS VALIDAÇÕES FALHARAM'}
+            </div>`;
+
+            content += formatJSON(results);
+
+            testResults['test4'] = { success: allPassed, data: results };
+            showResult(4, content, allPassed);
+        }
+
+        // TESTE 5: HEALTH CHECK
+        async function testHealthCheck() {
+            showLoading(5);
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">
+                    ${response.ok ? '✅ SERVIDOR OK' : '❌ SERVIDOR COM PROBLEMA'} - Status: ${response.status}
+                </div>`;
+
+                content += formatJSON(data);
+
+                testResults['test5'] = { success: response.ok, data };
+                showResult(5, content, response.ok);
+
+            } catch (error) {
+                testResults['test5'] = { success: false, error: error.message };
+                showResult(5, `
+                    <div class="status error">❌ SERVIDOR INACESSÍVEL</div>
+                    ${formatJSON({ error: error.message })}
+                `, false);
+            }
+        }
+
+        // EXECUTAR TODOS OS TESTES
+        async function runAllTests() {
+            console.log('🚀 Executando todos os testes...');
+            await testHealthCheck();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testSimpleDonation();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testCompleteDonation();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testAnonymousDonation();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testValidations();
+        }
+
+        // Adicionar botão para executar todos
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.header');
+            const runAllBtn = document.createElement('button');
+            runAllBtn.className = 'btn';
+            runAllBtn.style.marginTop = '20px';
+            runAllBtn.innerHTML = '🚀 EXECUTAR TODOS OS TESTES';
+            runAllBtn.onclick = runAllTests;
+            header.appendChild(runAllBtn);
+        });
+    </script>
+</body>
+</html>
