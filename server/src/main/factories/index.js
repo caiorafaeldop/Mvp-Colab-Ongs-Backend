@@ -3,6 +3,7 @@ const ServiceFactory = require("./ServiceFactory");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createSimpleAuthRoutes = require("../../presentation/routes/simpleAuthRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
+const createDonationRoutes = require("../../presentation/routes/donationRoutes");
 const uploadRoutes = require("../../presentation/routes/UploadRoutes");
 // Temporariamente comentados para focar no login
 // const ObserverFactory = require("./ObserverFactory");
@@ -88,6 +89,10 @@ class AppFactory {
     return this.repositoryFactory.createNotificationRepository();
   }
 
+  createDonationRepository() {
+    return this.repositoryFactory.createDonationRepository();
+  }
+
   /**
    * Métodos de criação de services usando ServiceFactory
    */
@@ -112,6 +117,13 @@ class AppFactory {
     return this.serviceFactory.createProductService();
   }
 
+  createDonationService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createDonationService();
+  }
+
   /**
    * Métodos de criação de rotas
    */
@@ -129,6 +141,12 @@ class AppFactory {
     const productService = this.createProductService();
     const authService = this.createSimpleAuthService(); // Usar o novo sistema simplificado
     return createProductRoutes(productService, authService);
+  }
+
+  createDonationRoutes() {
+    const donationService = this.createDonationService();
+    const authService = this.createSimpleAuthService(); // Para autenticação nas rotas protegidas
+    return createDonationRoutes(donationService, authService);
   }
 
   createUploadRoutes() {

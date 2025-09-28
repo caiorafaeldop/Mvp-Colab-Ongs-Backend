@@ -199,6 +199,17 @@ app.use("/api/upload", (req, res, next) => {
   return appFactory.createUploadRoutes()(req, res, next);
 });
 
+// Rotas de doações (Mercado Pago)
+app.use("/api/donations", (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: "Server is still initializing, please try again in a moment"
+    });
+  }
+  return appFactory.createDonationRoutes()(req, res, next);
+});
+
 // Health check endpoint
 
 /**

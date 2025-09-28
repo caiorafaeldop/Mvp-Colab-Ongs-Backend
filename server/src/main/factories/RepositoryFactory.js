@@ -3,6 +3,7 @@ const MongoProductRepository = require("../../infra/repositories/MongoProductRep
 const MongoCollaborationRepository = require("../../infra/repositories/MongoCollaborationRepository");
 const MongoFileRepository = require("../../infra/repositories/MongoFileRepository");
 const MongoNotificationRepository = require("../../infra/repositories/MongoNotificationRepository");
+const PrismaDonationRepository = require("../../infra/repositories/PrismaDonationRepository");
 
 /**
  * Factory para criação de Repositories seguindo o Factory Pattern
@@ -16,13 +17,26 @@ class RepositoryFactory {
   }
 
   /**
-   * Configura o factory com parâmetros específicos
-   * @param {Object} configuration - Configurações do factory
+   * Define configuração para os repositories
+   * @param {string} key - Chave da configuração
+   * @param {*} value - Valor da configuração
    */
-  configure(configuration) {
-    Object.entries(configuration).forEach(([key, value]) => {
-      this.config.set(key, value);
+  setConfig(key, value) {
+    this.config.set(key, value);
+  }
+
+  /**
+   * Configura o factory com um objeto de configurações
+   * @param {Object} config - Objeto com configurações
+   */
+  configure(config) {
+    console.log('[REPOSITORY FACTORY] Configurando factory:', config);
+    
+    Object.entries(config).forEach(([key, value]) => {
+      this.setConfig(key, value);
     });
+    
+    console.log('[REPOSITORY FACTORY] Factory configurado com sucesso');
   }
 
   /**
@@ -32,10 +46,9 @@ class RepositoryFactory {
   createUserRepository() {
     if (!this.repositories.has('userRepository')) {
       console.log('[REPOSITORY FACTORY] Criando UserRepository');
-      
-      const repository = new MongoUserRepository();
-      this.repositories.set('userRepository', repository);
-      
+      const database = this.config.get('database');
+      const userRepository = new MongoUserRepository(database);
+      this.repositories.set('userRepository', userRepository);
       console.log('[REPOSITORY FACTORY] UserRepository criado com sucesso');
     }
 
@@ -49,10 +62,9 @@ class RepositoryFactory {
   createProductRepository() {
     if (!this.repositories.has('productRepository')) {
       console.log('[REPOSITORY FACTORY] Criando ProductRepository');
-      
-      const repository = new MongoProductRepository();
-      this.repositories.set('productRepository', repository);
-      
+      const database = this.config.get('database');
+      const productRepository = new MongoProductRepository(database);
+      this.repositories.set('productRepository', productRepository);
       console.log('[REPOSITORY FACTORY] ProductRepository criado com sucesso');
     }
 
@@ -66,10 +78,9 @@ class RepositoryFactory {
   createCollaborationRepository() {
     if (!this.repositories.has('collaborationRepository')) {
       console.log('[REPOSITORY FACTORY] Criando CollaborationRepository');
-      
-      const repository = new MongoCollaborationRepository();
-      this.repositories.set('collaborationRepository', repository);
-      
+      const database = this.config.get('database');
+      const collaborationRepository = new MongoCollaborationRepository(database);
+      this.repositories.set('collaborationRepository', collaborationRepository);
       console.log('[REPOSITORY FACTORY] CollaborationRepository criado com sucesso');
     }
 
@@ -83,10 +94,9 @@ class RepositoryFactory {
   createFileRepository() {
     if (!this.repositories.has('fileRepository')) {
       console.log('[REPOSITORY FACTORY] Criando FileRepository');
-      
-      const repository = new MongoFileRepository();
+      const database = this.config.get('database');
+      const repository = new MongoFileRepository(database);
       this.repositories.set('fileRepository', repository);
-      
       console.log('[REPOSITORY FACTORY] FileRepository criado com sucesso');
     }
 
@@ -100,14 +110,28 @@ class RepositoryFactory {
   createNotificationRepository() {
     if (!this.repositories.has('notificationRepository')) {
       console.log('[REPOSITORY FACTORY] Criando NotificationRepository');
-      
-      const repository = new MongoNotificationRepository();
+      const database = this.config.get('database');
+      const repository = new MongoNotificationRepository(database);
       this.repositories.set('notificationRepository', repository);
-      
       console.log('[REPOSITORY FACTORY] NotificationRepository criado com sucesso');
     }
 
     return this.repositories.get('notificationRepository');
+  }
+
+  /**
+   * Cria ou retorna instância existente do DonationRepository
+   * @returns {PrismaDonationRepository}
+   */
+  createDonationRepository() {
+    if (!this.repositories.has('donationRepository')) {
+      console.log('[REPOSITORY FACTORY] Criando DonationRepository');
+      const donationRepository = new PrismaDonationRepository();
+      this.repositories.set('donationRepository', donationRepository);
+      console.log('[REPOSITORY FACTORY] DonationRepository criado com sucesso');
+    }
+
+    return this.repositories.get('donationRepository');
   }
 
   /**
@@ -123,107 +147,77 @@ class RepositoryFactory {
     }
 
     console.log(`[REPOSITORY FACTORY] Criando repository genérico: ${repositoryName}`);
-
-    // Mapeamento de repositories disponíveis
-    const repositoryMap = {
-      'userrepository': () => this.createUserRepository(),
-      'productrepository': () => this.createProductRepository(),
-      'collaborationrepository': () => this.createCollaborationRepository(),
-      'filerepository': () => this.createFileRepository(),
-      'notificationrepository': () => this.createNotificationRepository(),
+    
+    // Mapear nomes para métodos de criação
+    const methodMap = {
+      'user': 'createUserRepository',
+      'product': 'createProductRepository',
+      'collaboration': 'createCollaborationRepository',
+      'file': 'createFileRepository',
+      'notification': 'createNotificationRepository',
+      'donation': 'createDonationRepository'
     };
 
-    const factory = repositoryMap[repoKey];
-    if (!factory) {
-      throw new Error(`Repository factory not found for: ${repositoryName}`);
+    const methodName = methodMap[repoKey];
+    if (methodName && typeof this[methodName] === 'function') {
+      return this[methodName]();
     }
 
-    return factory();
-  }
-
-  /**
-   * Retorna repository existente sem criar novo
-   * @param {string} repositoryName - Nome do repository
-   * @returns {Object|null} Instância do repository ou null
-   */
-  getRepository(repositoryName) {
-    return this.repositories.get(repositoryName.toLowerCase()) || null;
+    throw new Error(`Repository não encontrado: ${repositoryName}`);
   }
 
   /**
    * Cria todos os repositories de uma vez
-   * @returns {Object} Objeto com todos os repositories
+   * @returns {Object} Mapa com todos os repositories
    */
   createAllRepositories() {
     console.log('[REPOSITORY FACTORY] Criando todos os repositories');
     
-    return {
+    const repositories = {
       userRepository: this.createUserRepository(),
       productRepository: this.createProductRepository(),
       collaborationRepository: this.createCollaborationRepository(),
       fileRepository: this.createFileRepository(),
-      notificationRepository: this.createNotificationRepository()
+      notificationRepository: this.createNotificationRepository(),
+      donationRepository: this.createDonationRepository()
     };
+
+    console.log('[REPOSITORY FACTORY] Todos os repositories criados com sucesso');
+    return repositories;
   }
 
   /**
-   * Lista todos os repositories criados
-   * @returns {Array<string>} Lista de nomes dos repositories
+   * Limpa todas as instâncias (útil para testes)
    */
-  getCreatedRepositories() {
-    return Array.from(this.repositories.keys());
-  }
-
-  /**
-   * Limpa cache de repositories (útil para testes)
-   */
-  clearRepositories() {
-    console.log('[REPOSITORY FACTORY] Limpando cache de repositories');
+  clear() {
+    console.log('[REPOSITORY FACTORY] Limpando todas as instâncias');
     this.repositories.clear();
   }
 
   /**
-   * Verifica se um repository específico foi criado
-   * @param {string} repositoryName - Nome do repository
-   * @returns {boolean} True se foi criado
+   * Retorna estatísticas dos repositories criados
+   * @returns {Object} Estatísticas
    */
-  isRepositoryCreated(repositoryName) {
-    return this.repositories.has(repositoryName.toLowerCase());
-  }
-
-  /**
-   * Retorna informações sobre o estado atual do factory
-   * @returns {Object} Estado do factory
-   */
-  getFactoryState() {
+  getStats() {
     return {
-      repositoriesCreated: this.getCreatedRepositories(),
       totalRepositories: this.repositories.size,
-      configuration: Object.fromEntries(this.config)
+      repositories: Array.from(this.repositories.keys()),
+      configs: Array.from(this.config.keys())
     };
   }
 
   /**
-   * Registra um repository customizado
-   * @param {string} name - Nome do repository
-   * @param {Object} repository - Instância do repository
+   * Retorna o estado atual do factory
+   * @returns {Object} Estado do factory
    */
-  registerRepository(name, repository) {
-    console.log(`[REPOSITORY FACTORY] Registrando repository customizado: ${name}`);
-    this.repositories.set(name.toLowerCase(), repository);
-  }
-
-  /**
-   * Remove um repository do cache
-   * @param {string} repositoryName - Nome do repository
-   * @returns {boolean} True se foi removido
-   */
-  removeRepository(repositoryName) {
-    const removed = this.repositories.delete(repositoryName.toLowerCase());
-    if (removed) {
-      console.log(`[REPOSITORY FACTORY] Repository removido: ${repositoryName}`);
-    }
-    return removed;
+  getFactoryState() {
+    return {
+      initialized: true,
+      repositoriesCount: this.repositories.size,
+      repositories: Array.from(this.repositories.keys()),
+      configs: Object.fromEntries(this.config),
+      status: 'ready'
+    };
   }
 }
 

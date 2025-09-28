@@ -11,23 +11,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model - Usuários do sistema (pessoas físicas e organizações)
+// User model - Usuários do sistema (administradores das ONGs)
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
+  name      String   // Nome da ONG
   email     String   @unique
   password  String
-  userType  String   // 'common' ou 'organization'
+  userType  String   @default("organization") // Sempre 'organization' agora
   phone     String?
+  
+  // Dados específicos da ONG
+  description String?  // Descrição da ONG
+  pixKey      String?  // Chave PIX para doações
+  address     String?  // Endereço da ONG
+  website     String?  // Site da ONG
+  
+  // Mercado Pago
+  mercadoPagoAccessToken String? // Token de acesso do Mercado Pago
+  mercadoPagoUserId      String? // ID do usuário no Mercado Pago
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relacionamentos
-  products                Product[]       @relation("UserProducts")
-  notifications          Notification[]  @relation("UserNotifications")
-  files                  File[]          @relation("UserFiles")
-  requestedCollaborations Collaboration[] @relation("RequesterCollaborations")
-  targetCollaborations   Collaboration[] @relation("TargetCollaborations")
+  // Relacionamentos simplificados
+  products  Product[]  @relation("UserProducts")
+  donations Donation[] @relation("UserDonations")
 
   @@map("users")
 }
@@ -53,65 +61,38 @@ model Product {
   @@map("products")
 }
 
-// Collaboration model - Colaborações entre organizações
-model Collaboration {
+// Donation model - Doações via Mercado Pago
+model Donation {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  requesterOrgId    String   @db.ObjectId
-  requesterOrgName  String
-  targetOrgId       String   @db.ObjectId
-  targetOrgName     String
-  title             String
-  description       String
-  status            String   @default("pending") // pending, accepted, rejected, completed
+  organizationId    String   @db.ObjectId
+  organizationName  String
+  
+  // Dados da doação
+  amount            Float    // Valor da doação
+  currency          String   @default("BRL")
+  type              String   // 'single' ou 'recurring'
+  frequency         String?  // 'monthly', 'weekly', 'yearly' (para recorrentes)
+  
+  // Dados do doador
+  donorName         String?
+  donorEmail        String?
+  donorPhone        String?
+  donorDocument     String?
+  
+  // Mercado Pago
+  mercadoPagoId     String?  // ID da transação no Mercado Pago
+  subscriptionId    String?  // ID da assinatura (para recorrentes)
+  paymentStatus     String   @default("pending") // pending, approved, rejected, cancelled
+  paymentMethod     String?  // credit_card, debit_card, pix, etc.
+  
+  // Metadados
+  metadata          Json     @default("{}")
+  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   // Relacionamentos
-  requesterOrg User @relation("RequesterCollaborations", fields: [requesterOrgId], references: [id])
-  targetOrg    User @relation("TargetCollaborations", fields: [targetOrgId], references: [id])
+  organization User @relation("UserDonations", fields: [organizationId], references: [id])
 
-  @@map("collaborations")
-}
-
-// Notification model - Notificações do sistema
-model Notification {
-  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId              String    @db.ObjectId
-  title               String
-  message             String
-  type                String    @default("info") // info, success, warning, error, collaboration, system
-  isRead              Boolean   @default(false)
-  readAt              DateTime?
-  relatedEntityId     String?   @db.ObjectId
-  relatedEntityType   String?   // collaboration, user, product, file
-  actionUrl           String?
-  metadata            Json      @default("{}")
-  createdAt           DateTime  @default(now())
-
-  // Relacionamentos
-  user User @relation("UserNotifications", fields: [userId], references: [id])
-
-  @@map("notifications")
-}
-
-// File model - Arquivos do sistema (imagens, documentos, etc.)
-model File {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  originalName String
-  fileName     String
-  fileUrl      String
-  fileType     String
-  fileSize     Int
-  ownerId      String   @db.ObjectId
-  ownerType    String   @default("user") // user, organization
-  folder       String   @default("general")
-  isPublic     Boolean  @default(false)
-  metadata     Json     @default("{}")
-  uploadedAt   DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relacionamentos
-  owner User @relation("UserFiles", fields: [ownerId], references: [id])
-
-  @@map("files")
+  @@map("donations")
 }

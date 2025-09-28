@@ -1,6 +1,8 @@
 const EnhancedJwtAuthService = require("../../infra/services/EnhancedJwtAuthService");
 const SimpleJwtAuthService = require("../../infra/services/SimpleJwtAuthService");
 const ProductService = require("../../application/services/ProductService");
+const DonationService = require("../../application/services/DonationService");
+const SimpleMercadoPagoAdapter = require("../../infra/adapters/SimpleMercadoPagoAdapter");
 
 /**
  * Factory para criação de Services seguindo o Factory Pattern
@@ -115,6 +117,45 @@ class ServiceFactory {
   }
 
   /**
+   * Cria ou retorna instância existente do DonationService
+   * @returns {DonationService}
+   */
+  createDonationService() {
+    if (!this.services.has('donationService')) {
+      console.log('[SERVICE FACTORY] Criando DonationService');
+      
+      const donationRepository = this.dependencies.get('donationRepository');
+      const userRepository = this.dependencies.get('userRepository');
+
+      if (!donationRepository || !userRepository) {
+        throw new Error('DonationRepository or UserRepository dependency not found');
+      }
+
+      // Criar adapter do Mercado Pago (será configurado dinamicamente)
+      const mercadoPagoAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+      
+      if (!mercadoPagoAccessToken) {
+        console.warn('[SERVICE FACTORY] MERCADO_PAGO_ACCESS_TOKEN não configurado - usando token de teste');
+      }
+
+      const paymentAdapter = new SimpleMercadoPagoAdapter(
+        mercadoPagoAccessToken || 'TEST-TOKEN'
+      );
+
+      const donationService = new DonationService(
+        donationRepository,
+        userRepository,
+        paymentAdapter
+      );
+
+      this.services.set('donationService', donationService);
+      console.log('[SERVICE FACTORY] DonationService criado com sucesso');
+    }
+
+    return this.services.get('donationService');
+  }
+
+  /**
    * Cria service por nome usando reflexão
    * @param {string} serviceName - Nome do service
    * @param {Array} dependencies - Array de dependências
@@ -133,6 +174,7 @@ class ServiceFactory {
     const serviceMap = {
       'authservice': () => this.createAuthService(),
       'productservice': () => this.createProductService(),
+      'donationservice': () => this.createDonationService(),
     };
 
     const factory = serviceMap[serviceKey];
