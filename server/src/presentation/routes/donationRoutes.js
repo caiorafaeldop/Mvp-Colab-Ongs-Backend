@@ -285,6 +285,94 @@ const createDonationRoutes = (donationService, authService) => {
 
   /**
    * @swagger
+   * /api/donations/recurring/{subscriptionId}:
+   *   delete:
+   *     tags: [Donations]
+   *     summary: Cancelar assinatura recorrente
+   *     description: Cancela uma assinatura recorrente no Mercado Pago
+   *     parameters:
+   *       - in: path
+   *         name: subscriptionId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID da assinatura no Mercado Pago
+   *     responses:
+   *       200:
+   *         description: Assinatura cancelada com sucesso
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Doação recorrente cancelada com sucesso"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                     status:
+   *                       type: string
+   *                       example: "cancelled"
+   *       400:
+   *         description: Erro ao cancelar assinatura
+   */
+  router.delete("/recurring/:subscriptionId", donationController.cancelRecurringDonation);
+
+  /**
+   * @swagger
+   * /api/donations/recurring/{subscriptionId}/status:
+   *   get:
+   *     tags: [Donations]
+   *     summary: Consultar status da assinatura
+   *     description: Consulta o status atual de uma assinatura recorrente
+   *     parameters:
+   *       - in: path
+   *         name: subscriptionId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID da assinatura no Mercado Pago
+   *     responses:
+   *       200:
+   *         description: Status consultado com sucesso
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Status da assinatura consultado com sucesso"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                     status:
+   *                       type: string
+   *                       example: "authorized"
+   *                     amount:
+   *                       type: number
+   *                       example: 25.00
+   *                     frequency:
+   *                       type: string
+   *                       example: "months"
+   *       400:
+   *         description: Erro ao consultar status
+   */
+  router.get("/recurring/:subscriptionId/status", donationController.getSubscriptionStatus);
+
+  /**
+   * @swagger
    * /api/donations/webhook:
    *   post:
    *     tags: [Donations]

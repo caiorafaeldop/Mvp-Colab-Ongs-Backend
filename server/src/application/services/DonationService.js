@@ -84,35 +84,23 @@ class DonationService {
       this.validateDonationData(donationData);
       this.validateRecurringData(donationData);
 
-      // 2. Buscar organização
-      const organization = await this.userRepository.findById(donationData.organizationId);
-      if (!organization) {
-        throw new Error('Organização não encontrada');
-      }
-
-      // 3. Verificar se a organização tem Mercado Pago configurado
-      if (!organization.mercadoPagoAccessToken) {
-        throw new Error('Organização não possui Mercado Pago configurado');
-      }
-
-      // 4. Criar assinatura no Mercado Pago
+      // 2. Criar assinatura no Mercado Pago
       const subscription = await this.paymentAdapter.createSubscription({
         amount: donationData.amount,
         frequency: donationData.frequency || 'monthly',
-        title: `Doação Recorrente para ${organization.name}`,
+        title: `Doação Recorrente`,
+        description: donationData.message || `Doação recorrente`,
         payer: {
           name: donationData.donorName,
           email: donationData.donorEmail,
           phone: donationData.donorPhone,
           document: donationData.donorDocument
         },
-        externalReference: `subscription-${organization.id}-${Date.now()}`
+        externalReference: `recurring-donation-${Date.now()}`
       });
 
-      // 5. Salvar doação no banco
+      // 3. Salvar doação no banco
       const donation = await this.donationRepository.create({
-        organizationId: organization.id,
-        organizationName: organization.name,
         amount: donationData.amount,
         currency: 'BRL',
         type: 'recurring',
@@ -230,7 +218,57 @@ class DonationService {
   }
 
   /**
-   * Cancela uma doação recorrente
+   * Cancela uma assinatura recorrente
+   */
+  async cancelSubscription(subscriptionId) {
+    try {
+      console.log('[DONATION SERVICE] Cancelando assinatura:', subscriptionId);
+
+      // Cancelar no Mercado Pago
+      const result = await this.paymentAdapter.cancelSubscription(subscriptionId);
+
+      // Atualizar no banco se encontrar a doação
+      try {
+        const donation = await this.donationRepository.findBySubscriptionId(subscriptionId);
+        if (donation) {
+          await this.donationRepository.update(donation.id, {
+            paymentStatus: 'cancelled',
+            updatedAt: new Date()
+          });
+        }
+      } catch (dbError) {
+        console.warn('[DONATION SERVICE] Erro ao atualizar banco após cancelamento:', dbError);
+      }
+
+      console.log('[DONATION SERVICE] Assinatura cancelada:', subscriptionId);
+
+      return result;
+
+    } catch (error) {
+      console.error('[DONATION SERVICE] Erro ao cancelar assinatura:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Consulta status de uma assinatura
+   */
+  async getSubscriptionStatus(subscriptionId) {
+    try {
+      console.log('[DONATION SERVICE] Consultando status da assinatura:', subscriptionId);
+
+      const result = await this.paymentAdapter.getSubscriptionStatus(subscriptionId);
+
+      return result;
+
+    } catch (error) {
+      console.error('[DONATION SERVICE] Erro ao consultar status da assinatura:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancela uma doação recorrente (método antigo - mantido para compatibilidade)
    */
   async cancelRecurringDonation(donationId, organizationId) {
     try {

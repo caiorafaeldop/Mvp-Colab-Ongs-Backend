@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 Teste de Assinaturas Recorrentes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 1.1em; }
+        .info-box { background: linear-gradient(45deg, #e74c3c, #c0392b); color: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
+        .test-section { background: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 25px; border-left: 5px solid #e74c3c; }
+        .btn { background: linear-gradient(45deg, #e74c3c, #c0392b); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 5px; }
+        .btn.success { background: linear-gradient(45deg, #27ae60, #2ecc71); }
+        .btn.info { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .btn.danger { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .result { background: #fff; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin-top: 15px; max-height: 400px; overflow-y: auto; }
+        .status { padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .json-container { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; margin-top: 10px; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #e74c3c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
+        .subscription-input { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; margin-bottom: 10px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Teste de Assinaturas Recorrentes</h1>
+        <p class="subtitle">Sistema de Doações Recorrentes - Mercado Pago</p>
+
+        <div class="info-box">
+            <h3>🎯 Endpoints:</h3>
+            <p>• <strong>Criar:</strong> POST /api/donations/recurring</p>
+            <p>• <strong>Cancelar:</strong> DELETE /api/donations/recurring/{id}</p>
+            <p>• <strong>Status:</strong> GET /api/donations/recurring/{id}/status</p>
+        </div>
+
+        <div class="grid">
+            <!-- Teste 1: Assinatura Mensal -->
+            <div class="test-section">
+                <h3>💰 Assinatura Mensal (R$ 25,00)</h3>
+                <button class="btn success" onclick="testMonthlySubscription()">Criar Assinatura Mensal</button>
+                <div class="loading" id="loading1"><div class="spinner"></div><p>Criando...</p></div>
+                <div class="result" id="result1"></div>
+            </div>
+
+            <!-- Teste 2: Assinatura Semanal -->
+            <div class="test-section">
+                <h3>⚡ Assinatura Semanal (R$ 10,00)</h3>
+                <button class="btn info" onclick="testWeeklySubscription()">Criar Assinatura Semanal</button>
+                <div class="loading" id="loading2"><div class="spinner"></div><p>Criando...</p></div>
+                <div class="result" id="result2"></div>
+            </div>
+
+            <!-- Teste 3: Gerenciamento -->
+            <div class="test-section">
+                <h3>🔧 Gerenciar Assinaturas</h3>
+                <input type="text" class="subscription-input" id="subscriptionId" placeholder="ID da Assinatura">
+                <button class="btn info" onclick="checkStatus()">📊 Consultar Status</button>
+                <button class="btn danger" onclick="cancelSubscription()">❌ Cancelar</button>
+                <div class="loading" id="loading3"><div class="spinner"></div><p>Processando...</p></div>
+                <div class="result" id="result3"></div>
+            </div>
+
+            <!-- Teste 4: Personalizado -->
+            <div class="test-section">
+                <h3>🎛️ Assinatura Personalizada</h3>
+                <input type="number" class="subscription-input" id="customAmount" placeholder="Valor (ex: 15.00)" step="0.01">
+                <select class="subscription-input" id="customFrequency">
+                    <option value="monthly">Mensal</option>
+                    <option value="weekly">Semanal</option>
+                    <option value="yearly">Anual</option>
+                </select>
+                <input type="text" class="subscription-input" id="customName" placeholder="Nome">
+                <input type="email" class="subscription-input" id="customEmail" placeholder="Email">
+                <button class="btn success" onclick="testCustomSubscription()">Criar Personalizada</button>
+                <div class="loading" id="loading4"><div class="spinner"></div><p>Criando...</p></div>
+                <div class="result" id="result4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://mvp-colab-ongs-backend.onrender.com';
+
+        function showLoading(n) { document.getElementById(`loading${n}`).style.display = 'block'; }
+        function hideLoading(n) { document.getElementById(`loading${n}`).style.display = 'none'; }
+        function formatJSON(obj) { return `<div class="json-container">${JSON.stringify(obj, null, 2)}</div>`; }
+
+        async function testMonthlySubscription() {
+            showLoading(1);
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/recurring`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: 25.00,
+                        frequency: "monthly",
+                        donorName: "João Silva - Mensal",
+                        donorEmail: "joao.mensal@email.com",
+                        message: "💰 Doação mensal de R$ 25,00"
+                    })
+                });
+                const data = await response.json();
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">${response.ok ? '✅ SUCESSO' : '❌ ERRO'} - ${response.status}</div>`;
+                content += formatJSON(data);
+                if (data.data?.subscriptionUrl) {
+                    content += `<div style="margin-top:15px;padding:15px;background:#e8f5e8;border-radius:8px;"><strong>🔗 Link:</strong><br><a href="${data.data.subscriptionUrl}" target="_blank">${data.data.subscriptionUrl}</a></div>`;
+                }
+                if (data.data?.subscriptionId) {
+                    content += `<div style="margin-top:15px;padding:15px;background:#fff3cd;border-radius:8px;"><strong>🆔 ID:</strong><br><code>${data.data.subscriptionId}</code></div>`;
+                }
+                document.getElementById('result1').innerHTML = content;
+            } catch (error) {
+                document.getElementById('result1').innerHTML = `<div class="status error">❌ ERRO</div>${formatJSON({error: error.message})}`;
+            } finally { hideLoading(1); }
+        }
+
+        async function testWeeklySubscription() {
+            showLoading(2);
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/recurring`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: 10.00,
+                        frequency: "weekly",
+                        donorName: "Maria Santos - Semanal",
+                        donorEmail: "maria.semanal@email.com",
+                        message: "⚡ Doação semanal de R$ 10,00"
+                    })
+                });
+                const data = await response.json();
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">${response.ok ? '✅ SUCESSO' : '❌ ERRO'} - ${response.status}</div>`;
+                content += formatJSON(data);
+                if (data.data?.subscriptionUrl) {
+                    content += `<div style="margin-top:15px;padding:15px;background:#e8f5e8;border-radius:8px;"><strong>🔗 Link:</strong><br><a href="${data.data.subscriptionUrl}" target="_blank">${data.data.subscriptionUrl}</a></div>`;
+                }
+                if (data.data?.subscriptionId) {
+                    content += `<div style="margin-top:15px;padding:15px;background:#fff3cd;border-radius:8px;"><strong>🆔 ID:</strong><br><code>${data.data.subscriptionId}</code></div>`;
+                }
+                document.getElementById('result2').innerHTML = content;
+            } catch (error) {
+                document.getElementById('result2').innerHTML = `<div class="status error">❌ ERRO</div>${formatJSON({error: error.message})}`;
+            } finally { hideLoading(2); }
+        }
+
+        async function checkStatus() {
+            const id = document.getElementById('subscriptionId').value;
+            if (!id) { alert('Digite o ID da assinatura'); return; }
+            showLoading(3);
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/recurring/${id}/status`);
+                const data = await response.json();
+                document.getElementById('result3').innerHTML = `<div class="status ${response.ok ? 'success' : 'error'}">${response.ok ? '✅ STATUS' : '❌ ERRO'} - ${response.status}</div>${formatJSON(data)}`;
+            } catch (error) {
+                document.getElementById('result3').innerHTML = `<div class="status error">❌ ERRO</div>${formatJSON({error: error.message})}`;
+            } finally { hideLoading(3); }
+        }
+
+        async function cancelSubscription() {
+            const id = document.getElementById('subscriptionId').value;
+            if (!id) { alert('Digite o ID da assinatura'); return; }
+            if (!confirm('Cancelar assinatura?')) return;
+            showLoading(3);
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/recurring/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                document.getElementById('result3').innerHTML = `<div class="status ${response.ok ? 'success' : 'error'}">${response.ok ? '✅ CANCELADO' : '❌ ERRO'} - ${response.status}</div>${formatJSON(data)}`;
+            } catch (error) {
+                document.getElementById('result3').innerHTML = `<div class="status error">❌ ERRO</div>${formatJSON({error: error.message})}`;
+            } finally { hideLoading(3); }
+        }
+
+        async function testCustomSubscription() {
+            const amount = parseFloat(document.getElementById('customAmount').value);
+            const frequency = document.getElementById('customFrequency').value;
+            const name = document.getElementById('customName').value;
+            const email = document.getElementById('customEmail').value;
+            
+            if (!amount || !name || !email) { alert('Preencha: Valor, Nome e Email'); return; }
+            
+            showLoading(4);
+            try {
+                const response = await fetch(`${API_BASE}/api/donations/recurring`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, frequency, donorName: name, donorEmail: email, message: `🎛️ Doação ${frequency} de R$ ${amount}` })
+                });
+                const data = await response.json();
+                let content = `<div class="status ${response.ok ? 'success' : 'error'}">${response.ok ? '✅ SUCESSO' : '❌ ERRO'} - ${response.status}</div>`;
+                content += formatJSON(data);
+                if (data.data?.subscriptionUrl) {
+                    content += `<div style="margin-top:15px;padding:15px;background:#e8f5e8;border-radius:8px;"><strong>🔗 Link:</strong><br><a href="${data.data.subscriptionUrl}" target="_blank">${data.data.subscriptionUrl}</a></div>`;
+                }
+                if (data.data?.subscriptionId) {
+                    content += `<div style="margin-top:15px;padding:15px;background:#fff3cd;border-radius:8px;"><strong>🆔 ID:</strong><br><code>${data.data.subscriptionId}</code></div>`;
+                }
+                document.getElementById('result4').innerHTML = content;
+            } catch (error) {
+                document.getElementById('result4').innerHTML = `<div class="status error">❌ ERRO</div>${formatJSON({error: error.message})}`;
+            } finally { hideLoading(4); }
+        }
+    </script>
+</body>
+</html>

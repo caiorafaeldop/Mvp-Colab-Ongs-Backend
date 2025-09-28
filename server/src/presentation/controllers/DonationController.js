@@ -158,6 +158,76 @@ class DonationController {
   }
 
   /**
+   * Cancela uma doação recorrente
+   * DELETE /api/donations/recurring/:subscriptionId
+   */
+  async cancelRecurringDonation(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Cancelando doação recorrente:', req.params);
+
+      const { subscriptionId } = req.params;
+
+      if (!subscriptionId) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID da assinatura é obrigatório'
+        });
+      }
+
+      const result = await this.donationService.cancelSubscription(subscriptionId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Doação recorrente cancelada com sucesso',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao cancelar doação recorrente:', error);
+      
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Erro ao cancelar doação recorrente'
+      });
+    }
+  }
+
+  /**
+   * Consulta status de uma assinatura
+   * GET /api/donations/recurring/:subscriptionId/status
+   */
+  async getSubscriptionStatus(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Consultando status da assinatura:', req.params);
+
+      const { subscriptionId } = req.params;
+
+      if (!subscriptionId) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID da assinatura é obrigatório'
+        });
+      }
+
+      const result = await this.donationService.getSubscriptionStatus(subscriptionId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Status da assinatura consultado com sucesso',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao consultar status da assinatura:', error);
+      
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Erro ao consultar status da assinatura'
+      });
+    }
+  }
+
+  /**
    * Processa webhook do Mercado Pago
    * POST /api/donations/webhook
    */
