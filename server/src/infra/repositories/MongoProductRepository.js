@@ -1,4 +1,4 @@
-const IProductRepository = require("../../domain/repositories/IProductRepository");
+const IProductRepository = require("../../domain/contracts/ProductRepositoryContract");
 const ProductModel = require("../database/models/ProductModel");
 const Product = require("../../domain/entities/Product");
 

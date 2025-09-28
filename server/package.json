@@ -2,11 +2,16 @@
   "name": "node_server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "src/main/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "test": "node test-api.js"
+    "start": "node src/main/server.js",
+    "dev": "node src/main/server.js",
+    "test": "node tests/test-api.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -16,7 +21,8 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
-    "axios": "^1.7.7",
+    "@prisma/client": "^6.8.2",
+    "axios": "^1.12.2",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "chart.js": "^4.4.1",
@@ -31,12 +37,17 @@
     "express": "^4.18.2",
     "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
+    "mercadopago": "^1.5.9",
     "moment": "^2.30.1",
     "mongoose": "^8.1.1",
     "multer": "^2.0.2",
     "openai": "^4.63.0",
+    "pagarme": "^4.35.2",
     "pino": "^9.5.0",
-    "streamifier": "0.1.1"
+    "prisma": "^6.8.2",
+    "streamifier": "0.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "prettier": "^3.6.2"

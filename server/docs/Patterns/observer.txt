@@ -1,0 +1,97 @@
+PADRÃO OBSERVER (Comportamental) - IMPLEMENTADO ✅
+
+CONTEXTO NO PROJETO:
+Observer para marketplace de ONGs - monitora vendas, compras e engajamento real dos usuários.
+
+IMPLEMENTAÇÕES REALIZADAS:
+
+1. **ProductSaleObserver** ✅
+   - product.purchased: Produto comprado (notifica ONG e comprador)
+   - product.low_stock: Estoque baixo (alerta para ONG)
+   - product.out_of_stock: Produto esgotado (desativa automaticamente)
+   - product.created: Novo produto publicado
+   - product.updated: Produto atualizado
+
+2. **UserEngagementObserver** ✅
+   - user.first_purchase: Primeira compra (parabeniza comprador)
+   - user.frequent_buyer: Comprador frequente (reconhecimento)
+   - organization.first_sale: Primeira venda da ONG (celebração)
+   - user.login: Login (boas-vindas para novos, reengajamento)
+   - user.product_view: Visualização de produtos
+   - user.search_performed: Buscas realizadas
+
+3. **SystemEventObserver** ✅
+   - system.error: Erros do sistema
+   - system.performance: Métricas de performance
+   - api.request: Requisições da API
+   - file.upload: Uploads de fotos de produtos
+   - auth.attempt: Tentativas de login
+
+4. **EventManager** ✅
+   - Gerenciador central de eventos
+   - Registro e notificação de observers
+   - Emissão assíncrona de eventos
+
+ESTRUTURA IMPLEMENTADA:
+```
+src/domain/contracts/
+  ├── Observer.js
+  └── Subject.js
+
+src/infra/observers/
+  ├── EventManager.js
+  ├── ProductSaleObserver.js
+  ├── UserEngagementObserver.js
+  └── SystemEventObserver.js
+```
+
+FUNCIONALIDADES REAIS:
+
+🛍️ **VENDAS INTELIGENTES:**
+- Notifica ONG quando produto é vendido
+- Gera link WhatsApp automático para contato
+- Confirma compra para o comprador
+- Atualiza estoque automaticamente
+- Desativa produtos esgotados
+
+👥 **ENGAJAMENTO DE USUÁRIOS:**
+- Boas-vindas personalizadas (ONG vs Comprador)
+- Parabeniza primeira compra/venda
+- Reconhece compradores frequentes
+- Reengaja usuários inativos
+- Sugere produtos para quem navega muito
+
+📊 **MÉTRICAS DO MARKETPLACE:**
+- Rastreia vendas por categoria
+- Monitora performance de uploads
+- Detecta problemas técnicos
+- Analisa padrões de busca
+
+BENEFÍCIOS ALCANÇADOS:
+- ✅ Notificações automáticas de vendas
+- ✅ Gestão inteligente de estoque
+- ✅ Engajamento de compradores e ONGs
+- ✅ Links WhatsApp automáticos
+- ✅ Métricas de marketplace
+- ✅ Retenção de usuários
+- ✅ Alertas de produtos esgotados
+
+USO PRÁTICO:
+```javascript
+// Quando usuário compra produto
+await eventManager.emit('product.purchased', {
+  product: product,
+  buyer: user,
+  quantity: 2,
+  totalPrice: 50.00,
+  paymentMethod: 'whatsapp'
+});
+
+// Quando ONG faz primeira venda
+await eventManager.emit('organization.first_sale', {
+  organization: ong,
+  product: product,
+  buyer: buyer,
+  totalPrice: 25.00
+});
+```
