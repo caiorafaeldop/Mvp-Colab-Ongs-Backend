@@ -1,5 +1,5 @@
-const WhatsAppUtils = require("../../utils/whatsappUtils");
-const Validators = require("../../utils/validators");
+const WhatsAppUtils = require("../../infra/adapters/WhatsAppUtils");
+const Validators = require("../../domain/validators/validators");
 
 class ProductController {
   constructor(productService) {

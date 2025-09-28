@@ -1,0 +1,40 @@
+PADRÃO ADAPTER (Estrutural) - IMPLEMENTADO ✅
+
+CONTEXTO NO PROJETO:
+- Integração com APIs externas (Cloudinary para storage)
+- Abstração de diferentes provedores de serviços
+- Isolamento de dependências externas no marketplace
+
+IMPLEMENTAÇÕES REALIZADAS:
+
+1. **CloudinaryAdapter** ✅
+   - Upload de imagens para Cloudinary
+   - Transformações automáticas (resize, crop, quality)
+   - Geração de URLs otimizadas
+   - Remoção de arquivos
+
+ESTRUTURA IMPLEMENTADA:
+```
+src/domain/contracts/
+  └── StorageAdapter.js (contrato)
+
+src/infra/adapters/
+  └── CloudinaryAdapter.js (implementação)
+```
+
+BENEFÍCIOS ALCANÇADOS:
+- ✅ Isolamento de dependências externas
+- ✅ Facilidade para trocar provedores
+- ✅ Testabilidade com mocks
+- ✅ Configuração centralizada
+
+INTEGRAÇÃO:
+- Usado pelos Bridges e Facades
+- Configurado via Factory pattern
+- Disponível em todo o sistema
+
+USO PRÁTICO:
+```javascript
+const cloudinaryAdapter = new CloudinaryAdapter(config);
+const result = await cloudinaryAdapter.uploadFile(file, options);
+```

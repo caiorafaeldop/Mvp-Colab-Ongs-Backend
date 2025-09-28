@@ -1,0 +1,83 @@
+PADRÃO BRIDGE (Estrutural) - IMPLEMENTADO ✅
+
+CONTEXTO NO PROJETO:
+- Separação entre abstração e implementação para marketplace
+- Múltiplos provedores de storage (Cloudinary, Local)
+- Diferentes canais de notificação (Email, WhatsApp)
+- Flexibilidade para trocar implementações sem afetar código cliente
+
+IMPLEMENTAÇÕES REALIZADAS:
+
+1. **StorageBridge** ✅
+   - StorageBridge (contrato abstrato)
+   - CloudinaryStorageBridge (provedor cloud)
+   - LocalStorageBridge (provedor local)
+   - Funcionalidades: upload, delete, listFiles, getFileUrl
+
+2. **NotificationBridge** ✅
+   - NotificationBridge (contrato abstrato)
+   - EmailNotificationBridge (canal email)
+   - WhatsAppNotificationBridge (canal WhatsApp)
+   - Funcionalidades: send, sendBulk, getDeliveryStatus
+
+3. **BridgeFactory** ✅
+   - Criação centralizada de todos os bridges
+   - Seleção automática de bridge por funcionalidades
+   - Health check de todos os provedores
+   - Fallback automático (Cloudinary → Local)
+
+ESTRUTURA IMPLEMENTADA:
+```
+src/domain/contracts/
+  ├── StorageBridge.js
+  └── NotificationBridge.js
+
+src/infra/bridges/
+  ├── CloudinaryStorageBridge.js
+  ├── LocalStorageBridge.js
+  ├── EmailNotificationBridge.js
+  └── WhatsAppNotificationBridge.js
+
+src/main/factories/
+  └── BridgeFactory.js
+```
+
+FUNCIONALIDADES STORAGE:
+- **CloudinaryStorageBridge**: Transformações, CDN, otimização automática
+- **LocalStorageBridge**: Armazenamento no sistema de arquivos
+- Troca transparente entre provedores
+- Fallback automático se Cloudinary indisponível
+
+FUNCIONALIDADES NOTIFICATION:
+- **EmailNotificationBridge**: Templates HTML, anexos, envio em lote
+- **WhatsAppNotificationBridge**: Mensagens instantâneas, mídia, status
+- Templates personalizados por tipo de notificação
+- Rate limiting e controle de lotes
+
+BENEFÍCIOS ALCANÇADOS:
+- ✅ Abstração completa de provedores externos
+- ✅ Troca de implementação sem afetar código cliente
+- ✅ Extensibilidade para novos provedores
+- ✅ Fallback automático para alta disponibilidade
+- ✅ Templates personalizados por canal
+- ✅ Health checks e monitoramento
+
+INTEGRAÇÃO:
+- Integrado no AppFactory principal
+- Usado pelos Facades para operações complexas
+- Disponível para todos os serviços
+- Configuração automática via Factory
+
+USO PRÁTICO:
+```javascript
+// Storage
+const storageBridge = bridgeFactory.getStorageBridge('cloudinary');
+const result = await storageBridge.uploadFile(file, options);
+
+// Notification
+const emailBridge = bridgeFactory.getNotificationBridge('email');
+await emailBridge.sendNotification(notification, recipient);
+
+// Fallback automático
+const bridge = bridgeFactory.getStorageBridge('cloudinary'); // Retorna local se cloudinary falhar
+```

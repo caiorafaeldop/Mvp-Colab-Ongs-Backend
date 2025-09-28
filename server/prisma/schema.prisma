@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User model - Usuários do sistema (administradores das ONGs)
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   // Nome da ONG
+  email     String   @unique
+  password  String
+  userType  String   @default("organization") // Sempre 'organization' agora
+  phone     String?
+  
+  // Dados específicos da ONG
+  description String?  // Descrição da ONG
+  pixKey      String?  // Chave PIX para doações
+  address     String?  // Endereço da ONG
+  website     String?  // Site da ONG
+  
+  // Mercado Pago
+  mercadoPagoAccessToken String? // Token de acesso do Mercado Pago
+  mercadoPagoUserId      String? // ID do usuário no Mercado Pago
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos simplificados
+  products  Product[]  @relation("UserProducts")
+
+  @@map("users")
+}
+
+// Product model - Produtos/Serviços oferecidos pelas organizações
+model Product {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  description      String
+  price            Float
+  imageUrls        String[] // Array de URLs das imagens
+  organizationId   String   @db.ObjectId
+  organizationName String
+  isAvailable      Boolean  @default(true)
+  category         String?
+  stock            Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relacionamentos
+  organization User @relation("UserProducts", fields: [organizationId], references: [id])
+
+  @@map("products")
+}
+
+// Donation model - Doações via Mercado Pago (UMA ONG)
+model Donation {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Dados da doação
+  amount            Float    // Valor da doação
+  currency          String   @default("BRL")
+  type              String   @default("single") // 'single' ou 'recurring'
+  frequency         String?  // 'monthly', 'weekly', 'yearly' (para recorrentes)
+  message           String?  // Mensagem do doador
+  
+  // Dados do doador (obrigatórios para transparência)
+  donorName         String   // Nome completo
+  donorEmail        String   // Email para contato
+  donorPhone        String?  // Telefone opcional
+  donorDocument     String?  // CPF opcional
+  donorAddress      String?  // Endereço opcional
+  donorCity         String?  // Cidade opcional
+  donorState        String?  // Estado opcional
+  donorZipCode      String?  // CEP opcional
+  
+  // Mercado Pago
+  mercadoPagoId     String?  @unique // ID da transação no Mercado Pago
+  subscriptionId    String?  // ID da assinatura (para recorrentes)
+  paymentStatus     String   @default("pending") // pending, approved, rejected, cancelled
+  paymentMethod     String?  // credit_card, debit_card, pix, etc.
+  
+  // Controle interno
+  isAnonymous       Boolean  @default(false) // Se doador quer ficar anônimo
+  showInPublicList  Boolean  @default(true)  // Se pode aparecer na lista pública
+  
+  // Metadados
+  metadata          Json     @default("{}")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("donations")
+}

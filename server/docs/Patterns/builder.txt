@@ -1,0 +1,18 @@
+PADRÃO BUILDER (Criacional)
+
+CONTEXTO NO PROJETO:
+- Construção de objetos complexos como relatórios personalizados
+- Criação de queries MongoDB complexas
+- Montagem de respostas de API com múltiplos dados
+
+APLICAÇÃO PRÁTICA:
+1. ReportBuilder - constrói relatórios com diferentes seções e filtros
+2. QueryBuilder - monta queries MongoDB complexas dinamicamente
+3. ResponseBuilder - constrói respostas de API padronizadas
+4. EmailBuilder - monta emails personalizados para diferentes contextos
+5. ValidationBuilder - constrói regras de validação complexas
+
+BENEFÍCIOS:
+- Construção step-by-step de objetos complexos
+- Código mais legível para criação de objetos
+- Flexibilidade na configuração de objetos

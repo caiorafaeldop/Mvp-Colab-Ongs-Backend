@@ -1,0 +1,18 @@
+PADRÃO STATE (Comportamental)
+
+CONTEXTO NO PROJETO:
+- Estados de colaboração entre ONGs (pendente, ativa, concluída, cancelada)
+- Status de projetos (rascunho, publicado, em andamento, finalizado)
+- Estados de usuário (ativo, inativo, suspenso, verificado)
+
+APLICAÇÃO PRÁTICA:
+1. CollaborationState - gerencia estados de parcerias entre ONGs
+2. ProjectState - controla ciclo de vida de projetos
+3. UserState - estados do usuário e suas transições
+4. UploadState - estados de processamento de arquivos
+5. NotificationState - estados de notificações (enviada, lida, arquivada)
+
+BENEFÍCIOS:
+- Controle claro de transições de estado
+- Comportamento específico para cada estado
+- Facilita implementação de workflows

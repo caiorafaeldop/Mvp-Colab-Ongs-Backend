@@ -1,0 +1,77 @@
+PADRÃO SINGLETON (Criacional) - IMPLEMENTADO ✅
+
+CONTEXTO NO PROJETO:
+- Conexão única com banco de dados MongoDB
+- Configurações globais da aplicação marketplace
+- Sistema de logs centralizado
+- Gerenciamento de recursos compartilhados
+
+IMPLEMENTAÇÕES REALIZADAS:
+
+1. **DatabaseConnection** ✅
+   - Instância única de conexão MongoDB
+   - Gerenciamento automático de reconexão
+   - Pool de conexões otimizado
+   - Eventos de conexão/desconexão
+   - Health check e estatísticas
+
+2. **ConfigManager** ✅
+   - Configurações centralizadas (JWT, DB, APIs)
+   - Validação de configurações obrigatórias
+   - Suporte a diferentes ambientes
+   - Reload dinâmico de configurações
+
+3. **Logger** ✅
+   - Sistema de logs com níveis (error, warn, info, debug)
+   - Rotação automática de arquivos
+   - Logs coloridos no console
+   - Logs de performance e eventos HTTP
+   - Limpeza automática de logs antigos
+
+4. **SingletonFactory** ✅
+   - Inicialização coordenada de todos os singletons
+   - Health check completo do sistema
+   - Gerenciamento de dependências entre singletons
+
+ESTRUTURA IMPLEMENTADA:
+```
+src/infra/singletons/
+  ├── DatabaseConnection.js
+  ├── ConfigManager.js
+  └── Logger.js
+
+src/main/factories/
+  └── SingletonFactory.js
+```
+
+BENEFÍCIOS ALCANÇADOS:
+- ✅ Controle único de recursos críticos
+- ✅ Configuração centralizada e validada
+- ✅ Logging estruturado e persistente
+- ✅ Conexão otimizada com MongoDB
+- ✅ Health checks automáticos
+- ✅ Economia de memória e recursos
+
+INTEGRAÇÃO:
+- Integrado no AppFactory principal
+- Inicialização automática no startup
+- Disponível para todos os componentes
+- Suporte a testes com destroyInstance()
+
+USO PRÁTICO:
+```javascript
+// Obter singletons
+const config = ConfigManager.getInstance();
+const logger = Logger.getInstance();
+const db = DatabaseConnection.getInstance();
+
+// Usar configurações
+const jwtSecret = config.get('jwt.secret');
+
+// Fazer logs
+logger.info('Sistema iniciado');
+logger.error('Erro crítico', { error: err.message });
+
+// Verificar conexão
+const isConnected = await db.ping();
+```
