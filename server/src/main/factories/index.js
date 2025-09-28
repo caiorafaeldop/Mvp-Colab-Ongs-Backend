@@ -261,6 +261,24 @@ class AppFactory {
   }
 
   /**
+   * Cria rotas de doações
+   * @returns {Function} Router de doações
+   */
+  createDonationRoutes() {
+    const donationRoutes = require('../routes/donationRoutes');
+    
+    // Middleware para injetar dependências nas rotas
+    return (req, res, next) => {
+      // Injetar repositories e adapters no req.app.locals
+      req.app.locals.repositories = this.repositories;
+      req.app.locals.adapters = this.adapters;
+      
+      // Chamar as rotas de doação
+      donationRoutes(req, res, next);
+    };
+  }
+
+  /**
    * Limpa todos os caches (útil para testes)
    */
   clearAll() {
