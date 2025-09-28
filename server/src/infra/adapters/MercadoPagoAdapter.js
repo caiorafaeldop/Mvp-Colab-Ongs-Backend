@@ -145,7 +145,7 @@ class MercadoPagoAdapter extends PaymentAdapter {
           currency_id: 'BRL'
         },
         payer_email: subscriptionData.payer?.email,
-        back_url: subscriptionData.backUrls?.success || `${process.env.FRONTEND_URL}/donation/success`,
+        back_url: subscriptionData.backUrls?.success || 'https://mvp-colab-ongs-backend.onrender.com/donation/success',
         external_reference: subscriptionData.externalReference || `subscription-${Date.now()}`,
         status: 'pending'
       };

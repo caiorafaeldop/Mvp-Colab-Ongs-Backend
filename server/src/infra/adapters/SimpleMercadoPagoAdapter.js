@@ -28,6 +28,7 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
     });
 
     console.log('[SIMPLE MP ADAPTER] Inicializado com sucesso');
+    console.log('[SIMPLE MP ADAPTER] Token usado:', accessToken?.substring(0, 20) + '...');
   }
 
   /**
@@ -125,10 +126,12 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
           currency_id: 'BRL'
         },
         payer_email: subscriptionData.payer?.email,
-        back_url: subscriptionData.backUrls?.success || `${process.env.FRONTEND_URL}/donation/success`,
+        back_url: 'https://www.mercadopago.com.br',
         external_reference: subscriptionData.externalReference || `subscription-${Date.now()}`,
         status: 'pending'
       };
+
+      console.log('[SIMPLE MP] Payload completo sendo enviado:', JSON.stringify(subscriptionBody, null, 2));
 
       const response = await this.api.post('/preapproval', subscriptionBody);
       const result = response.data;
@@ -147,8 +150,20 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro ao criar assinatura:', error.response?.data || error.message);
-      throw new Error(`Erro ao criar assinatura: ${error.message}`);
+      console.error('[SIMPLE MP] Erro completo:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+      throw new Error(`Erro ao criar assinatura: ${errorMessage}`);
     }
   }
 
