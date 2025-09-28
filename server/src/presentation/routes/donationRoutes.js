@@ -222,6 +222,9 @@ const createDonationRoutes = (donationService, authService) => {
    *               $ref: '#/components/schemas/Error'
    */
   router.post("/single", donationController.createSingleDonation);
+  
+  // Alias para compatibilidade com testes existentes
+  router.post("/donate", donationController.createSingleDonation);
 
   /**
    * @swagger

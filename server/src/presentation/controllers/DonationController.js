@@ -28,31 +28,41 @@ class DonationController {
       console.log('[DONATION CONTROLLER] Criando doação única:', req.body);
 
       const {
-        organizationId,
         amount,
         donorName,
         donorEmail,
         donorPhone,
         donorDocument,
-        message
+        donorAddress,
+        donorCity,
+        donorState,
+        donorZipCode,
+        message,
+        isAnonymous,
+        showInPublicList
       } = req.body;
 
       // Validações básicas
-      if (!organizationId || !amount || !donorEmail) {
+      if (!amount || !donorEmail || !donorName) {
         return res.status(400).json({
           success: false,
-          message: 'Dados obrigatórios: organizationId, amount, donorEmail'
+          message: 'Dados obrigatórios: amount, donorEmail, donorName'
         });
       }
 
       const result = await this.donationService.createSingleDonation({
-        organizationId,
         amount: parseFloat(amount),
         donorName,
         donorEmail,
         donorPhone,
         donorDocument,
-        message
+        donorAddress,
+        donorCity,
+        donorState,
+        donorZipCode,
+        message,
+        isAnonymous,
+        showInPublicList
       });
 
       return res.status(201).json({
@@ -62,8 +72,7 @@ class DonationController {
           donationId: result.donation.id,
           paymentUrl: result.paymentUrl,
           mercadoPagoId: result.mercadoPagoId,
-          amount: result.donation.amount,
-          organizationName: result.donation.organizationName
+          amount: result.donation.amount
         }
       });
 
@@ -86,33 +95,43 @@ class DonationController {
       console.log('[DONATION CONTROLLER] Criando doação recorrente:', req.body);
 
       const {
-        organizationId,
         amount,
         frequency,
         donorName,
         donorEmail,
         donorPhone,
         donorDocument,
-        message
+        donorAddress,
+        donorCity,
+        donorState,
+        donorZipCode,
+        message,
+        isAnonymous,
+        showInPublicList
       } = req.body;
 
       // Validações básicas
-      if (!organizationId || !amount || !donorEmail) {
+      if (!amount || !donorEmail || !donorName) {
         return res.status(400).json({
           success: false,
-          message: 'Dados obrigatórios: organizationId, amount, donorEmail'
+          message: 'Dados obrigatórios: amount, donorEmail, donorName'
         });
       }
 
       const result = await this.donationService.createRecurringDonation({
-        organizationId,
         amount: parseFloat(amount),
         frequency: frequency || 'monthly',
         donorName,
         donorEmail,
         donorPhone,
         donorDocument,
-        message
+        donorAddress,
+        donorCity,
+        donorState,
+        donorZipCode,
+        message,
+        isAnonymous,
+        showInPublicList
       });
 
       return res.status(201).json({

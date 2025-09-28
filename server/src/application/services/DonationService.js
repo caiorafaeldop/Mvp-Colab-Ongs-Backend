@@ -22,46 +22,39 @@ class DonationService {
       // 1. Validar dados
       this.validateDonationData(donationData);
 
-      // 2. Buscar organização
-      const organization = await this.userRepository.findById(donationData.organizationId);
-      if (!organization) {
-        throw new Error('Organização não encontrada');
-      }
-
-      // 3. Verificar se a organização tem Mercado Pago configurado
-      if (!organization.mercadoPagoAccessToken) {
-        throw new Error('Organização não possui Mercado Pago configurado');
-      }
-
-      // 4. Criar preferência no Mercado Pago
+      // 2. Criar preferência no Mercado Pago
       const paymentPreference = await this.paymentAdapter.createPaymentPreference({
         amount: donationData.amount,
-        title: `Doação para ${organization.name}`,
-        description: donationData.message || `Doação para apoiar ${organization.name}`,
+        title: `Doação`,
+        description: donationData.message || `Doação`,
         payer: {
           name: donationData.donorName,
           email: donationData.donorEmail,
           phone: donationData.donorPhone,
           document: donationData.donorDocument
         },
-        externalReference: `donation-${organization.id}-${Date.now()}`
+        externalReference: `donation-${Date.now()}`
       });
 
-      // 5. Salvar doação no banco
+      // 3. Salvar doação no banco
       const donation = await this.donationRepository.create({
-        organizationId: organization.id,
-        organizationName: organization.name,
         amount: donationData.amount,
         currency: 'BRL',
         type: 'single',
+        message: donationData.message,
         donorName: donationData.donorName,
         donorEmail: donationData.donorEmail,
         donorPhone: donationData.donorPhone,
         donorDocument: donationData.donorDocument,
+        donorAddress: donationData.donorAddress,
+        donorCity: donationData.donorCity,
+        donorState: donationData.donorState,
+        donorZipCode: donationData.donorZipCode,
+        isAnonymous: donationData.isAnonymous || false,
+        showInPublicList: donationData.showInPublicList !== false,
         mercadoPagoId: paymentPreference.id,
         paymentStatus: 'pending',
         metadata: {
-          message: donationData.message,
           externalReference: paymentPreference.externalReference
         }
       });
@@ -124,14 +117,20 @@ class DonationService {
         currency: 'BRL',
         type: 'recurring',
         frequency: donationData.frequency || 'monthly',
+        message: donationData.message,
         donorName: donationData.donorName,
         donorEmail: donationData.donorEmail,
         donorPhone: donationData.donorPhone,
         donorDocument: donationData.donorDocument,
+        donorAddress: donationData.donorAddress,
+        donorCity: donationData.donorCity,
+        donorState: donationData.donorState,
+        donorZipCode: donationData.donorZipCode,
+        isAnonymous: donationData.isAnonymous || false,
+        showInPublicList: donationData.showInPublicList !== false,
         subscriptionId: subscription.id,
         paymentStatus: 'pending',
         metadata: {
-          message: donationData.message,
           externalReference: subscription.externalReference
         }
       });
@@ -272,16 +271,16 @@ class DonationService {
    * Validações privadas
    */
   validateDonationData(data) {
-    if (!data.organizationId) {
-      throw new Error('ID da organização é obrigatório');
-    }
-
     if (!data.amount || data.amount <= 0) {
       throw new Error('Valor da doação deve ser maior que zero');
     }
 
     if (!data.donorEmail) {
       throw new Error('Email do doador é obrigatório');
+    }
+
+    if (!data.donorName) {
+      throw new Error('Nome do doador é obrigatório');
     }
 
     // Validar email
