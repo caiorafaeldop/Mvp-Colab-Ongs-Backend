@@ -17,20 +17,25 @@ class PrismaDonationRepository extends IDonationRepository {
     try {
       const donation = await this.prisma.donation.create({
         data: {
-          organizationId: donationData.organizationId,
-          organizationName: donationData.organizationName || 'ONG',
           amount: donationData.amount,
           currency: donationData.currency || 'BRL',
           type: donationData.type || 'single',
           frequency: donationData.frequency,
+          message: donationData.message,
           donorName: donationData.donorName,
           donorEmail: donationData.donorEmail,
           donorPhone: donationData.donorPhone,
           donorDocument: donationData.donorDocument,
+          donorAddress: donationData.donorAddress,
+          donorCity: donationData.donorCity,
+          donorState: donationData.donorState,
+          donorZipCode: donationData.donorZipCode,
           mercadoPagoId: donationData.mercadoPagoId,
           subscriptionId: donationData.subscriptionId,
           paymentStatus: donationData.paymentStatus || 'pending',
           paymentMethod: donationData.paymentMethod,
+          isAnonymous: donationData.isAnonymous || false,
+          showInPublicList: donationData.showInPublicList !== false,
           metadata: donationData.metadata || {}
         }
       });
@@ -72,29 +77,51 @@ class PrismaDonationRepository extends IDonationRepository {
     }
   }
 
-  async findByOrganizationId(organizationId, filters = {}) {
+  async findPublicDonations(options = {}) {
     try {
-      const where = { organizationId };
-      
-      if (filters.status) {
-        where.paymentStatus = filters.status;
-      }
-      
-      if (filters.type) {
-        where.type = filters.type;
-      }
+      const {
+        page = 1,
+        limit = 20,
+        status = 'approved'
+      } = options;
 
-      const donations = await this.prisma.donation.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: filters.limit || 100,
-        skip: filters.skip || 0
-      });
+      const skip = (page - 1) * limit;
+      
+      const where = {
+        showInPublicList: true,
+        paymentStatus: status
+      };
 
-      return donations;
+      const [donations, total] = await Promise.all([
+        this.prisma.donation.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+          select: {
+            id: true,
+            amount: true,
+            donorName: true,
+            message: true,
+            isAnonymous: true,
+            createdAt: true
+          }
+        }),
+        this.prisma.donation.count({ where })
+      ]);
+
+      return {
+        data: donations,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      };
 
     } catch (error) {
-      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar doações por organização:', error);
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar doações públicas:', error);
       throw error;
     }
   }
@@ -170,9 +197,9 @@ class PrismaDonationRepository extends IDonationRepository {
     }
   }
 
-  async getStatistics(organizationId, dateRange = {}) {
+  async getGeneralStatistics(dateRange = {}) {
     try {
-      const where = { organizationId };
+      const where = {};
       
       if (dateRange.startDate || dateRange.endDate) {
         where.createdAt = {};
@@ -189,17 +216,21 @@ class PrismaDonationRepository extends IDonationRepository {
         totalAmount,
         singleDonations,
         recurringDonations,
-        approvedDonations
+        approvedDonations,
+        pendingDonations,
+        anonymousDonations
       ] = await Promise.all([
         this.prisma.donation.count({ where }),
         this.prisma.donation.aggregate({
-          where,
+          where: { ...where, paymentStatus: 'approved' },
           _sum: { amount: true },
           _avg: { amount: true }
         }),
         this.prisma.donation.count({ where: { ...where, type: 'single' } }),
         this.prisma.donation.count({ where: { ...where, type: 'recurring' } }),
-        this.prisma.donation.count({ where: { ...where, paymentStatus: 'approved' } })
+        this.prisma.donation.count({ where: { ...where, paymentStatus: 'approved' } }),
+        this.prisma.donation.count({ where: { ...where, paymentStatus: 'pending' } }),
+        this.prisma.donation.count({ where: { ...where, isAnonymous: true } })
       ]);
 
       return {
@@ -209,11 +240,13 @@ class PrismaDonationRepository extends IDonationRepository {
         singleDonations,
         recurringDonations,
         approvedDonations,
-        pendingDonations: totalDonations - approvedDonations
+        pendingDonations,
+        anonymousDonations,
+        publicDonations: totalDonations - anonymousDonations
       };
 
     } catch (error) {
-      console.error('[PRISMA DONATION REPOSITORY] Erro ao obter estatísticas:', error);
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao obter estatísticas gerais:', error);
       throw error;
     }
   }
