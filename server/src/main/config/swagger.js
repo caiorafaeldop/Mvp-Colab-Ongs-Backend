@@ -41,12 +41,234 @@ const options = {
         description: 'Servidor de desenvolvimento',
       },
       {
+        url: 'https://mvp-colab-ongs-backend.onrender.com',
+        description: 'Servidor de produção (Render)',
+      },
+      {
         url: 'https://unexcitable-escapeless-adalyn.ngrok-free.dev',
         description: 'Servidor público (ngrok)',
       },
     ],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT token obtido através do endpoint de login'
+        }
+      },
       schemas: {
+        User: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: '507f1f77bcf86cd799439011'
+            },
+            name: {
+              type: 'string',
+              example: 'João Silva'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'joao@email.com'
+            },
+            userType: {
+              type: 'string',
+              enum: ['common', 'organization'],
+              example: 'organization'
+            },
+            phone: {
+              type: 'string',
+              example: '11999999999'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time'
+            }
+          }
+        },
+        LoginRequest: {
+          type: 'object',
+          required: ['email', 'password'],
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'usuario@exemplo.com'
+            },
+            password: {
+              type: 'string',
+              format: 'password',
+              example: 'minhasenha123'
+            }
+          }
+        },
+        RegisterRequest: {
+          type: 'object',
+          required: ['name', 'email', 'password'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'João Silva'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'joao@exemplo.com'
+            },
+            password: {
+              type: 'string',
+              format: 'password',
+              minLength: 6,
+              example: 'minhasenha123'
+            },
+            userType: {
+              type: 'string',
+              enum: ['common', 'organization'],
+              default: 'common',
+              example: 'organization'
+            },
+            phone: {
+              type: 'string',
+              example: '11999999999'
+            }
+          }
+        },
+        AuthResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true
+            },
+            message: {
+              type: 'string',
+              example: 'Login successful'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                user: {
+                  $ref: '#/components/schemas/User'
+                },
+                accessToken: {
+                  type: 'string',
+                  description: 'Token JWT de acesso (45 minutos)'
+                },
+                refreshToken: {
+                  type: 'string',
+                  description: 'Token JWT de refresh (7 dias)'
+                }
+              }
+            }
+          }
+        },
+        Product: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: '507f1f77bcf86cd799439013'
+            },
+            name: {
+              type: 'string',
+              example: 'Cesta Básica Familiar'
+            },
+            description: {
+              type: 'string',
+              example: 'Cesta básica completa para uma família de 4 pessoas'
+            },
+            price: {
+              type: 'number',
+              format: 'float',
+              example: 85.50
+            },
+            imageUrls: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              example: ['https://example.com/cesta1.jpg']
+            },
+            organizationId: {
+              type: 'string',
+              example: '507f1f77bcf86cd799439012'
+            },
+            organizationName: {
+              type: 'string',
+              example: 'ONG Esperança'
+            },
+            category: {
+              type: 'string',
+              example: 'Alimentação'
+            },
+            stock: {
+              type: 'integer',
+              example: 50
+            },
+            isAvailable: {
+              type: 'boolean',
+              example: true
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time'
+            }
+          }
+        },
+        ProductRequest: {
+          type: 'object',
+          required: ['name', 'description', 'price'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'Cesta Básica Familiar'
+            },
+            description: {
+              type: 'string',
+              example: 'Cesta básica completa para uma família de 4 pessoas'
+            },
+            price: {
+              type: 'number',
+              format: 'float',
+              minimum: 0.01,
+              example: 85.50
+            },
+            imageUrls: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              example: ['https://example.com/cesta1.jpg']
+            },
+            category: {
+              type: 'string',
+              example: 'Alimentação'
+            },
+            stock: {
+              type: 'integer',
+              minimum: 0,
+              default: 1,
+              example: 50
+            }
+          }
+        },
+        Error: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false
+            },
+            message: {
+              type: 'string',
+              example: 'Mensagem de erro'
+            }
+          }
+        },
         DonationRequest: {
           type: 'object',
           required: ['amount', 'donorName', 'donorEmail'],
@@ -270,6 +492,14 @@ const options = {
     },
     tags: [
       {
+        name: 'Authentication',
+        description: '🔐 Sistema de autenticação e autorização',
+      },
+      {
+        name: 'Products',
+        description: '📦 Gerenciamento de produtos das ONGs',
+      },
+      {
         name: 'Donations',
         description: '💰 Sistema de doações via Mercado Pago',
       },
@@ -282,6 +512,7 @@ const options = {
   apis: [
     './src/main/routes/*.js',
     './src/main/server.js',
+    './src/presentation/routes/*.js',
   ],
 };
 
