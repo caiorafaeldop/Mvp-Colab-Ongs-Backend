@@ -5,9 +5,11 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./config/swagger");
+const env = require("./config/env");
 const { connectDB } = require("./config/database");
 const AppFactory = require("./factories");
 const { deduplicationMiddleware, getDeduplicationStats } = require("../presentation/middleware/RequestDeduplicationMiddleware");
+const errorHandler = require("../presentation/middleware/ErrorHandler");
 // const uploadRouter = require("../presentation/routes/UploadRoutes"); // Temporariamente comentado
 
 const app = express();
@@ -61,6 +63,8 @@ app.use(cookieParser(process.env.COOKIE_SECRET)); // CHAIN HANDLER 2: Cookies
 app.use(express.json()); // CHAIN HANDLER 3: JSON parsing
 app.use(express.urlencoded({ extended: true })); // CHAIN HANDLER 4: URL encoding
 app.use(express.static('public')); // CHAIN HANDLER 5: Static files
+// Static serve for local uploads when using LocalStorageBridge
+app.use('/uploads', express.static(env.LOCAL_UPLOAD_PATH));
 
 // CHAIN HANDLER 6: Middleware de deduplicação de requisições
 app.use(deduplicationMiddleware);
@@ -295,20 +299,12 @@ app.use((req, res, next) => {
 });
 
 // Global error handling middleware
-app.use((err, req, res, next) => {
-  console.error(`Unhandled application error: ${err.message}`);
-  console.error(err.stack);
-
-  res.status(500).json({
-    success: false,
-    message: "Internal server error",
-  });
-});
+app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`🚀 Server rodando na porta ${port}`);
-  console.log(`📚 Swagger UI disponível em: http://localhost:${port}/api-docs`);
-  console.log(`📖 Documentação alternativa em: http://localhost:${port}/docs`);
-  console.log(`📄 Swagger JSON em: http://localhost:${port}/api-docs.json`);
-  console.log(`🏥 Health check em: http://localhost:${port}/health`);
+  console.log(` Server rodando na porta ${port}`);
+  console.log(` Swagger UI dispon vel em: http://localhost:${port}/api-docs`);
+  console.log(`  Documenta o alternativa em: http://localhost:${port}/docs`);
+  console.log(`  Swagger JSON em: http://localhost:${port}/api-docs.json`);
+  console.log(`  Health check em: http://localhost:${port}/health`);
 });

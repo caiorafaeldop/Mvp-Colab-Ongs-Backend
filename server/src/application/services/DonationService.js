@@ -37,8 +37,25 @@ class DonationService {
         externalReference: `donation-${Date.now()}`
       });
 
-      // 3. Salvar doação no banco
+      // 3. Idempotency: se já existir uma doação com este MP ID, retorna existente
+      try {
+        if (this.donationRepository.existsByMercadoPagoId) {
+          const exists = await this.donationRepository.existsByMercadoPagoId(paymentPreference.id);
+          if (exists) {
+            const existing = await this.donationRepository.findByMercadoPagoId(paymentPreference.id);
+            return {
+              donation: existing,
+              paymentUrl: paymentPreference.paymentUrl,
+              mercadoPagoId: paymentPreference.id
+            };
+          }
+        }
+      } catch (_) {}
+
+      // 4. Salvar doação no banco
       const donation = await this.donationRepository.create({
+        organizationId: donationData.organizationId,
+        organizationName: donationData.organizationName,
         amount: donationData.amount,
         currency: 'BRL',
         type: 'single',
@@ -100,8 +117,25 @@ class DonationService {
         externalReference: `recurring-donation-${Date.now()}`
       });
 
-      // 3. Salvar doação no banco
+      // 3. Idempotency: se já existir uma doação com esta assinatura, retorna existente
+      try {
+        if (this.donationRepository.existsBySubscriptionId) {
+          const exists = await this.donationRepository.existsBySubscriptionId(subscription.id);
+          if (exists) {
+            const existing = await this.donationRepository.findBySubscriptionId(subscription.id);
+            return {
+              donation: existing,
+              subscriptionUrl: subscription.subscriptionUrl,
+              subscriptionId: subscription.id
+            };
+          }
+        }
+      } catch (_) {}
+
+      // 4. Salvar doação no banco
       const donation = await this.donationRepository.create({
+        organizationId: donationData.organizationId,
+        organizationName: donationData.organizationName,
         amount: donationData.amount,
         currency: 'BRL',
         type: 'recurring',

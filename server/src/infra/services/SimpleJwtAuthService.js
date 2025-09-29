@@ -1,16 +1,17 @@
-const IAuthService = require("../../domain/contracts/AuthServiceContract");
+// Interface removida na limpeza
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const User = require("../../domain/entities/User");
 
 /**
+ * Interface do serviço de autenticação
  * Sistema de autenticação JWT simples e eficiente
  * Baseado no sistema do projeto Maia Advocacia
  * Sem cookies complexos, apenas tokens JWT limpos
  */
-class SimpleJwtAuthService extends IAuthService {
+class SimpleJwtAuthService {
   constructor(userRepository, jwtSecret) {
-    super();
+    // super() removido na limpeza
     this.userRepository = userRepository;
     this.jwtSecret = jwtSecret || process.env.JWT_SECRET || 'default-secret';
   }

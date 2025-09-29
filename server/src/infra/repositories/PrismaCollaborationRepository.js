@@ -1,4 +1,4 @@
-const ICollaborationRepository = require("../../domain/contracts/CollaborationRepositoryContract");
+// Interface removida na limpeza
 const Collaboration = require("../../domain/entities/Collaboration");
 const PrismaService = require("../singletons/PrismaService");
 
@@ -7,9 +7,9 @@ const PrismaService = require("../singletons/PrismaService");
  * Segue os princípios SOLID e Clean Architecture
  * Mantém compatibilidade com a interface existente
  */
-class PrismaCollaborationRepository extends ICollaborationRepository {
+class PrismaCollaborationRepository  {
   constructor() {
-    super();
+    // super() removido na limpeza
     this.prismaService = PrismaService.getInstance();
   }
 

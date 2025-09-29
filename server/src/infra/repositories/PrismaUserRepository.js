@@ -1,4 +1,4 @@
-const IUserRepository = require("../../domain/repositories/IUserRepository");
+// Interface removida na limpeza
 const User = require("../../domain/entities/User");
 const PrismaService = require("../singletons/PrismaService");
 
@@ -7,9 +7,9 @@ const PrismaService = require("../singletons/PrismaService");
  * Segue os princípios SOLID e Clean Architecture
  * Mantém compatibilidade com a interface existente
  */
-class PrismaUserRepository extends IUserRepository {
+class PrismaUserRepository  {
   constructor() {
-    super();
+    // super() removido na limpeza
     this.prismaService = PrismaService.getInstance();
   }
 

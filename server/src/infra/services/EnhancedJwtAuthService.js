@@ -1,11 +1,10 @@
-const IAuthService = require("../../domain/contracts/AuthServiceContract");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../../domain/entities/User");
 
-class EnhancedJwtAuthService extends IAuthService {
+class EnhancedJwtAuthService {
   constructor(userRepository, jwtSecret, jwtRefreshSecret) {
-    super();
+    // super() removido na limpeza
     this.userRepository = userRepository;
     this.jwtSecret = jwtSecret;
     this.jwtRefreshSecret = jwtRefreshSecret;

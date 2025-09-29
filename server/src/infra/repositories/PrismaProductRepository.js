@@ -1,4 +1,4 @@
-const IProductRepository = require("../../domain/contracts/ProductRepositoryContract");
+// Interface removida na limpeza
 const Product = require("../../domain/entities/Product");
 const PrismaService = require("../singletons/PrismaService");
 
@@ -7,9 +7,9 @@ const PrismaService = require("../singletons/PrismaService");
  * Segue os princípios SOLID e Clean Architecture
  * Mantém compatibilidade com a interface existente
  */
-class PrismaProductRepository extends IProductRepository {
+class PrismaProductRepository  {
   constructor() {
-    super();
+    // super() removido na limpeza
     this.prismaService = PrismaService.getInstance();
   }
 

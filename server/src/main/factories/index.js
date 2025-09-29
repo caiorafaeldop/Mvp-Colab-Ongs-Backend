@@ -1,18 +1,14 @@
-const RepositoryFactory = require("./PrismaRepositoryFactory");
+// PrismaRepositoryFactory temporariamente desabilitado - usando MongoDB
+const RepositoryFactory = require("./MongoRepositoryFactory");
 const ServiceFactory = require("./ServiceFactory");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createSimpleAuthRoutes = require("../../presentation/routes/simpleAuthRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
 const createDonationRoutes = require("../../presentation/routes/donationRoutes");
 const createUploadRoutes = require("../../presentation/routes/UploadRoutes");
-// Temporariamente comentados para focar no login
-// const ObserverFactory = require("./ObserverFactory");
-// const FacadeFactory = require("./FacadeFactory");
+// Factories removidos na limpeza - não utilizados
 const AdapterFactory = require("./AdapterFactory");
-// const StrategyFactory = require("./StrategyFactory");
-// const SingletonFactory = require("./SingletonFactory");
 const BridgeFactory = require("./BridgeFactory");
-// const DecoratorFactory = require("./DecoratorFactory");
 
 /**
  * Factory principal da aplicação seguindo o Factory Pattern
@@ -27,12 +23,7 @@ class AppFactory {
     
     // Cache de componentes criados
     this.eventManager = null;
-    this.facades = null;
-    this.adapters = null;
-    this.strategies = null;
-    this.singletons = null;
     this.bridges = null;
-    this.decorators = null;
     
     // Flag para indicar se foi inicializado
     this.initialized = false;
@@ -50,16 +41,8 @@ class AppFactory {
 
     console.log('[APP FACTORY] Inicializando AppFactory...');
     
-    // Configura os sub-factories
-    const environment = process.env.NODE_ENV || 'development';
-    const databaseStrategy = process.env.DATABASE_STRATEGY || 'prisma'; // 'prisma' | 'mongodb'
-    this.repositoryFactory.configure({
-      environment,
-      databaseStrategy
-    });
-
-    // Cria repositories primeiro
-    const repositories = await this.repositoryFactory.createAllRepositories();
+    // Inicializa repositories MongoDB
+    const repositories = await this.repositoryFactory.initialize();
     
     // Registra dependências no ServiceFactory
     this.serviceFactory.registerDependencies(repositories);
@@ -181,12 +164,7 @@ class AppFactory {
       repositories: this.repositoryFactory.getFactoryState(),
       services: this.serviceFactory.getFactoryState(),
       hasEventManager: !!this.eventManager,
-      hasFacades: !!this.facades,
-      hasAdapters: !!this.adapters,
-      hasStrategies: !!this.strategies,
-      hasSingletons: !!this.singletons,
-      hasBridges: !!this.bridges,
-      hasDecorators: !!this.decorators
+      hasBridges: !!this.bridges
     };
   }
 
@@ -207,74 +185,8 @@ class AppFactory {
     return this.eventManager;
   }
 
-  async createFacades() {
-    if (!this.facades) {
-      // Temporariamente desabilitado
-      console.log('[AppFactory] Facades temporariamente desabilitados');
-      this.facades = {};
-    }
-    return this.facades;
-  }
-
-  async createAdapters() {
-    if (!this.adapters) {
-      // Temporariamente desabilitado
-      console.log('[AppFactory] Adapters temporariamente desabilitados');
-      this.adapters = {};
-    }
-    return this.adapters;
-  }
-
-  async createStrategies() {
-    if (!this.strategies) {
-      // Temporariamente desabilitado
-      console.log('[AppFactory] Strategies temporariamente desabilitados');
-      this.strategies = {};
-    }
-    return this.strategies;
-  }
-
-  getFacades() {
-    return this.facades;
-  }
-
-  async createSingletons() {
-    if (!this.singletons) {
-      // Temporariamente desabilitado
-      console.log('[AppFactory] Singletons temporariamente desabilitados');
-      this.singletons = {};
-    }
-    return this.singletons;
-  }
-
-  getSingletons() {
-    return this.singletons;
-  }
-
-  async createBridges() {
-    if (!this.bridges) {
-      // Temporariamente desabilitado
-      console.log('[AppFactory] Bridges temporariamente desabilitados');
-      this.bridges = {};
-    }
-    return this.bridges;
-  }
-
   getBridges() {
     return this.bridges;
-  }
-
-  async createDecorators() {
-    if (!this.decorators) {
-      // Temporariamente desabilitado
-      console.log('[AppFactory] Decorators temporariamente desabilitados');
-      this.decorators = {};
-    }
-    return this.decorators;
-  }
-
-  getDecorators() {
-    return this.decorators;
   }
 
   /**
@@ -285,12 +197,7 @@ class AppFactory {
     this.repositoryFactory.clearRepositories();
     this.serviceFactory.clearServices();
     this.eventManager = null;
-    this.facades = null;
-    this.adapters = null;
-    this.strategies = null;
-    this.singletons = null;
     this.bridges = null;
-    this.decorators = null;
     this.initialized = false;
   }
 }

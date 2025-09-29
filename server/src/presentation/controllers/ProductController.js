@@ -1,5 +1,5 @@
 const WhatsAppUtils = require("../../infra/adapters/WhatsAppUtils");
-const Validators = require("../../domain/validators/validators");
+// Validators removidos na limpeza - usando validação direta
 
 class ProductController {
   constructor(productService) {
@@ -11,13 +11,11 @@ class ProductController {
       const productData = req.body;
       const organizationId = req.user.id;
 
-      // Validate product data
-      const validation = Validators.validateProduct(productData);
-      if (!validation.isValid) {
+      // Validação básica direta
+      if (!productData.name || !productData.price || !productData.description) {
         return res.status(400).json({
           success: false,
-          message: "Validation failed",
-          errors: validation.errors,
+          message: "Nome, preço e descrição são obrigatórios",
         });
       }
 
@@ -42,16 +40,14 @@ class ProductController {
   updateProduct = async (req, res) => {
     try {
       const { id } = req.params;
-      const productData = Validators.sanitizeObject(req.body);
+      const productData = req.body;
       const organizationId = req.user.id;
 
-      // Validate product data
-      const validation = Validators.validateProduct(productData);
-      if (!validation.isValid) {
+      // Validação básica direta
+      if (productData.name === '' || productData.price < 0) {
         return res.status(400).json({
           success: false,
-          message: "Validation failed",
-          errors: validation.errors,
+          message: "Dados de produto inválidos",
         });
       }
 

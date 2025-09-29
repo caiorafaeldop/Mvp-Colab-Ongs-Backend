@@ -1,9 +1,9 @@
-const IProductService = require("../../domain/contracts/ProductServiceContract");
+// Interface removida na limpeza
 const Product = require("../../domain/entities/Product");
 
-class ProductService extends IProductService {
+class ProductService {
   constructor(productRepository, userRepository) {
-    super();
+    // super() removido na limpeza
     this.productRepository = productRepository;
     this.userRepository = userRepository;
   }

@@ -13,6 +13,7 @@ class PrismaService extends ISingleton {
     this.isConnected = false;
     this.connectionAttempts = 0;
     this.maxRetries = 3;
+    this.fallbackMode = false;
   }
 
   /**
@@ -37,6 +38,14 @@ class PrismaService extends ISingleton {
       if (this.prisma && this.isConnected) {
         console.log('[PrismaService] Usando cliente existente');
         return this.prisma;
+      }
+
+      // Verifica se DATABASE_URL está definida
+      if (!process.env.DATABASE_URL) {
+        console.warn('[PrismaService] DATABASE_URL não definida - Prisma desabilitado');
+        this.fallbackMode = true;
+        this.isConnected = false;
+        return null;
       }
 
       console.log('[PrismaService] Inicializando cliente Prisma...');
@@ -76,6 +85,14 @@ class PrismaService extends ISingleton {
         return;
       }
 
+      // Verifica se DATABASE_URL está definida
+      if (!process.env.DATABASE_URL) {
+        console.warn('[PrismaService] DATABASE_URL não definida - modo fallback ativado');
+        this.fallbackMode = true;
+        this.isConnected = false;
+        return;
+      }
+
       this.connectionAttempts++;
       console.log(`[PrismaService] Tentativa de conexão ${this.connectionAttempts}/${this.maxRetries}`);
 
@@ -87,6 +104,7 @@ class PrismaService extends ISingleton {
       
       this.isConnected = true;
       this.connectionAttempts = 0;
+      this.fallbackMode = false;
       
       console.log('[PrismaService] Conectado ao banco de dados via Prisma');
       
@@ -96,6 +114,7 @@ class PrismaService extends ISingleton {
     } catch (error) {
       console.error('[PrismaService] Erro na conexão:', error.message);
       this.isConnected = false;
+      this.fallbackMode = true;
 
       if (this.connectionAttempts < this.maxRetries) {
         console.log(`[PrismaService] Tentando reconectar em 2 segundos...`);

@@ -3,19 +3,99 @@
  * Usa o Prisma que já está configurado no projeto
  */
 
-const IDonationRepository = require('../../domain/repositories/IDonationRepository');
-const { PrismaClient } = require('@prisma/client');
+// Interface removida na limpeza
+const PrismaService = require('../singletons/PrismaService');
 
-class PrismaDonationRepository extends IDonationRepository {
+class PrismaDonationRepository  {
   constructor() {
-    super();
-    this.prisma = new PrismaClient();
+    // super() removido na limpeza
+    this.prismaService = PrismaService.getInstance();
     console.log('[PRISMA DONATION REPOSITORY] Inicializado com sucesso');
+  }
+
+  async findByOrganizationId(organizationId, filters = {}) {
+    try {
+      const prisma = this._getPrismaClient();
+      const page = Number(filters.page) || 1;
+      const limit = Number(filters.limit) || 20;
+      const skip = (page - 1) * limit;
+
+      const where = { organizationId };
+      if (filters.status) where.paymentStatus = filters.status;
+
+      const [donations, total] = await Promise.all([
+        prisma.donation.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        prisma.donation.count({ where })
+      ]);
+
+      return {
+        data: donations,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+      };
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar por organização:', error);
+      throw error;
+    }
+  }
+
+  async findByStatus(status) {
+    try {
+      const prisma = this._getPrismaClient();
+      return await prisma.donation.findMany({ where: { paymentStatus: status }, orderBy: { createdAt: 'desc' } });
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar por status:', error);
+      throw error;
+    }
+  }
+
+  async findByType(type) {
+    try {
+      const prisma = this._getPrismaClient();
+      return await prisma.donation.findMany({ where: { type }, orderBy: { createdAt: 'desc' } });
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar por tipo:', error);
+      throw error;
+    }
+  }
+
+  async findByDonorEmail(donorEmail) {
+    try {
+      const prisma = this._getPrismaClient();
+      return await prisma.donation.findMany({ where: { donorEmail }, orderBy: { createdAt: 'desc' } });
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar por email do doador:', error);
+      throw error;
+    }
+  }
+
+  async delete(id) {
+    try {
+      const prisma = this._getPrismaClient();
+      await prisma.donation.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      if (error.code === 'P2025') return false;
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao remover doação:', error);
+      throw error;
+    }
+  }
+
+  _getPrismaClient() {
+    if (!this.prismaService.isReady()) {
+      throw new Error('PrismaService não está inicializado. Chame initialize() primeiro.');
+    }
+    return this.prismaService.getClient();
   }
 
   async create(donationData) {
     try {
-      const donation = await this.prisma.donation.create({
+      const prisma = this._getPrismaClient();
+      const donation = await prisma.donation.create({
         data: {
           amount: donationData.amount,
           currency: donationData.currency || 'BRL',
@@ -51,7 +131,8 @@ class PrismaDonationRepository extends IDonationRepository {
 
   async findById(id) {
     try {
-      const donation = await this.prisma.donation.findUnique({
+      const prisma = this._getPrismaClient();
+      const donation = await prisma.donation.findUnique({
         where: { id }
       });
       
@@ -65,7 +146,8 @@ class PrismaDonationRepository extends IDonationRepository {
 
   async findByMercadoPagoId(mercadoPagoId) {
     try {
-      const donation = await this.prisma.donation.findFirst({
+      const prisma = this._getPrismaClient();
+      const donation = await prisma.donation.findFirst({
         where: { mercadoPagoId }
       });
       
@@ -73,6 +155,39 @@ class PrismaDonationRepository extends IDonationRepository {
 
     } catch (error) {
       console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar por Mercado Pago ID:', error);
+      throw error;
+    }
+  }
+
+  async findBySubscriptionId(subscriptionId) {
+    try {
+      const prisma = this._getPrismaClient();
+      const donation = await prisma.donation.findFirst({ where: { subscriptionId } });
+      return donation;
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao buscar por Subscription ID:', error);
+      throw error;
+    }
+  }
+
+  async existsBySubscriptionId(subscriptionId) {
+    try {
+      const prisma = this._getPrismaClient();
+      const existing = await prisma.donation.findFirst({ where: { subscriptionId } });
+      return !!existing;
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao verificar existência por Subscription ID:', error);
+      throw error;
+    }
+  }
+
+  async existsByMercadoPagoId(mercadoPagoId) {
+    try {
+      const prisma = this._getPrismaClient();
+      const existing = await prisma.donation.findFirst({ where: { mercadoPagoId } });
+      return !!existing;
+    } catch (error) {
+      console.error('[PRISMA DONATION REPOSITORY] Erro ao verificar existência por MP ID:', error);
       throw error;
     }
   }
@@ -92,8 +207,9 @@ class PrismaDonationRepository extends IDonationRepository {
         paymentStatus: status
       };
 
+      const prisma = this._getPrismaClient();
       const [donations, total] = await Promise.all([
-        this.prisma.donation.findMany({
+        prisma.donation.findMany({
           where,
           orderBy: { createdAt: 'desc' },
           skip,
@@ -107,7 +223,7 @@ class PrismaDonationRepository extends IDonationRepository {
             createdAt: true
           }
         }),
-        this.prisma.donation.count({ where })
+        prisma.donation.count({ where })
       ]);
 
       return {
@@ -128,7 +244,8 @@ class PrismaDonationRepository extends IDonationRepository {
 
   async update(id, updateData) {
     try {
-      const donation = await this.prisma.donation.update({
+      const prisma = this._getPrismaClient();
+      const donation = await prisma.donation.update({
         where: { id },
         data: updateData
       });
@@ -152,13 +269,14 @@ class PrismaDonationRepository extends IDonationRepository {
 
       const skip = (page - 1) * limit;
 
+      const prisma = this._getPrismaClient();
       const [donations, total] = await Promise.all([
-        this.prisma.donation.findMany({
+        prisma.donation.findMany({
           orderBy: { [sortBy]: sortOrder },
           skip,
           take: limit
         }),
-        this.prisma.donation.count()
+        prisma.donation.count()
       ]);
 
       return {
@@ -189,7 +307,8 @@ class PrismaDonationRepository extends IDonationRepository {
         where.paymentStatus = filters.status;
       }
 
-      return await this.prisma.donation.count({ where });
+      const prisma = this._getPrismaClient();
+      return await prisma.donation.count({ where });
 
     } catch (error) {
       console.error('[PRISMA DONATION REPOSITORY] Erro ao contar doações:', error);
@@ -197,9 +316,10 @@ class PrismaDonationRepository extends IDonationRepository {
     }
   }
 
-  async getGeneralStatistics(dateRange = {}) {
+  async getStatistics(organizationId, dateRange = {}) {
     try {
       const where = {};
+      if (organizationId) where.organizationId = organizationId;
       
       if (dateRange.startDate || dateRange.endDate) {
         where.createdAt = {};
@@ -211,6 +331,7 @@ class PrismaDonationRepository extends IDonationRepository {
         }
       }
 
+      const prisma = this._getPrismaClient();
       const [
         totalDonations,
         totalAmount,
@@ -220,17 +341,17 @@ class PrismaDonationRepository extends IDonationRepository {
         pendingDonations,
         anonymousDonations
       ] = await Promise.all([
-        this.prisma.donation.count({ where }),
-        this.prisma.donation.aggregate({
+        prisma.donation.count({ where }),
+        prisma.donation.aggregate({
           where: { ...where, paymentStatus: 'approved' },
           _sum: { amount: true },
           _avg: { amount: true }
         }),
-        this.prisma.donation.count({ where: { ...where, type: 'single' } }),
-        this.prisma.donation.count({ where: { ...where, type: 'recurring' } }),
-        this.prisma.donation.count({ where: { ...where, paymentStatus: 'approved' } }),
-        this.prisma.donation.count({ where: { ...where, paymentStatus: 'pending' } }),
-        this.prisma.donation.count({ where: { ...where, isAnonymous: true } })
+        prisma.donation.count({ where: { ...where, type: 'single' } }),
+        prisma.donation.count({ where: { ...where, type: 'recurring' } }),
+        prisma.donation.count({ where: { ...where, paymentStatus: 'approved' } }),
+        prisma.donation.count({ where: { ...where, paymentStatus: 'pending' } }),
+        prisma.donation.count({ where: { ...where, isAnonymous: true } })
       ]);
 
       return {

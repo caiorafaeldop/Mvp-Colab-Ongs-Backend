@@ -32,12 +32,30 @@ class IDonationRepository {
   }
 
   /**
+   * Verifica existência por ID do Mercado Pago
+   * @param {string} mercadoPagoId
+   * @returns {Promise<boolean>} Se existe
+   */
+  async existsByMercadoPagoId(mercadoPagoId) {
+    throw new Error('existsByMercadoPagoId method must be implemented');
+  }
+
+  /**
    * Busca doação por ID da assinatura
    * @param {string} subscriptionId - ID da assinatura no Mercado Pago
    * @returns {Promise<Object|null>} Doação encontrada
    */
   async findBySubscriptionId(subscriptionId) {
     throw new Error('findBySubscriptionId method must be implemented');
+  }
+
+  /**
+   * Verifica existência por ID de assinatura
+   * @param {string} subscriptionId
+   * @returns {Promise<boolean>} Se existe
+   */
+  async existsBySubscriptionId(subscriptionId) {
+    throw new Error('existsBySubscriptionId method must be implemented');
   }
 
   /**

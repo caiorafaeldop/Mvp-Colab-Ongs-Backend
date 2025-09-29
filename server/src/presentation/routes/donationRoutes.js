@@ -1,6 +1,8 @@
 const express = require("express");
 const DonationController = require("../controllers/DonationController");
 const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddleware");
+const { validateBody } = require("../middleware/validationMiddleware");
+const { singleDonationSchema, recurringDonationSchema } = require("../../application/validators/donationSchemas");
 
 /**
  * @swagger
@@ -221,10 +223,10 @@ const createDonationRoutes = (donationService, authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/single", donationController.createSingleDonation);
+  router.post("/single", validateBody(singleDonationSchema), donationController.createSingleDonation);
   
   // Alias para compatibilidade com testes existentes
-  router.post("/donate", donationController.createSingleDonation);
+  router.post("/donate", validateBody(singleDonationSchema), donationController.createSingleDonation);
 
   /**
    * @swagger
@@ -281,7 +283,7 @@ const createDonationRoutes = (donationService, authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/recurring", donationController.createRecurringDonation);
+  router.post("/recurring", validateBody(recurringDonationSchema), donationController.createRecurringDonation);
 
   /**
    * @swagger

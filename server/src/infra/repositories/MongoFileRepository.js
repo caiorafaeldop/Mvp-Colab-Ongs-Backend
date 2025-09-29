@@ -1,4 +1,4 @@
-const IFileRepository = require("../../domain/contracts/FileRepositoryContract");
+// Interface removida na limpeza
 const File = require("../../domain/entities/File");
 const mongoose = require("mongoose");
 
@@ -20,7 +20,7 @@ const FileSchema = new mongoose.Schema({
 
 const FileModel = mongoose.model('File', FileSchema);
 
-class MongoFileRepository extends IFileRepository {
+class MongoFileRepository  {
   async save(file) {
     try {
       const fileData = {

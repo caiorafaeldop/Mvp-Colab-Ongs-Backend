@@ -1,11 +1,11 @@
-const IStorageAdapter = require('../../domain/contracts/StorageAdapterContract');
+const StorageAdapterContract = require('../../domain/contracts/StorageAdapterContract');
 const cloudinary = require('../../main/config/cloudinary');
 
 /**
  * Adapter para Cloudinary que implementa IStorageAdapter
  * Adapta as operações do Cloudinary para a interface padronizada do domínio
  */
-class CloudinaryAdapter extends IStorageAdapter {
+class CloudinaryAdapter extends StorageAdapterContract {
   constructor() {
     super();
     this.cloudinary = cloudinary;

@@ -1,4 +1,3 @@
-const ICollaborationRepository = require("../../domain/contracts/CollaborationRepositoryContract");
 const Collaboration = require("../../domain/entities/Collaboration");
 const mongoose = require("mongoose");
 
@@ -25,7 +24,7 @@ const CollaborationSchema = new mongoose.Schema({
 
 const CollaborationModel = mongoose.model('Collaboration', CollaborationSchema);
 
-class MongoCollaborationRepository extends ICollaborationRepository {
+class MongoCollaborationRepository {
   async save(collaboration) {
     try {
       const collaborationData = {

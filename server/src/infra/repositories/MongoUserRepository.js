@@ -1,4 +1,4 @@
-const IUserRepository = require("../../domain/repositories/IUserRepository");
+// Interface removida na limpeza
 const UserModel = require("../database/models/UserModel");
 const User = require("../../domain/entities/User");
 
@@ -6,7 +6,7 @@ const User = require("../../domain/entities/User");
  * Implementação MongoDB do Repository Pattern para Usuários
  * Segue os princípios SOLID e Clean Architecture
  */
-class MongoUserRepository extends IUserRepository {
+class MongoUserRepository  {
   /**
    * Salva um usuário no banco de dados
    * @param {User} user - Entidade de usuário do domínio

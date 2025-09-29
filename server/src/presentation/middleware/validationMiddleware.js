@@ -76,6 +76,38 @@ const validateDTO = (DTOClass, source = 'body') => {
 };
 
 /**
+ * Middleware para validação de body com Zod
+ * @param {Object} schema - Schema Zod para validação
+ * @returns {Function} Middleware do Express
+ */
+const validateBody = (schema) => {
+  return (req, res, next) => {
+    const requestLogger = req.logger || logger;
+    try {
+      const validated = schema.parse(req.body);
+      req.validatedBody = validated;
+      requestLogger.debug('Body validado', { middleware: 'validateBody' });
+      next();
+    } catch (error) {
+      requestLogger.warn('Erro na validação de body', { middleware: 'validateBody', error: error.message });
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          message: 'Body inválido',
+          error: 'BODY_VALIDATION_ERROR',
+          details: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message,
+            code: err.code
+          }))
+        });
+      }
+      return res.status(400).json({ success: false, message: 'Erro na validação do body' });
+    }
+  };
+};
+
+/**
  * Middleware de validação segura (não interrompe o fluxo)
  * @param {Class} DTOClass - Classe do DTO para validação
  * @param {string} source - Fonte dos dados
@@ -302,5 +334,6 @@ module.exports = {
   safeValidateDTO,
   validateParams,
   validateQuery,
+  validateBody,
   validateMultiple
 };

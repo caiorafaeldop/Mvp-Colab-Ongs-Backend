@@ -1,4 +1,4 @@
-const INotificationRepository = require("../../domain/contracts/NotificationRepositoryContract");
+// Interface removida na limpeza
 const Notification = require("../../domain/entities/Notification");
 const mongoose = require("mongoose");
 
@@ -28,7 +28,7 @@ const NotificationSchema = new mongoose.Schema({
 
 const NotificationModel = mongoose.model('Notification', NotificationSchema);
 
-class MongoNotificationRepository extends INotificationRepository {
+class MongoNotificationRepository  {
   async save(notification) {
     try {
       const notificationData = {

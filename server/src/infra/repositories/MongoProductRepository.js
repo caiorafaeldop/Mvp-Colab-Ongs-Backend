@@ -1,8 +1,8 @@
-const IProductRepository = require("../../domain/contracts/ProductRepositoryContract");
+// Interface removida na limpeza
 const ProductModel = require("../database/models/ProductModel");
 const Product = require("../../domain/entities/Product");
 
-class MongoProductRepository extends IProductRepository {
+class MongoProductRepository  {
   async save(product) {
     try {
       const productData = {

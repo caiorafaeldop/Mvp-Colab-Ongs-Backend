@@ -1,6 +1,6 @@
 const CloudinaryAdapter = require('../../infra/adapters/CloudinaryAdapter');
-const OpenAIAdapter = require('../../infra/adapters/OpenAIAdapter');
-const AnthropicAdapter = require('../../infra/adapters/AnthropicAdapter');
+const SimpleMercadoPagoAdapter = require('../../infra/adapters/SimpleMercadoPagoAdapter');
+const WhatsAppUtils = require('../../infra/adapters/WhatsAppUtils');
 
 /**
  * Factory para criação de adapters
@@ -8,18 +8,16 @@ const AnthropicAdapter = require('../../infra/adapters/AnthropicAdapter');
  */
 class AdapterFactory {
   /**
-   * Cria um adapter de LLM baseado no provedor
-   * @param {string} provider - Nome do provedor ('openai' ou 'anthropic')
-   * @returns {ILLMAdapter} Instância do adapter
+   * Cria um adapter de pagamento
+   * @param {string} provider - Nome do provedor (padrão: 'mercadopago')
+   * @returns {PaymentAdapter} Instância do adapter
    */
-  static createLLMAdapter(provider) {
+  static createPaymentAdapter(provider = 'mercadopago') {
     switch (provider.toLowerCase()) {
-      case 'openai':
-        return new OpenAIAdapter();
-      case 'anthropic':
-        return new AnthropicAdapter();
+      case 'mercadopago':
+        return new SimpleMercadoPagoAdapter();
       default:
-        throw new Error(`Unsupported LLM provider: ${provider}`);
+        throw new Error(`Unsupported payment provider: ${provider}`);
     }
   }
 
@@ -38,12 +36,11 @@ class AdapterFactory {
   }
 
   /**
-   * Cria um adapter de LLM baseado em variável de ambiente
-   * @returns {ILLMAdapter} Instância do adapter configurado
+   * Cria utils do WhatsApp
+   * @returns {WhatsAppUtils} Instância dos utils
    */
-  static createDefaultLLMAdapter() {
-    const defaultProvider = process.env.DEFAULT_LLM_PROVIDER || 'openai';
-    return this.createLLMAdapter(defaultProvider);
+  static createWhatsAppUtils() {
+    return new WhatsAppUtils();
   }
 
   /**
