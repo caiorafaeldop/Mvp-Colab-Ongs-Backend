@@ -168,14 +168,21 @@ class SimpleJwtAuthService extends IAuthService {
         throw new Error('User already exists with this email');
       }
 
-      // Criar usuário
-      const user = new User(
-        userData.name.trim(),
-        userData.email.toLowerCase().trim(),
-        userData.password,
-        userData.userType || 'common',
-        userData.phone?.trim()
-      );
+      // Criar usuário (usar fábricas para manter ordem correta dos campos)
+      const lowerEmail = userData.email.toLowerCase().trim();
+      const user = (userData.userType === 'organization')
+        ? User.createOrganizationUser(
+            userData.name.trim(),
+            lowerEmail,
+            userData.password,
+            userData.phone?.trim()
+          )
+        : User.createCommonUser(
+            userData.name.trim(),
+            lowerEmail,
+            userData.password,
+            userData.phone?.trim()
+          );
 
       // Hash da senha
       user.password = await this.hashPassword(user.password);

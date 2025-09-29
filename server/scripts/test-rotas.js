@@ -127,15 +127,15 @@ async function testAuthentication() {
   };
   
 //   // Registro
-//   const register = await makeRequest('POST', '/api/auth/register', testUser);
-//   const registerSuccess = logTest('Registro', register);
+  const register = await makeRequest('POST', '/api/auth/register', testUser);
+  const registerSuccess = logTest('Registro', register);
   
-//   if (registerSuccess && register.data.user) {
-//     userId = register.data.user.id;
-//     if (register.data.tokens) {
-//       authToken = register.data.tokens.accessToken;
-//     }
-//   }
+  if (registerSuccess && register.data.user) {
+    userId = register.data.user.id;
+    if (register.data.tokens) {
+      authToken = register.data.tokens.accessToken;
+    }
+  }
   
   // Login (se registro falhou, tentar usuário existente)
   if (true) {

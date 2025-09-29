@@ -32,14 +32,13 @@ class RegisterUserUseCase {
           email: createUserDTO.getEmail(),
           useCase: 'RegisterUserUseCase'
         });
-        
         throw new Error('Email já está em uso');
       }
 
       // 2. Hash da senha
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(createUserDTO.getPassword(), saltRounds);
-
+  
       // 3. Preparar dados para persistência
       const userData = {
         ...createUserDTO.toPlainObject(),
@@ -49,10 +48,10 @@ class RegisterUserUseCase {
         isActive: true,
         emailVerified: false
       };
-
-      // 4. Criar usuário no banco
-      const createdUser = await this.userRepository.create(userData);
-
+  
+      // 4. Salvar usuário no banco (Repository Pattern)
+      const createdUser = await this.userRepository.save(userData);
+  
       // 5. Preparar resposta (sem dados sensíveis)
       const userResponse = {
         id: createdUser.id || createdUser._id,
@@ -107,7 +106,7 @@ class RegisterUserUseCase {
    * @returns {boolean} True se válido
    */
   isValid() {
-    return this.userRepository && typeof this.userRepository.create === 'function';
+    return this.userRepository && typeof this.userRepository.save === 'function';
   }
 
   /**

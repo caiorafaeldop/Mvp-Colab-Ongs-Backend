@@ -30,14 +30,23 @@ class EnhancedJwtAuthService extends IAuthService {
         throw new Error("User already exists with this email");
       }
 
-      // CHAIN STEP 3: Criar entidade de usuário baseada no tipo
+      // CHAIN STEP 3: Criar entidade de usuário baseada no tipo (usar fábrica correta)
       let user;
       if (sanitizedData.userType === "organization") {
         console.log("[ENHANCED JWT AUTH] Criando usuário organizacional");
-        user = new User(sanitizedData.name, sanitizedData.email, sanitizedData.password, "organization", sanitizedData.phone);
+        user = User.createOrganizationUser(
+          sanitizedData.name,
+          sanitizedData.email,
+          sanitizedData.password,
+          sanitizedData.phone
+        );
       } else {
-        console.log("[ENHANCED JWT AUTH] Criando usuário comum");
-        user = new User(sanitizedData.name, sanitizedData.email, sanitizedData.password, "common", sanitizedData.phone);
+        user = User.createCommonUser(
+          sanitizedData.name,
+          sanitizedData.email,
+          sanitizedData.password,
+          sanitizedData.phone
+        );
       }
 
       // CHAIN STEP 4: Hash da senha
@@ -46,13 +55,12 @@ class EnhancedJwtAuthService extends IAuthService {
 
       // CHAIN STEP 5: Salvar usuário
       console.log("[ENHANCED JWT AUTH] Salvando usuário no banco");
-      const savedUser = await this.userRepository.create(user);
+      const savedUser = await this.userRepository.save(user);
       console.log("[ENHANCED JWT AUTH] Usuário salvo com sucesso:", savedUser.id);
 
       // CHAIN STEP 6: Gerar tokens (final da cadeia)
       const tokens = await this.generateTokenPair(savedUser);
       console.log("[REGISTER] Tokens gerados");
-
       return {
         user: {
           id: savedUser.id,
