@@ -35,23 +35,29 @@ class CloudinaryStorageBridge extends IStorageBridge {
 
       const result = await this.adapter.uploadFile(file, cloudinaryOptions);
 
-      console.log(`[CloudinaryStorageBridge] Upload concluído: ${result.secure_url}`);
+      if (!result || result.success === false) {
+        const msg = result?.error || 'Adapter upload failed';
+        throw new Error(msg);
+      }
+
+      const d = result.data;
+      console.log(`[CloudinaryStorageBridge] Upload concluído: ${d.url}`);
 
       return {
         success: true,
-        fileId: result.public_id,
-        url: result.secure_url,
+        fileId: d.id,
+        url: d.url,
         originalName: file.originalname,
-        size: file.size,
-        format: result.format,
-        width: result.width,
-        height: result.height,
+        size: d.size ?? file.size,
+        format: d.format,
+        width: d.width,
+        height: d.height,
         provider: this.providerName,
         metadata: {
-          bytes: result.bytes,
-          etag: result.etag,
-          version: result.version,
-          createdAt: result.created_at
+          bytes: d.size,
+          folder: d.folder,
+          requestId: result.metadata?.requestId,
+          timestamp: result.metadata?.timestamp
         }
       };
 
@@ -72,13 +78,18 @@ class CloudinaryStorageBridge extends IStorageBridge {
 
       const result = await this.adapter.deleteFile(fileId);
 
+      if (!result || result.success === false) {
+        const msg = result?.error || 'Adapter delete failed';
+        throw new Error(msg);
+      }
+
       console.log(`[CloudinaryStorageBridge] Arquivo removido: ${fileId}`);
 
       return {
         success: true,
         fileId: fileId,
         provider: this.providerName,
-        result: result.result
+        result: result.data?.deleted === true ? 'ok' : 'not_found'
       };
 
     } catch (error) {
@@ -95,29 +106,7 @@ class CloudinaryStorageBridge extends IStorageBridge {
    */
   async getFileUrl(fileId, options = {}) {
     try {
-      const transformations = [];
-
-      if (options.width || options.height) {
-        transformations.push({
-          width: options.width,
-          height: options.height,
-          crop: options.crop || 'fill'
-        });
-      }
-
-      if (options.quality) {
-        transformations.push({ quality: options.quality });
-      }
-
-      if (options.format) {
-        transformations.push({ format: options.format });
-      }
-
-      const url = this.adapter.cloudinary.url(fileId, {
-        transformation: transformations,
-        secure: true
-      });
-
+      const url = await this.adapter.getFileUrl(fileId, options);
       return url;
 
     } catch (error) {
@@ -135,38 +124,28 @@ class CloudinaryStorageBridge extends IStorageBridge {
     try {
       console.log('[CloudinaryStorageBridge] Listando arquivos...');
 
-      const searchOptions = {
-        resource_type: filters.resourceType || 'image',
-        type: filters.type || 'upload',
-        max_results: filters.limit || 50
-      };
+      const result = await this.adapter.listFiles({
+        resourceType: filters.resourceType,
+        maxResults: filters.limit,
+        cloudinaryFilters: {},
+        folder: filters.folder
+      });
 
-      if (filters.folder) {
-        searchOptions.prefix = filters.folder;
+      if (!result || result.success === false) {
+        const msg = result?.error || 'Adapter list files failed';
+        throw new Error(msg);
       }
 
-      if (filters.tags) {
-        searchOptions.tags = Array.isArray(filters.tags) ? filters.tags : [filters.tags];
-      }
-
-      const result = await this.adapter.cloudinary.search
-        .expression(this.buildSearchExpression(filters))
-        .with_field('context')
-        .with_field('tags')
-        .max_results(searchOptions.max_results)
-        .execute();
-
-      const files = result.resources.map(resource => ({
-        fileId: resource.public_id,
-        url: resource.secure_url,
+      const files = result.data.files.map(resource => ({
+        fileId: resource.id,
+        url: resource.url,
         format: resource.format,
         width: resource.width,
         height: resource.height,
-        size: resource.bytes,
-        createdAt: resource.created_at,
+        size: resource.size,
+        createdAt: resource.createdAt,
         provider: this.providerName,
-        tags: resource.tags || [],
-        context: resource.context || {}
+        folder: resource.folder
       }));
 
       console.log(`[CloudinaryStorageBridge] ${files.length} arquivos encontrados`);

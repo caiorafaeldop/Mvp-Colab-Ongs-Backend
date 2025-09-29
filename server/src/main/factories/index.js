@@ -1,17 +1,17 @@
-const RepositoryFactory = require("./RepositoryFactory");
+const RepositoryFactory = require("./PrismaRepositoryFactory");
 const ServiceFactory = require("./ServiceFactory");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createSimpleAuthRoutes = require("../../presentation/routes/simpleAuthRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
 const createDonationRoutes = require("../../presentation/routes/donationRoutes");
-const uploadRoutes = require("../../presentation/routes/UploadRoutes");
+const createUploadRoutes = require("../../presentation/routes/UploadRoutes");
 // Temporariamente comentados para focar no login
 // const ObserverFactory = require("./ObserverFactory");
 // const FacadeFactory = require("./FacadeFactory");
-// const AdapterFactory = require("./AdapterFactory");
+const AdapterFactory = require("./AdapterFactory");
 // const StrategyFactory = require("./StrategyFactory");
 // const SingletonFactory = require("./SingletonFactory");
-// const BridgeFactory = require("./BridgeFactory");
+const BridgeFactory = require("./BridgeFactory");
 // const DecoratorFactory = require("./DecoratorFactory");
 
 /**
@@ -51,16 +51,25 @@ class AppFactory {
     console.log('[APP FACTORY] Inicializando AppFactory...');
     
     // Configura os sub-factories
+    const environment = process.env.NODE_ENV || 'development';
+    const databaseStrategy = process.env.DATABASE_STRATEGY || 'prisma'; // 'prisma' | 'mongodb'
     this.repositoryFactory.configure({
-      environment: process.env.NODE_ENV || 'development',
-      database: 'mongodb'
+      environment,
+      databaseStrategy
     });
 
     // Cria repositories primeiro
-    const repositories = this.repositoryFactory.createAllRepositories();
+    const repositories = await this.repositoryFactory.createAllRepositories();
     
     // Registra dependências no ServiceFactory
     this.serviceFactory.registerDependencies(repositories);
+
+    // Configurar bridges de storage/notification
+    const storageAdapter = AdapterFactory.createDefaultStorageAdapter();
+    this.bridges = await BridgeFactory.initialize({
+      cloudinaryAdapter: storageAdapter,
+      localStoragePath: process.env.LOCAL_UPLOAD_PATH || './uploads'
+    });
     
     this.initialized = true;
     console.log('[APP FACTORY] AppFactory inicializado com sucesso');
@@ -150,9 +159,17 @@ class AppFactory {
   }
 
   createUploadRoutes() {
-    // Upload routes não precisam de services específicos por enquanto
-    // Usa diretamente o Cloudinary configurado
-    return uploadRoutes;
+    // Seleciona bridge conforme preferência/env
+    const preference = (process.env.STORAGE_BRIDGE || 'cloudinary').toLowerCase();
+    const storageBridge = preference === 'local' 
+      ? this.bridges?.storage?.local 
+      : this.bridges?.storage?.cloudinary;
+
+    if (!storageBridge) {
+      throw new Error('Storage bridge is not initialized');
+    }
+
+    return createUploadRoutes(storageBridge);
   }
 
   /**

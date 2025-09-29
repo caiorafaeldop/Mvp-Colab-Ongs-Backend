@@ -1,5 +1,5 @@
-const IStorageAdapter = require('../../domain/adapters/IStorageAdapter');
-const cloudinary = require('../../../config/cloudinary');
+const IStorageAdapter = require('../../domain/contracts/StorageAdapterContract');
+const cloudinary = require('../../main/config/cloudinary');
 
 /**
  * Adapter para Cloudinary que implementa IStorageAdapter
@@ -26,14 +26,25 @@ class CloudinaryAdapter extends IStorageAdapter {
       };
 
       let result;
-      if (Buffer.isBuffer(file)) {
+      if (file && typeof file === 'object' && file.buffer) {
+        // Upload de arquivo Multer (possui buffer, originalname)
+        result = await new Promise((resolve, reject) => {
+          this.cloudinary.uploader.upload_stream(
+            uploadOptions,
+            (error, res) => {
+              if (error) reject(error);
+              else resolve(res);
+            }
+          ).end(file.buffer);
+        });
+      } else if (Buffer.isBuffer(file)) {
         // Upload de buffer
         result = await new Promise((resolve, reject) => {
           this.cloudinary.uploader.upload_stream(
             uploadOptions,
-            (error, result) => {
+            (error, res) => {
               if (error) reject(error);
-              else resolve(result);
+              else resolve(res);
             }
           ).end(file);
         });

@@ -2,6 +2,7 @@
  * SERVICE LAYER - Serviço de gerenciamento de doações
  * Implementa regras de negócio para doações via Mercado Pago
  */
+const PaymentState = require('../../domain/state/PaymentState');
 
 class DonationService {
   constructor(donationRepository, userRepository, paymentAdapter) {
@@ -53,7 +54,7 @@ class DonationService {
         isAnonymous: donationData.isAnonymous || false,
         showInPublicList: donationData.showInPublicList !== false,
         mercadoPagoId: paymentPreference.id,
-        paymentStatus: 'pending',
+        paymentStatus: new PaymentState('pending').toDomain(),
         metadata: {
           externalReference: paymentPreference.externalReference
         }
@@ -117,7 +118,7 @@ class DonationService {
         isAnonymous: donationData.isAnonymous || false,
         showInPublicList: donationData.showInPublicList !== false,
         subscriptionId: subscription.id,
-        paymentStatus: 'pending',
+        paymentStatus: new PaymentState('pending').toDomain(),
         metadata: {
           externalReference: subscription.externalReference
         }
@@ -172,7 +173,7 @@ class DonationService {
       
       if (donation) {
         await this.donationRepository.update(donation.id, {
-          paymentStatus: this.mapMercadoPagoStatus(status),
+          paymentStatus: PaymentState.fromMercadoPago(status).toDomain(),
           updatedAt: new Date()
         });
         
@@ -184,26 +185,7 @@ class DonationService {
     }
   }
 
-  /**
-   * Atualiza status de uma assinatura
-   */
-  async updateSubscriptionStatus(subscriptionId, status) {
-    try {
-      const donation = await this.donationRepository.findBySubscriptionId(subscriptionId);
-      
-      if (donation) {
-        await this.donationRepository.update(donation.id, {
-          paymentStatus: this.mapMercadoPagoStatus(status),
-          updatedAt: new Date()
-        });
-        
-        console.log('[DONATION SERVICE] Status da assinatura atualizado:', donation.id, status);
-      }
-
-    } catch (error) {
-      console.error('[DONATION SERVICE] Erro ao atualizar status da assinatura:', error);
-    }
-  }
+  
 
   /**
    * Lista doações de uma organização
@@ -327,7 +309,6 @@ class DonationService {
       throw new Error('Email do doador inválido');
     }
   }
-
   validateRecurringData(data) {
     const validFrequencies = ['monthly', 'weekly', 'yearly'];
     
@@ -336,20 +317,26 @@ class DonationService {
     }
   }
 
-  mapMercadoPagoStatus(mpStatus) {
-    const statusMap = {
-      'pending': 'pending',
-      'approved': 'approved',
-      'authorized': 'approved',
-      'in_process': 'pending',
-      'in_mediation': 'pending',
-      'rejected': 'rejected',
-      'cancelled': 'cancelled',
-      'refunded': 'refunded',
-      'charged_back': 'charged_back'
-    };
+  async updateSubscriptionStatus(subscriptionId, status) {
+    try {
+      const donation = await this.donationRepository.findBySubscriptionId(subscriptionId);
+      
+      if (donation) {
+        await this.donationRepository.update(donation.id, {
+          paymentStatus: PaymentState.fromMercadoPago(status).toDomain(),
+          updatedAt: new Date()
+        });
+        
+        console.log('[DONATION SERVICE] Status da assinatura atualizado:', donation.id, status);
+      }
 
-    return statusMap[mpStatus] || 'unknown';
+    } catch (error) {
+      console.error('[DONATION SERVICE] Erro ao atualizar status da assinatura:', error);
+    }
+  }
+
+  mapMercadoPagoStatus(mpStatus) {
+    return PaymentState.fromMercadoPago(mpStatus).toDomain();
   }
 }
 

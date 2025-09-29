@@ -12,6 +12,7 @@ const MongoNotificationRepository = require("../../infra/repositories/MongoNotif
 
 // Prisma Service
 const PrismaService = require("../../infra/singletons/PrismaService");
+const PrismaDonationRepository = require("../../infra/repositories/PrismaDonationRepository");
 
 /**
  * Factory para criação de Repositories com suporte a Prisma e MongoDB
@@ -24,6 +25,22 @@ class PrismaRepositoryFactory {
     this.config = new Map();
     this.databaseStrategy = 'prisma'; // 'prisma' ou 'mongodb'
     this.prismaService = null;
+  }
+
+  /**
+   * Cria ou retorna instância existente do DonationRepository
+   * Sempre Prisma (não há implementação MongoDB)
+   * @returns {PrismaDonationRepository}
+   */
+  async createDonationRepository() {
+    if (!this.repositories.has('donationRepository')) {
+      console.log('[PRISMA REPOSITORY FACTORY] Criando DonationRepository (Prisma)');
+      const repository = new PrismaDonationRepository();
+      this.repositories.set('donationRepository', repository);
+      console.log('[PRISMA REPOSITORY FACTORY] DonationRepository criado com sucesso');
+    }
+
+    return this.repositories.get('donationRepository');
   }
 
   /**
@@ -222,7 +239,8 @@ class PrismaRepositoryFactory {
       productRepository: await this.createProductRepository(),
       collaborationRepository: await this.createCollaborationRepository(),
       fileRepository: await this.createFileRepository(),
-      notificationRepository: await this.createNotificationRepository()
+      notificationRepository: await this.createNotificationRepository(),
+      donationRepository: await this.createDonationRepository()
     };
   }
 
