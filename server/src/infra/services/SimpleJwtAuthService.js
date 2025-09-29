@@ -181,7 +181,7 @@ class SimpleJwtAuthService extends IAuthService {
       user.password = await this.hashPassword(user.password);
 
       // Salvar usuário
-      const savedUser = await this.userRepository.create(user);
+      const savedUser = await this.userRepository.save(user);
 
       // Gerar tokens
       const tokens = await this.generateTokens(savedUser);
