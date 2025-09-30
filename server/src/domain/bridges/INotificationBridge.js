@@ -12,6 +12,7 @@ class INotificationBridge {
    */
   async sendNotification(notification, recipient, options = {}) {
     throw new Error('Method sendNotification must be implemented by concrete bridge');
+    // teste final husky
   }
 
   /**
