@@ -1,0 +1,23 @@
+# Dependências
+node_modules/
+package-lock.json
+
+# Build
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Prisma
+prisma/migrations/
+
+# Jest
+.jest-cache/
+
+# Outros
+.husky/
+.git/
+*.min.js

@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🐕 Husky: Validando código antes do commit..."
+echo ""
+
+# Navegar para o diretório server
+cd server
+
+# 1. Lint-staged (Prettier + ESLint nos arquivos staged)
+echo "📝 Rodando formatação e lint..."
+npx lint-staged
+
+# 2. Verificar uso correto de Singletons
+echo ""
+echo "🔍 Verificando padrões de Singleton..."
+npm run verify:singletons
+
+# 3. Rodar testes rápidos (apenas Singletons)
+echo ""
+echo "🧪 Rodando testes dos Singletons..."
+npm run test:singletons -- --bail --maxWorkers=2
+
+echo ""
+echo "✅ Todas as validações passaram! Commit autorizado."

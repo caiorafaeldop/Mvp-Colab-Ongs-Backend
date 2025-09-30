@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🐕 Husky: Validando código antes do push..."
+echo ""
+
+# Navegar para o diretório server
+cd server
+
+# 1. Lint completo
+echo "📝 Rodando lint completo..."
+npm run lint
+
+# 2. Verificar Singletons
+echo ""
+echo "🔍 Verificando padrões de Singleton..."
+npm run verify:singletons
+
+# 3. Rodar TODOS os testes
+echo ""
+echo "🧪 Rodando todos os testes..."
+npm test -- --bail --maxWorkers=4
+
+echo ""
+echo "✅ Todas as validações passaram! Push autorizado."
