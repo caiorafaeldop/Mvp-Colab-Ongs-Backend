@@ -1,3 +1,9 @@
+## Avaliação Atual — Memento (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: Originator/Memento/Caretaker, undo/redo, diff, limites e sanitização; ProductHistory/UserProfileHistory.
+ - Melhorias: persistência opcional do histórico (Mongo/Prisma) e endpoint/UI de auditoria.
+ - Status: Implementado
+
 RESUMO ATUAL (2025-09-30) • Nota: 10/10
 Como está sendo usado:
 - Memento Pattern implementado para rastrear histórico de mudanças em objetos.
@@ -5,6 +11,7 @@ Como está sendo usado:
 - Caretaker gerencia histórico com undo/redo e limite de versões.
 - Originator é classe base para objetos que podem salvar/restaurar estado.
 - ProductHistory implementa histórico de produtos com auditoria.
+{{ ... }}
 - UserProfileHistory implementa histórico de perfis com sanitização de dados sensíveis.
 - Suporta undo, redo, restauração para versão específica e diff entre versões.
 

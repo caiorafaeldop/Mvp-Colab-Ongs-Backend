@@ -1,3 +1,9 @@
+## Avaliação Atual — Composite (2025-09-30)
+- Nota: 10/10
+- Pontos fortes: Component/Leaf/Composite completos, service+controller+rotas, recursividade testada, CompositeFactory.
+- Melhorias: cache para métricas agregadas e reforço de permissões nas rotas de árvore.
+- Status: Implementado e integrado
+
 COMPOSITE PATTERN (Estrutural)
 =============================
 
@@ -5,7 +11,6 @@ CONTEXTO NO PROJETO:
 - Sistema de colaboração entre ONGs com hierarquias organizacionais
 - Organizações podem ter filiais (matriz → filiais → sub-filiais)
 - Operações devem funcionar tanto em organizações individuais quanto em grupos
-- Necessidade de calcular métricas agregadas (produtos, doações) recursivamente
 
 PROBLEMA:
 - Como tratar organizações individuais e grupos de organizações uniformemente?

@@ -230,6 +230,34 @@ class CloudinaryStorageBridge extends IStorageBridge {
       return { error: error.message };
     }
   }
+
+  /**
+   * Verifica saúde do bridge
+   * @returns {Promise<Object>} Status de saúde
+   */
+  async healthCheck() {
+    try {
+      // Tenta listar arquivos para verificar conectividade
+      const result = await this.listFiles({ limit: 1 });
+      
+      return {
+        status: 'healthy',
+        provider: this.providerName,
+        accessible: true,
+        apiConnected: true,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        provider: this.providerName,
+        accessible: false,
+        apiConnected: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 module.exports = CloudinaryStorageBridge;

@@ -1,12 +1,18 @@
 RESUMO ATUAL (2025-09-29) • Nota: 9/10
-O que garante 9/10:
-- **Correlação de requests**: `RequestCorrelationMiddleware` adiciona requestId único e logger contextual para rastrear toda a cadeia.
+ ## Avaliação Atual — Chain of Responsibility (2025-09-30)
+ - Nota: 9.5/10
+ - Pontos fortes: request correlation, BaseMiddleware, cadeias coesas para doações, error handler robusto, rate limiting avançado.
+ - Melhorias: métricas por handler e um builder DSL para montar cadeias.
+ - Status: Implementado
+ 
+ O que garante 9/10:
+ - **Correlação de requests**: `RequestCorrelationMiddleware` adiciona requestId único e logger contextual para rastrear toda a cadeia.
 - **Contratos padronizados**: `BaseMiddleware` define interface comum com logging automático, tratamento de erros e métricas de duração.
 - **Handlers coesos**: `DonationChainHandler` implementa cadeia específica para doações (validação → políticas → rate limit → contexto).
 - **Error handler robusto**: `ErrorHandler` categoriza erros, logs estruturados com correlação e respostas padronizadas.
 - **Rate limiting avançado**: `RateLimitMiddleware` com presets, limpeza automática e headers informativos.
 - **Middlewares melhorados**: `SimpleAuthMiddleware` e `validationMiddleware` usam logger estruturado e correlação.
-Evidências no código:
+ 
 - `src/presentation/middleware/RequestCorrelationMiddleware.js` (requestId, logger contextual).
 - `src/presentation/middleware/BaseMiddleware.js` (contratos padronizados, MiddlewareFactory).
 - `src/presentation/middleware/DonationChainHandler.js` (cadeia coesa para doações).

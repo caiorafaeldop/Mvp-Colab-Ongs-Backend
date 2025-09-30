@@ -1,3 +1,9 @@
+## Avaliação Atual — Mediator (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: EventManager como mediator + observer, histórico e stats, integração ampla com services/observers.
+ - Melhorias: backpressure, dead-letter queue e tracing (requestId → eventId).
+ - Status: Implementado
+
 RESUMO ATUAL (2025-09-30) • Nota: 10/10
 Como está sendo usado:
 - EventManager (src/infra/events/EventManager.js) atua como Mediator central.
@@ -5,7 +11,7 @@ Como está sendo usado:
 - ProductService, DonationService emitem eventos através do Mediator.
 - Observers (ProductObserver, UserObserver, DonationObserver, SystemObserver) se comunicam via Mediator.
 - Desacoplamento total: componentes não conhecem uns aos outros, apenas o Mediator.
-- Comunicação many-to-many simplificada em comunicação one-to-one (component -> mediator).
+{{ ... }}
 
 Implementações realizadas:
 ✅ EventManager como Mediator central (Singleton)

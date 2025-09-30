@@ -1,11 +1,16 @@
-RESUMO ATUAL (2025-09-29) • Nota: 9/10
-9/10:
+## Avaliação Atual — Template Method (2025-09-30)
+ - Nota: 9/10
+ - Pontos fortes: BaseTemplate imutável, templates especializados (upload/auth/donation/report) e factory; integração transparente.
+ - Melhorias: assegurar pré/pós-condições nos hooks; testes de invariantes; métricas por etapa do template.
+ - Status: Implementado
+ 
+## Avaliação Atual (2025-09-29) • Nota: 9/10
+ 9/10:
 - **BaseTemplate abstrata**: Define algoritmo imutável com hooks customizáveis (beforeProcess, afterValidation, onError, etc.).
 - **Templates especializados**: UploadProcessTemplate, AuthenticationTemplate, DonationProcessTemplate, ReportTemplate com fluxos padronizados.
 - **Hooks opcionais**: Subclasses podem sobrescrever hooks sem alterar algoritmo principal (validateFileIntegrity, preprocessFile, sendWelcomeEmail).
 - **TemplateFactory**: Registro e criação centralizada de templates com injeção de dependências.
 - **Fluxos estruturados**: Validar → Preparar → Processar → Finalizar com logs automáticos e tratamento de erros.
-- **Especialização por herança**: LoginTemplate/RegisterTemplate, ImageUpload/DocumentUpload, SingleDonation/RecurringDonation.
 - **Integração transparente**: DonationServiceWithTemplate mantém interface existente usando templates internamente.
 Evidências no código:
 - `src/application/templates/BaseTemplate.js` (algoritmo imutável, hooks, factory).

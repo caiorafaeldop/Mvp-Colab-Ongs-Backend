@@ -1,13 +1,8 @@
-RESUMO (2025-09-29) • Nota: 10/10
-O que garante 10/10:
-- Contratos padronizados com métodos críticos: `getProviderName()`, `validateConfiguration()`, `healthCheck()` em `PaymentAdapter` e `StorageAdapterContract`.
-- `SimpleMercadoPagoAdapter` com injeção de config via `AdapterFactory` (token, `backUrls`, `notificationUrl`), logs estruturados (`logger`), erros padronizados e `healthCheck` real (`/users/me`).
-- `CloudinaryAdapter` com `validateConfiguration()` e `healthCheck()` (consulta simples), logs estruturados e respostas padronizadas.
-- `AdapterFactory.createPaymentAdapter()` injeta credenciais e valida config; `ServiceFactory` passou a usar a `AdapterFactory` (DI correta).
-Evidências no código:
-- `src/domain/contracts/PaymentAdapter.js` e `src/domain/contracts/StorageAdapterContract.js` (novos métodos obrigatórios).
-- `src/infra/adapters/SimpleMercadoPagoAdapter.js` (options, logger, healthCheck, validateConfiguration, externalReference em `getPaymentStatus`).
-- `src/infra/adapters/CloudinaryAdapter.js` (logger, validateConfiguration, healthCheck).
+## Avaliação Atual — Adapter (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: contratos claros (Payment/Storage), adapters Mercado Pago e Cloudinary, AdapterFactory com DI integrada.
+ - Melhorias: testes para healthCheck e padronizar mapeamento de erros HTTP → domínio entre adapters.
+ - Status: Implementado
 - `src/main/factories/AdapterFactory.js` (injeção de token/opções, validação) e `src/main/factories/ServiceFactory.js` (uso da factory).
 
 PADRÃO ADAPTER (Estrutural) - IMPLEMENTADO ✅

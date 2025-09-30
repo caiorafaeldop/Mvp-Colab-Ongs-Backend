@@ -1,11 +1,16 @@
-RESUMO ATUAL (2025-09-30) • Nota: 9.5/10
-Como está sendo usado:
+## Avaliação Atual — Observer (2025-09-30)
+ - Nota: 9.5/10
+ - Pontos fortes: EventManager (Subject) + 4 observers + ObserverFactory + integração no server/services.
+ - Melhorias: isolamento de erros por observer, replays e feature flags por evento.
+ - Status: Implementado
+ 
+## AVALIAÇÃO ATUAL (2025-09-30) • Nota: 9.5/10
+ Como está sendo usado:
 - `src/infra/events/EventManager.js` implementa Subject completo (add/remove/notify, histórico, stats) como Singleton.
 - 4 Observers concretos implementados: ProductObserver, UserObserver, DonationObserver, SystemObserver.
 - ObserverFactory para registro dinâmico e centralizado de observers.
 - Eventos emitidos automaticamente pelos services em operações críticas.
 - Integração completa no server.js com registro automático na inicialização.
-
 Melhorias implementadas:
 ✅ Interfaces IObserver e ISubject em src/domain/observers/
 ✅ 4 Observers concretos em src/infra/observers/ com handlers específicos

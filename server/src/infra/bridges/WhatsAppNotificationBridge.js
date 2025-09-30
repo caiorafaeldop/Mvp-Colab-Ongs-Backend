@@ -292,6 +292,36 @@ class WhatsAppNotificationBridge extends INotificationBridge {
     const name = recipient.name || 'Cliente';
     return `💳 *Link de Pagamento*\n\nOlá ${name}!\n\nSeu link de pagamento está pronto:\n\n📦 *Produto:* ${notification.productName}\n💰 *Valor:* R$ ${notification.price}\n\n🔗 *Pagar via WhatsApp:*\n${notification.paymentUrl}\n\n_Clique no link para finalizar sua compra!_ 💚\n\n_Marketplace ONGs_`;
   }
+
+  /**
+   * Verifica saúde do bridge
+   * @returns {Promise<Object>} Status de saúde
+   */
+  async healthCheck() {
+    try {
+      // Verifica se o adapter está configurado
+      if (!this.adapter) {
+        throw new Error('WhatsApp adapter not configured');
+      }
+
+      return {
+        status: 'healthy',
+        channel: this.channelName,
+        accessible: true,
+        configured: true,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        channel: this.channelName,
+        accessible: false,
+        configured: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 module.exports = WhatsAppNotificationBridge;

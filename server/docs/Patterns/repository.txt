@@ -1,5 +1,11 @@
-RESUMO ATUAL (2025-09-30) • Nota: 10/10
-Como está sendo usado:
+## Avaliação Atual — Repository (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: interfaces por domínio, Mongo+Prisma, Strategy+Factory+DI, testabilidade e abstração total.
+ - Melhorias: padronizar mapeamento de erros de DB e exemplos de transações/upsert.
+ - Status: Implementado
+
+## RESUMO ATUAL (2025-09-30) • Nota: 10/10
+ Como está sendo usado:
 - Repository Pattern implementado em todas as entidades do domínio.
 - Interfaces em src/domain/repositories/ definem contratos (IUserRepository, IProductRepository, etc).
 - Implementações MongoDB em src/infra/repositories/ (MongoUserRepository, MongoProductRepository, etc).

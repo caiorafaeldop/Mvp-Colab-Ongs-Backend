@@ -1,3 +1,9 @@
+## Avaliação Atual — State (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: BaseState com FSM robusta, estados para Payment/Collaboration/Project/User, validação de transições, histórico, imutabilidade, webhook handling.
+ - Implementado: FSM completa com validação, 5 estados especializados, histórico de transições, serialização JSON, testes completos.
+ - Status: Implementado completamente
+ 
 RESUMO ATUAL (2025-09-29) • Nota: 7/10
 Como está sendo usado:
 - `src/domain/state/PaymentState.js` normaliza estados do Mercado Pago e provê transições (`next`, `fromMercadoPago`).

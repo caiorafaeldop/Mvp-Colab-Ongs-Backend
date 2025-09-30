@@ -1,10 +1,17 @@
+## Avaliação Atual — Decorator (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: CacheDecorator, RetryDecorator, DecoratorFactory, testes; zero impacto no código cliente.
+ - Melhorias: cache Redis opcional; toggles por ambiente; endpoints de métricas.
+ - Status: Implementado
+ 
 # Decorator Pattern - Implementação Completa
-
-## 🎯 Objetivo
+ 
+## Objetivo
 
 Adicionar funcionalidades extras (cache, retry) a repositories e services **sem modificar o código original**.
 
-## 📦 Componentes Implementados
+## Componentes Implementados
+{{ ... }}
 
 ### 1. CacheDecorator
 - **Objetivo**: Reduzir queries ao banco em 50-90%

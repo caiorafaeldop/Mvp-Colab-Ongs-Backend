@@ -377,6 +377,36 @@ class EmailNotificationBridge extends INotificationBridge {
       </html>
     `;
   }
+
+  /**
+   * Verifica saúde do bridge
+   * @returns {Promise<Object>} Status de saúde
+   */
+  async healthCheck() {
+    try {
+      // Verifica se o adapter está configurado
+      if (!this.adapter) {
+        throw new Error('Email adapter not configured');
+      }
+
+      return {
+        status: 'healthy',
+        channel: this.channelName,
+        accessible: true,
+        configured: true,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        channel: this.channelName,
+        accessible: false,
+        configured: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 module.exports = EmailNotificationBridge;

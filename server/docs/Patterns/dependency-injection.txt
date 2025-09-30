@@ -1,11 +1,16 @@
-RESUMO ATUAL (2025-09-30) • Nota: 10/10
-Como está sendo usado:
+## Avaliação Atual — Dependency Injection (2025-09-30)
+ - Nota: 10/10
+ - Pontos fortes: container central, constructor injection, factories coordenadas, singletons gerenciados.
+ - Melhorias: documentar grafo de dependências e evitar service locator.
+ - Status: Implementado
+
+## RESUMO ATUAL (2025-09-30) • Nota: 10/10
+ Como está sendo usado:
 - DependencyInjectionContainer em src/main/core/ para gerenciar todas as dependências.
 - Constructor Injection em todos os Services (ProductService, DonationService, AuthService).
 - ServiceFactory e AppFactory injetam dependencies automaticamente via registerDependencies().
 - Repositories recebem dependências via constructor (UserRepository, ProductRepository, etc).
 - Facilita testes unitários com mock injection.
-- Desacopla criação de uso de objetos.
 
 Implementações realizadas:
 ✅ DependencyInjectionContainer centralizado com singleton global

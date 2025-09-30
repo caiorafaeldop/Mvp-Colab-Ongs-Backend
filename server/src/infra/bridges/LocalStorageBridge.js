@@ -361,6 +361,42 @@ class LocalStorageBridge extends IStorageBridge {
       return { error: error.message };
     }
   }
+
+  /**
+   * Verifica saúde do bridge
+   * @returns {Promise<Object>} Status de saúde
+   */
+  async healthCheck() {
+    try {
+      // Verifica se diretório existe e tem permissão de escrita
+      this.ensureDirectoryExists();
+      
+      // Tenta criar arquivo de teste
+      const testFile = path.join(this.basePath, '.health-check');
+      fs.writeFileSync(testFile, 'health check');
+      fs.unlinkSync(testFile);
+
+      const stats = await this.getUsageStats();
+
+      return {
+        status: 'healthy',
+        provider: this.providerName,
+        accessible: true,
+        writable: true,
+        totalFiles: stats.totalFiles,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        provider: this.providerName,
+        accessible: false,
+        writable: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 module.exports = LocalStorageBridge;

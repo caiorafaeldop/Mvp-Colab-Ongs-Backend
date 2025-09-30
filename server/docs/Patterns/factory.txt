@@ -1,5 +1,11 @@
-RESUMO ATUAL (2025-09-29) • Nota: 9/10
-Como está sendo usado:
+## Avaliação Atual — Factory (2025-09-30)
+ - Nota: 9.5/10
+ - Pontos fortes: App/Repository/Service/Adapter/Bridge factories, cache/singleton, Strategy/DI, logs e validações.
+ - Melhorias: validar 100% das variáveis de ambiente; timeouts em inicializações assíncronas; métricas de inicialização.
+ - Status: Implementado
+
+## Avaliação Atual (2025-09-29) • Nota: 9/10
+ Como está sendo usado:
 - `src/main/factories/index.js` (AppFactory) coordena criação de repositories, services e rotas.
 - `src/main/factories/MongoRepositoryFactory.js` cria e faz cache dos repositories Mongo.
 - `src/main/factories/ServiceFactory.js` injeta dependências e valida envs (JWT, MP token).

@@ -1,5 +1,11 @@
-RESUMO ATUAL (2025-09-29) • Nota: 8/10
-Como está sendo usado:
+## Avaliação Atual — Singleton (2025-09-30)
+ - Nota: 8.5/10
+ - Pontos fortes: DatabaseConnection, PrismaService, ConfigManager, Logger, SingletonFactory.
+ - Melhorias: testes para destroyInstance/reconexão e garantir uso consistente do singleton.
+ - Status: Implementado
+ 
+ RESUMO ATUAL (2025-09-29) • Nota: 8/10
+ Como está sendo usado:
 - `src/infra/singletons/DatabaseConnection.js` e `src/infra/singletons/PrismaService.js` garantem instância única, health/ping e shutdown.
 Melhorias sugeridas:
 - Garantir uso consistente da conexão única; considerar singleton para logger/config centralizado.

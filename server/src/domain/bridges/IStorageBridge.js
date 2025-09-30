@@ -48,6 +48,14 @@ class IStorageBridge {
   getProviderInfo() {
     throw new Error('Method getProviderInfo must be implemented by concrete bridge');
   }
+
+  /**
+   * Verifica saúde do bridge
+   * @returns {Promise<Object>} Status de saúde
+   */
+  async healthCheck() {
+    throw new Error('Method healthCheck must be implemented by concrete bridge');
+  }
 }
 
 module.exports = IStorageBridge;
