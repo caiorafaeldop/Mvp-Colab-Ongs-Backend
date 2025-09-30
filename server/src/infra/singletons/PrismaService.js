@@ -27,13 +27,13 @@ class PrismaService extends ISingleton {
       // Double-checked locking para thread safety
       if (!PrismaService._creating) {
         PrismaService._creating = true;
-        
+
         // Second check (com lock)
         if (!PrismaService.instance) {
           PrismaService.instance = new PrismaService();
           console.log('[PrismaService] Nova instância criada');
         }
-        
+
         PrismaService._creating = false;
       }
     }
@@ -61,11 +61,10 @@ class PrismaService extends ISingleton {
       }
 
       console.log('[PrismaService] Inicializando cliente Prisma...');
-      
+
       const defaultOptions = {
-        log: process.env.NODE_ENV === 'development' 
-          ? ['query', 'info', 'warn', 'error']
-          : ['error'],
+        log:
+          process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
         errorFormat: 'pretty',
       };
 
@@ -76,10 +75,9 @@ class PrismaService extends ISingleton {
 
       // Conectar ao banco
       await this.connect();
-      
+
       console.log('[PrismaService] Cliente Prisma inicializado com sucesso');
       return this.prisma;
-
     } catch (error) {
       console.error('[PrismaService] Erro ao inicializar:', error.message);
       this.isConnected = false;
@@ -106,23 +104,24 @@ class PrismaService extends ISingleton {
       }
 
       this.connectionAttempts++;
-      console.log(`[PrismaService] Tentativa de conexão ${this.connectionAttempts}/${this.maxRetries}`);
+      console.log(
+        `[PrismaService] Tentativa de conexão ${this.connectionAttempts}/${this.maxRetries}`
+      );
 
       // Testa a conexão
       await this.prisma.$connect();
-      
+
       // Verifica se a conexão está funcionando
       await this.prisma.$queryRaw`SELECT 1`;
-      
+
       this.isConnected = true;
       this.connectionAttempts = 0;
       this.fallbackMode = false;
-      
+
       console.log('[PrismaService] Conectado ao banco de dados via Prisma');
-      
+
       // Configura handlers de eventos
       this.setupEventHandlers();
-
     } catch (error) {
       console.error('[PrismaService] Erro na conexão:', error.message);
       this.isConnected = false;
@@ -226,19 +225,14 @@ class PrismaService extends ISingleton {
       }
 
       // Contagem de registros por tabela
-      const [
-        userCount,
-        productCount,
-        collaborationCount,
-        notificationCount,
-        fileCount
-      ] = await Promise.all([
-        this.prisma.user.count(),
-        this.prisma.product.count(),
-        this.prisma.collaboration.count(),
-        this.prisma.notification.count(),
-        this.prisma.file.count(),
-      ]);
+      const [userCount, productCount, collaborationCount, notificationCount, fileCount] =
+        await Promise.all([
+          this.prisma.user.count(),
+          this.prisma.product.count(),
+          this.prisma.collaboration.count(),
+          this.prisma.notification.count(),
+          this.prisma.file.count(),
+        ]);
 
       return {
         isConnected: this.isConnected,

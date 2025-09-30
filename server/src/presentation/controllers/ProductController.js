@@ -1,4 +1,4 @@
-const WhatsAppUtils = require("../../infra/adapters/WhatsAppUtils");
+const WhatsAppUtils = require('../../infra/adapters/WhatsAppUtils');
 // Validators removidos na limpeza - usando validação direta
 
 class ProductController {
@@ -15,18 +15,15 @@ class ProductController {
       if (!productData.name || !productData.price || !productData.description) {
         return res.status(400).json({
           success: false,
-          message: "Nome, preço e descrição são obrigatórios",
+          message: 'Nome, preço e descrição são obrigatórios',
         });
       }
 
-      const product = await this.productService.createProduct(
-        productData,
-        organizationId
-      );
+      const product = await this.productService.createProduct(productData, organizationId);
 
       res.status(201).json({
         success: true,
-        message: "Product created successfully",
+        message: 'Product created successfully',
         data: product,
       });
     } catch (error) {
@@ -47,19 +44,15 @@ class ProductController {
       if (productData.name === '' || productData.price < 0) {
         return res.status(400).json({
           success: false,
-          message: "Dados de produto inválidos",
+          message: 'Dados de produto inválidos',
         });
       }
 
-      const product = await this.productService.updateProduct(
-        id,
-        productData,
-        organizationId
-      );
+      const product = await this.productService.updateProduct(id, productData, organizationId);
 
       res.status(200).json({
         success: true,
-        message: "Product updated successfully",
+        message: 'Product updated successfully',
         data: product,
       });
     } catch (error) {
@@ -79,7 +72,7 @@ class ProductController {
 
       res.status(200).json({
         success: true,
-        message: "Product deleted successfully",
+        message: 'Product deleted successfully',
       });
     } catch (error) {
       res.status(400).json({
@@ -111,8 +104,7 @@ class ProductController {
     try {
       const organizationId = req.user.id;
 
-      const products =
-        await this.productService.getProductsByOrganization(organizationId);
+      const products = await this.productService.getProductsByOrganization(organizationId);
 
       res.status(200).json({
         success: true,
@@ -165,14 +157,11 @@ class ProductController {
       const { id } = req.params;
       const organizationId = req.user.id;
 
-      const product = await this.productService.toggleProductAvailability(
-        id,
-        organizationId
-      );
+      const product = await this.productService.toggleProductAvailability(id, organizationId);
 
       res.status(200).json({
         success: true,
-        message: `Product ${product.isAvailable ? "activated" : "deactivated"} successfully`,
+        message: `Product ${product.isAvailable ? 'activated' : 'deactivated'} successfully`,
         data: product,
       });
     } catch (error) {
@@ -189,22 +178,18 @@ class ProductController {
       const { stock } = req.body;
       const organizationId = req.user.id;
 
-      if (typeof stock !== "number" || stock < 0) {
+      if (typeof stock !== 'number' || stock < 0) {
         return res.status(400).json({
           success: false,
-          message: "Stock must be a number greater than or equal to zero",
+          message: 'Stock must be a number greater than or equal to zero',
         });
       }
 
-      const product = await this.productService.updateProductStock(
-        id,
-        stock,
-        organizationId
-      );
+      const product = await this.productService.updateProductStock(id, stock, organizationId);
 
       res.status(200).json({
         success: true,
-        message: "Product stock updated successfully",
+        message: 'Product stock updated successfully',
         data: product,
       });
     } catch (error) {
@@ -223,7 +208,7 @@ class ProductController {
       if (!phone) {
         return res.status(400).json({
           success: false,
-          message: "Phone number is required",
+          message: 'Phone number is required',
         });
       }
 
@@ -232,7 +217,7 @@ class ProductController {
       if (!product) {
         return res.status(404).json({
           success: false,
-          message: "Product not found",
+          message: 'Product not found',
         });
       }
 

@@ -13,7 +13,7 @@ class EnhancedPaymentState extends BaseState {
     REFUNDED: 'refunded',
     CHARGED_BACK: 'charged_back',
     IN_PROCESS: 'in_process',
-    UNKNOWN: 'unknown'
+    UNKNOWN: 'unknown',
   };
 
   static TRANSITIONS = {
@@ -24,7 +24,7 @@ class EnhancedPaymentState extends BaseState {
     cancelled: [], // Estado final
     refunded: ['charged_back'], // Pode ter chargeback depois de refund
     charged_back: [], // Estado final
-    unknown: ['pending', 'approved', 'rejected'] // Pode transicionar para qualquer estado conhecido
+    unknown: ['pending', 'approved', 'rejected'], // Pode transicionar para qualquer estado conhecido
   };
 
   constructor(currentState = EnhancedPaymentState.STATES.PENDING) {
@@ -45,11 +45,11 @@ class EnhancedPaymentState extends BaseState {
       'payment.rejected': EnhancedPaymentState.STATES.REJECTED,
       'payment.cancelled': EnhancedPaymentState.STATES.CANCELLED,
       'payment.refunded': EnhancedPaymentState.STATES.REFUNDED,
-      'payment.charged_back': EnhancedPaymentState.STATES.CHARGED_BACK
+      'payment.charged_back': EnhancedPaymentState.STATES.CHARGED_BACK,
     };
 
     const targetState = eventMapping[event] || this.currentState;
-    
+
     if (targetState === this.currentState) {
       return this; // Sem mudança de estado
     }
@@ -57,7 +57,7 @@ class EnhancedPaymentState extends BaseState {
     return this.transitionTo(targetState, {
       event,
       ...metadata,
-      source: 'mercadopago_webhook'
+      source: 'mercadopago_webhook',
     });
   }
 
@@ -78,7 +78,7 @@ class EnhancedPaymentState extends BaseState {
   approve(metadata = {}) {
     return this.transitionTo(EnhancedPaymentState.STATES.APPROVED, {
       action: 'approve',
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -89,7 +89,7 @@ class EnhancedPaymentState extends BaseState {
     return this.transitionTo(EnhancedPaymentState.STATES.REJECTED, {
       action: 'reject',
       reason,
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -100,7 +100,7 @@ class EnhancedPaymentState extends BaseState {
     return this.transitionTo(EnhancedPaymentState.STATES.CANCELLED, {
       action: 'cancel',
       reason,
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -111,7 +111,7 @@ class EnhancedPaymentState extends BaseState {
     return this.transitionTo(EnhancedPaymentState.STATES.REFUNDED, {
       action: 'refund',
       amount,
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -121,7 +121,7 @@ class EnhancedPaymentState extends BaseState {
   chargeback(metadata = {}) {
     return this.transitionTo(EnhancedPaymentState.STATES.CHARGED_BACK, {
       action: 'chargeback',
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -138,7 +138,7 @@ class EnhancedPaymentState extends BaseState {
   isFailed() {
     return this.isOneOf([
       EnhancedPaymentState.STATES.REJECTED,
-      EnhancedPaymentState.STATES.CANCELLED
+      EnhancedPaymentState.STATES.CANCELLED,
     ]);
   }
 
@@ -166,7 +166,7 @@ class EnhancedPaymentState extends BaseState {
       cancelled: EnhancedPaymentState.STATES.CANCELLED,
       canceled: EnhancedPaymentState.STATES.CANCELLED,
       refunded: EnhancedPaymentState.STATES.REFUNDED,
-      charged_back: EnhancedPaymentState.STATES.CHARGED_BACK
+      charged_back: EnhancedPaymentState.STATES.CHARGED_BACK,
     };
 
     return new EnhancedPaymentState(map[normalized] || EnhancedPaymentState.STATES.UNKNOWN);

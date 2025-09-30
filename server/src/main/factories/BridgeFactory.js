@@ -33,7 +33,7 @@ class BridgeFactory {
 
       // Cria storage bridges
       await this.createStorageBridges(dependencies);
-      
+
       // Cria notification bridges
       await this.createNotificationBridges(dependencies);
 
@@ -42,12 +42,12 @@ class BridgeFactory {
       return {
         storage: {
           cloudinary: this.bridges.get('cloudinary-storage'),
-          local: this.bridges.get('local-storage')
+          local: this.bridges.get('local-storage'),
         },
         notification: {
           email: this.bridges.get('email-notification'),
-          whatsapp: this.bridges.get('whatsapp-notification')
-        }
+          whatsapp: this.bridges.get('whatsapp-notification'),
+        },
       };
     } catch (error) {
       console.error('[BridgeFactory] Erro ao configurar bridges:', error.message);
@@ -67,14 +67,15 @@ class BridgeFactory {
         this.bridges.set('cloudinary-storage', cloudinaryBridge);
         console.log('[BridgeFactory] CloudinaryStorageBridge criado');
       } else {
-        console.warn('[BridgeFactory] CloudinaryAdapter não fornecido para CloudinaryStorageBridge');
+        console.warn(
+          '[BridgeFactory] CloudinaryAdapter não fornecido para CloudinaryStorageBridge'
+        );
       }
 
       // Local Storage Bridge
       const localBridge = new LocalStorageBridge(dependencies.localStoragePath);
       this.bridges.set('local-storage', localBridge);
       console.log('[BridgeFactory] LocalStorageBridge criado');
-
     } catch (error) {
       console.error('[BridgeFactory] Erro ao criar Storage Bridges:', error.message);
     }
@@ -101,9 +102,10 @@ class BridgeFactory {
         this.bridges.set('whatsapp-notification', whatsappBridge);
         console.log('[BridgeFactory] WhatsAppNotificationBridge criado');
       } else {
-        console.warn('[BridgeFactory] WhatsAppAdapter não fornecido para WhatsAppNotificationBridge');
+        console.warn(
+          '[BridgeFactory] WhatsAppAdapter não fornecido para WhatsAppNotificationBridge'
+        );
       }
-
     } catch (error) {
       console.error('[BridgeFactory] Erro ao criar Notification Bridges:', error.message);
     }
@@ -126,13 +128,13 @@ class BridgeFactory {
   getStorageBridge(preference = 'cloudinary') {
     const bridgeName = `${preference}-storage`;
     const bridge = this.bridges.get(bridgeName);
-    
+
     if (!bridge && preference === 'cloudinary') {
       // Fallback para local se Cloudinary não disponível
       console.warn('[BridgeFactory] Cloudinary não disponível, usando Local Storage');
       return this.bridges.get('local-storage');
     }
-    
+
     return bridge;
   }
 
@@ -152,17 +154,18 @@ class BridgeFactory {
    */
   listBridges() {
     const bridgeList = [];
-    
+
     for (const [name, bridge] of this.bridges) {
       const info = bridge.getProviderInfo?.() || bridge.getChannelInfo?.() || {};
-      
+
       bridgeList.push({
         name: name,
         className: bridge.constructor.name,
         type: info.type || 'unknown',
         features: info.features || [],
-        methods: Object.getOwnPropertyNames(Object.getPrototypeOf(bridge))
-          .filter(method => method !== 'constructor' && typeof bridge[method] === 'function')
+        methods: Object.getOwnPropertyNames(Object.getPrototypeOf(bridge)).filter(
+          (method) => method !== 'constructor' && typeof bridge[method] === 'function'
+        ),
       });
     }
 
@@ -176,7 +179,7 @@ class BridgeFactory {
   getBridgeStats() {
     return {
       totalBridges: this.bridges.size,
-      bridges: this.listBridges()
+      bridges: this.listBridges(),
     };
   }
 
@@ -188,13 +191,13 @@ class BridgeFactory {
     const results = {
       timestamp: new Date().toISOString(),
       overall: 'healthy',
-      bridges: {}
+      bridges: {},
     };
 
     try {
       for (const [name, bridge] of this.bridges) {
         try {
-          let status = 'healthy';
+          const status = 'healthy';
           let details = {};
 
           // Testa storage bridges
@@ -212,18 +215,16 @@ class BridgeFactory {
 
           results.bridges[name] = {
             status,
-            details
+            details,
           };
-
         } catch (error) {
           results.bridges[name] = {
             status: 'error',
-            error: error.message
+            error: error.message,
           };
           results.overall = 'degraded';
         }
       }
-
     } catch (error) {
       results.overall = 'error';
       results.error = error.message;
@@ -242,21 +243,21 @@ class BridgeFactory {
     const compatibleBridges = [];
 
     for (const [name, bridge] of this.bridges) {
-      if (!name.includes(type)) continue;
+      if (!name.includes(type)) {
+        continue;
+      }
 
       const info = bridge.getProviderInfo?.() || bridge.getChannelInfo?.() || {};
       const features = info.features || [];
 
-      const hasAllFeatures = requiredFeatures.every(feature => 
-        features.includes(feature)
-      );
+      const hasAllFeatures = requiredFeatures.every((feature) => features.includes(feature));
 
       if (hasAllFeatures) {
         compatibleBridges.push({
           name,
           bridge,
           info,
-          score: features.length // Prioriza bridges com mais funcionalidades
+          score: features.length, // Prioriza bridges com mais funcionalidades
         });
       }
     }

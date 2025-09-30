@@ -23,31 +23,35 @@ class CloudinaryAdapter extends StorageAdapterContract {
       const uploadOptions = {
         folder: options.folder || 'ongs-colab',
         resource_type: options.resourceType || 'auto',
-        ...options.cloudinaryOptions
+        ...options.cloudinaryOptions,
       };
 
       let result;
       if (file && typeof file === 'object' && file.buffer) {
         // Upload de arquivo Multer (possui buffer, originalname)
         result = await new Promise((resolve, reject) => {
-          this.cloudinary.uploader.upload_stream(
-            uploadOptions,
-            (error, res) => {
-              if (error) reject(error);
-              else resolve(res);
-            }
-          ).end(file.buffer);
+          this.cloudinary.uploader
+            .upload_stream(uploadOptions, (error, res) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(res);
+              }
+            })
+            .end(file.buffer);
         });
       } else if (Buffer.isBuffer(file)) {
         // Upload de buffer
         result = await new Promise((resolve, reject) => {
-          this.cloudinary.uploader.upload_stream(
-            uploadOptions,
-            (error, res) => {
-              if (error) reject(error);
-              else resolve(res);
-            }
-          ).end(file);
+          this.cloudinary.uploader
+            .upload_stream(uploadOptions, (error, res) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(res);
+              }
+            })
+            .end(file);
         });
       } else if (typeof file === 'string') {
         // Upload de path ou base64
@@ -66,14 +70,14 @@ class CloudinaryAdapter extends StorageAdapterContract {
           size: result.bytes,
           width: result.width,
           height: result.height,
-          folder: result.folder
+          folder: result.folder,
         },
         error: null,
         metadata: {
           provider: this.getProviderName(),
           timestamp: new Date(),
-          requestId: result.public_id
-        }
+          requestId: result.public_id,
+        },
       };
     } catch (error) {
       logger.error('[CLOUDINARY ADAPTER] Upload failed', { message: error.message });
@@ -84,8 +88,8 @@ class CloudinaryAdapter extends StorageAdapterContract {
         metadata: {
           provider: this.getProviderName(),
           timestamp: new Date(),
-          requestId: null
-        }
+          requestId: null,
+        },
       };
     }
   }
@@ -98,7 +102,7 @@ class CloudinaryAdapter extends StorageAdapterContract {
   async deleteFile(fileId) {
     try {
       const result = await this.cloudinary.uploader.destroy(fileId);
-      
+
       return {
         success: result.result === 'ok',
         data: { deleted: result.result === 'ok' },
@@ -106,8 +110,8 @@ class CloudinaryAdapter extends StorageAdapterContract {
         metadata: {
           provider: this.getProviderName(),
           timestamp: new Date(),
-          requestId: fileId
-        }
+          requestId: fileId,
+        },
       };
     } catch (error) {
       logger.error('[CLOUDINARY ADAPTER] Delete failed', { fileId, message: error.message });
@@ -118,8 +122,8 @@ class CloudinaryAdapter extends StorageAdapterContract {
         metadata: {
           provider: this.getProviderName(),
           timestamp: new Date(),
-          requestId: fileId
-        }
+          requestId: fileId,
+        },
       };
     }
   }
@@ -133,21 +137,34 @@ class CloudinaryAdapter extends StorageAdapterContract {
   async getFileUrl(fileId, options = {}) {
     try {
       const transformations = {};
-      
-      if (options.width) transformations.width = options.width;
-      if (options.height) transformations.height = options.height;
-      if (options.crop) transformations.crop = options.crop;
-      if (options.quality) transformations.quality = options.quality;
-      if (options.format) transformations.format = options.format;
+
+      if (options.width) {
+        transformations.width = options.width;
+      }
+      if (options.height) {
+        transformations.height = options.height;
+      }
+      if (options.crop) {
+        transformations.crop = options.crop;
+      }
+      if (options.quality) {
+        transformations.quality = options.quality;
+      }
+      if (options.format) {
+        transformations.format = options.format;
+      }
 
       const url = this.cloudinary.url(fileId, {
         secure: true,
-        ...transformations
+        ...transformations,
       });
 
       return url;
     } catch (error) {
-      logger.error('[CLOUDINARY ADAPTER] Failed to generate URL', { fileId, message: error.message });
+      logger.error('[CLOUDINARY ADAPTER] Failed to generate URL', {
+        fileId,
+        message: error.message,
+      });
       throw new Error(`Failed to generate URL: ${error.message}`);
     }
   }
@@ -170,7 +187,7 @@ class CloudinaryAdapter extends StorageAdapterContract {
       const searchOptions = {
         resource_type: filters.resourceType || 'image',
         max_results: filters.maxResults || 50,
-        ...filters.cloudinaryFilters
+        ...filters.cloudinaryFilters,
       };
 
       if (filters.folder) {
@@ -185,22 +202,22 @@ class CloudinaryAdapter extends StorageAdapterContract {
       return {
         success: true,
         data: {
-          files: result.resources.map(resource => ({
+          files: result.resources.map((resource) => ({
             id: resource.public_id,
             url: resource.secure_url,
             format: resource.format,
             size: resource.bytes,
             createdAt: resource.created_at,
-            folder: resource.folder
+            folder: resource.folder,
           })),
-          totalCount: result.total_count
+          totalCount: result.total_count,
         },
         error: null,
         metadata: {
           provider: this.getProviderName(),
           timestamp: new Date(),
-          requestId: 'list-files'
-        }
+          requestId: 'list-files',
+        },
       };
     } catch (error) {
       logger.error('[CLOUDINARY ADAPTER] List files failed', { message: error.message });
@@ -211,8 +228,8 @@ class CloudinaryAdapter extends StorageAdapterContract {
         metadata: {
           provider: this.getProviderName(),
           timestamp: new Date(),
-          requestId: 'list-files'
-        }
+          requestId: 'list-files',
+        },
       };
     }
   }
@@ -222,7 +239,11 @@ class CloudinaryAdapter extends StorageAdapterContract {
    */
   validateConfiguration() {
     try {
-      return !!process.env.CLOUDINARY_CLOUD_NAME && !!process.env.CLOUDINARY_API_KEY && !!process.env.CLOUDINARY_API_SECRET;
+      return (
+        !!process.env.CLOUDINARY_CLOUD_NAME &&
+        !!process.env.CLOUDINARY_API_KEY &&
+        !!process.env.CLOUDINARY_API_SECRET
+      );
     } catch (error) {
       logger.error('[CLOUDINARY ADAPTER] Configuração inválida', error);
       return false;

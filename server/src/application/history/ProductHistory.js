@@ -1,6 +1,6 @@
 /**
  * ProductHistory - Implementação de Memento Pattern para Produtos
- * 
+ *
  * Permite rastrear histórico de mudanças em produtos e fazer undo/redo.
  * Útil para auditoria e recuperação de dados.
  */
@@ -14,7 +14,7 @@ class ProductHistory extends Originator {
     super();
     this._state = productData;
     this._caretaker = new Caretaker(50); // Máximo 50 versões
-    
+
     // Salva estado inicial
     if (Object.keys(productData).length > 0) {
       this.saveSnapshot('initial_state');
@@ -28,17 +28,17 @@ class ProductHistory extends Originator {
    */
   updateProduct(changes, action = 'update') {
     const previousState = { ...this._state };
-    
+
     // Aplica mudanças
     this._state = { ...this._state, ...changes, updatedAt: new Date() };
-    
+
     // Salva snapshot
     this.saveSnapshot(action, { previousState, changes });
-    
+
     logger.info('[PRODUCT HISTORY] Produto atualizado', {
       productId: this._state.id,
       action,
-      changes: Object.keys(changes)
+      changes: Object.keys(changes),
     });
   }
 
@@ -52,9 +52,9 @@ class ProductHistory extends Originator {
       action,
       productId: this._state.id,
       productName: this._state.name,
-      ...metadata
+      ...metadata,
     });
-    
+
     this._caretaker.save(memento);
   }
 
@@ -64,16 +64,16 @@ class ProductHistory extends Originator {
    */
   undo() {
     const memento = this._caretaker.undo();
-    
+
     if (memento) {
       this.restore(memento);
       logger.info('[PRODUCT HISTORY] Undo executado', {
         productId: this._state.id,
-        restoredTo: memento.getMetadata().action
+        restoredTo: memento.getMetadata().action,
       });
       return this._state;
     }
-    
+
     return null;
   }
 
@@ -83,16 +83,16 @@ class ProductHistory extends Originator {
    */
   redo() {
     const memento = this._caretaker.redo();
-    
+
     if (memento) {
       this.restore(memento);
       logger.info('[PRODUCT HISTORY] Redo executado', {
         productId: this._state.id,
-        restoredTo: memento.getMetadata().action
+        restoredTo: memento.getMetadata().action,
       });
       return this._state;
     }
-    
+
     return null;
   }
 
@@ -103,16 +103,16 @@ class ProductHistory extends Originator {
    */
   restoreToVersion(mementoId) {
     const memento = this._caretaker.restoreById(mementoId);
-    
+
     if (memento) {
       this.restore(memento);
       logger.info('[PRODUCT HISTORY] Restaurado para versão específica', {
         productId: this._state.id,
-        mementoId
+        mementoId,
       });
       return this._state;
     }
-    
+
     return null;
   }
 
@@ -133,26 +133,26 @@ class ProductHistory extends Originator {
   getDiff(fromMementoId, toMementoId) {
     const fromMemento = this._caretaker.getById(fromMementoId);
     const toMemento = this._caretaker.getById(toMementoId);
-    
+
     if (!fromMemento || !toMemento) {
       return null;
     }
-    
+
     const fromState = fromMemento.getState();
     const toState = toMemento.getState();
-    
+
     const diff = {};
-    
+
     // Encontra campos modificados
-    Object.keys(toState).forEach(key => {
+    Object.keys(toState).forEach((key) => {
       if (JSON.stringify(fromState[key]) !== JSON.stringify(toState[key])) {
         diff[key] = {
           from: fromState[key],
-          to: toState[key]
+          to: toState[key],
         };
       }
     });
-    
+
     return diff;
   }
 
@@ -186,7 +186,7 @@ class ProductHistory extends Originator {
   clearHistory() {
     this._caretaker.clear();
     logger.info('[PRODUCT HISTORY] Histórico limpo', {
-      productId: this._state.id
+      productId: this._state.id,
     });
   }
 

@@ -55,8 +55,8 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'JWT token obtido através do endpoint de login'
-        }
+          description: 'JWT token obtido através do endpoint de login',
+        },
       },
       schemas: {
         User: {
@@ -64,31 +64,31 @@ const options = {
           properties: {
             id: {
               type: 'string',
-              example: '507f1f77bcf86cd799439011'
+              example: '507f1f77bcf86cd799439011',
             },
             name: {
               type: 'string',
-              example: 'João Silva'
+              example: 'João Silva',
             },
             email: {
               type: 'string',
               format: 'email',
-              example: 'joao@email.com'
+              example: 'joao@email.com',
             },
             userType: {
               type: 'string',
               enum: ['common', 'organization'],
-              example: 'organization'
+              example: 'organization',
             },
             phone: {
               type: 'string',
-              example: '11999999999'
+              example: '11999999999',
             },
             createdAt: {
               type: 'string',
-              format: 'date-time'
-            }
-          }
+              format: 'date-time',
+            },
+          },
         },
         LoginRequest: {
           type: 'object',
@@ -97,14 +97,14 @@ const options = {
             email: {
               type: 'string',
               format: 'email',
-              example: 'usuario@exemplo.com'
+              example: 'usuario@exemplo.com',
             },
             password: {
               type: 'string',
               format: 'password',
-              example: 'minhasenha123'
-            }
-          }
+              example: 'minhasenha123',
+            },
+          },
         },
         RegisterRequest: {
           type: 'object',
@@ -112,112 +112,112 @@ const options = {
           properties: {
             name: {
               type: 'string',
-              example: 'João Silva'
+              example: 'João Silva',
             },
             email: {
               type: 'string',
               format: 'email',
-              example: 'joao@exemplo.com'
+              example: 'joao@exemplo.com',
             },
             password: {
               type: 'string',
               format: 'password',
               minLength: 6,
-              example: 'minhasenha123'
+              example: 'minhasenha123',
             },
             userType: {
               type: 'string',
               enum: ['common', 'organization'],
               default: 'common',
-              example: 'organization'
+              example: 'organization',
             },
             phone: {
               type: 'string',
-              example: '11999999999'
-            }
-          }
+              example: '11999999999',
+            },
+          },
         },
         AuthResponse: {
           type: 'object',
           properties: {
             success: {
               type: 'boolean',
-              example: true
+              example: true,
             },
             message: {
               type: 'string',
-              example: 'Login successful'
+              example: 'Login successful',
             },
             data: {
               type: 'object',
               properties: {
                 user: {
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/User',
                 },
                 accessToken: {
                   type: 'string',
-                  description: 'Token JWT de acesso (45 minutos)'
+                  description: 'Token JWT de acesso (45 minutos)',
                 },
                 refreshToken: {
                   type: 'string',
-                  description: 'Token JWT de refresh (7 dias)'
-                }
-              }
-            }
-          }
+                  description: 'Token JWT de refresh (7 dias)',
+                },
+              },
+            },
+          },
         },
         Product: {
           type: 'object',
           properties: {
             id: {
               type: 'string',
-              example: '507f1f77bcf86cd799439013'
+              example: '507f1f77bcf86cd799439013',
             },
             name: {
               type: 'string',
-              example: 'Cesta Básica Familiar'
+              example: 'Cesta Básica Familiar',
             },
             description: {
               type: 'string',
-              example: 'Cesta básica completa para uma família de 4 pessoas'
+              example: 'Cesta básica completa para uma família de 4 pessoas',
             },
             price: {
               type: 'number',
               format: 'float',
-              example: 85.50
+              example: 85.5,
             },
             imageUrls: {
               type: 'array',
               items: {
-                type: 'string'
+                type: 'string',
               },
-              example: ['https://example.com/cesta1.jpg']
+              example: ['https://example.com/cesta1.jpg'],
             },
             organizationId: {
               type: 'string',
-              example: '507f1f77bcf86cd799439012'
+              example: '507f1f77bcf86cd799439012',
             },
             organizationName: {
               type: 'string',
-              example: 'ONG Esperança'
+              example: 'ONG Esperança',
             },
             category: {
               type: 'string',
-              example: 'Alimentação'
+              example: 'Alimentação',
             },
             stock: {
               type: 'integer',
-              example: 50
+              example: 50,
             },
             isAvailable: {
               type: 'boolean',
-              example: true
+              example: true,
             },
             createdAt: {
               type: 'string',
-              format: 'date-time'
-            }
-          }
+              format: 'date-time',
+            },
+          },
         },
         ProductRequest: {
           type: 'object',
@@ -225,49 +225,49 @@ const options = {
           properties: {
             name: {
               type: 'string',
-              example: 'Cesta Básica Familiar'
+              example: 'Cesta Básica Familiar',
             },
             description: {
               type: 'string',
-              example: 'Cesta básica completa para uma família de 4 pessoas'
+              example: 'Cesta básica completa para uma família de 4 pessoas',
             },
             price: {
               type: 'number',
               format: 'float',
               minimum: 0.01,
-              example: 85.50
+              example: 85.5,
             },
             imageUrls: {
               type: 'array',
               items: {
-                type: 'string'
+                type: 'string',
               },
-              example: ['https://example.com/cesta1.jpg']
+              example: ['https://example.com/cesta1.jpg'],
             },
             category: {
               type: 'string',
-              example: 'Alimentação'
+              example: 'Alimentação',
             },
             stock: {
               type: 'integer',
               minimum: 0,
               default: 1,
-              example: 50
-            }
-          }
+              example: 50,
+            },
+          },
         },
         Error: {
           type: 'object',
           properties: {
             success: {
               type: 'boolean',
-              example: false
+              example: false,
             },
             message: {
               type: 'string',
-              example: 'Mensagem de erro'
-            }
-          }
+              example: 'Mensagem de erro',
+            },
+          },
         },
         DonationRequest: {
           type: 'object',
@@ -277,7 +277,7 @@ const options = {
               type: 'number',
               format: 'float',
               minimum: 1,
-              example: 25.00,
+              example: 25.0,
               description: 'Valor da doação em reais (mínimo R$ 1,00)',
             },
             donorName: {
@@ -366,7 +366,7 @@ const options = {
                 },
                 amount: {
                   type: 'number',
-                  example: 25.00,
+                  example: 25.0,
                 },
                 status: {
                   type: 'string',
@@ -403,7 +403,7 @@ const options = {
             },
             amount: {
               type: 'number',
-              example: 25.00,
+              example: 25.0,
             },
             donorName: {
               type: 'string',
@@ -438,7 +438,7 @@ const options = {
                 },
                 totalAmount: {
                   type: 'number',
-                  example: 2500.00,
+                  example: 2500.0,
                   description: 'Valor total arrecadado (apenas aprovadas)',
                 },
                 avgAmount: {
@@ -509,11 +509,7 @@ const options = {
       },
     ],
   },
-  apis: [
-    './src/main/routes/*.js',
-    './src/main/server.js',
-    './src/presentation/routes/*.js',
-  ],
+  apis: ['./src/main/routes/*.js', './src/main/server.js', './src/presentation/routes/*.js'],
 };
 
 const specs = swaggerJsdoc(options);

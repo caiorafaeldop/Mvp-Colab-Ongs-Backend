@@ -1,13 +1,13 @@
 // Interface removida na limpeza
-const Product = require("../../domain/entities/Product");
-const PrismaService = require("../singletons/PrismaService");
+const Product = require('../../domain/entities/Product');
+const PrismaService = require('../singletons/PrismaService');
 
 /**
  * Implementação Prisma do Repository Pattern para Produtos
  * Segue os princípios SOLID e Clean Architecture
  * Mantém compatibilidade com a interface existente
  */
-class PrismaProductRepository  {
+class PrismaProductRepository {
   constructor() {
     // super() removido na limpeza
     this.prismaService = PrismaService.getInstance();
@@ -68,7 +68,7 @@ class PrismaProductRepository  {
     };
 
     // Remove campos undefined
-    Object.keys(data).forEach(key => {
+    Object.keys(data).forEach((key) => {
       if (data[key] === undefined) {
         delete data[key];
       }
@@ -84,8 +84,11 @@ class PrismaProductRepository  {
    */
   async save(product) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Salvando produto:", { name: product.name, organizationId: product.organizationId });
-      
+      console.log('[PRISMA PRODUCT REPO] Salvando produto:', {
+        name: product.name,
+        organizationId: product.organizationId,
+      });
+
       const prisma = this._getPrismaClient();
       const productData = this._mapToPrismaData(product);
 
@@ -93,10 +96,10 @@ class PrismaProductRepository  {
         data: productData,
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produto salvo com sucesso:", savedProduct.id);
+      console.log('[PRISMA PRODUCT REPO] Produto salvo com sucesso:', savedProduct.id);
       return this._mapToEntity(savedProduct);
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao salvar produto:", error.message);
+      console.error('[PRISMA PRODUCT REPO] Erro ao salvar produto:', error.message);
       throw new Error(`Error saving product: ${error.message}`);
     }
   }
@@ -108,17 +111,17 @@ class PrismaProductRepository  {
    */
   async findById(id) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Buscando produto por ID:", id);
-      
+      console.log('[PRISMA PRODUCT REPO] Buscando produto por ID:', id);
+
       const prisma = this._getPrismaClient();
       const product = await prisma.product.findUnique({
         where: { id },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produto encontrado:", !!product);
+      console.log('[PRISMA PRODUCT REPO] Produto encontrado:', !!product);
       return product ? this._mapToEntity(product) : null;
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao buscar produto por ID:", error.message);
+      console.error('[PRISMA PRODUCT REPO] Erro ao buscar produto por ID:', error.message);
       throw new Error(`Error finding product by id: ${error.message}`);
     }
   }
@@ -130,18 +133,21 @@ class PrismaProductRepository  {
    */
   async findByOrganizationId(organizationId) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Buscando produtos por organização:", organizationId);
-      
+      console.log('[PRISMA PRODUCT REPO] Buscando produtos por organização:', organizationId);
+
       const prisma = this._getPrismaClient();
       const products = await prisma.product.findMany({
         where: { organizationId },
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produtos encontrados por organização:", products.length);
-      return products.map(product => this._mapToEntity(product));
+      console.log('[PRISMA PRODUCT REPO] Produtos encontrados por organização:', products.length);
+      return products.map((product) => this._mapToEntity(product));
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao buscar produtos por organização:", error.message);
+      console.error(
+        '[PRISMA PRODUCT REPO] Erro ao buscar produtos por organização:',
+        error.message
+      );
       throw new Error(`Error finding products by organization: ${error.message}`);
     }
   }
@@ -152,18 +158,18 @@ class PrismaProductRepository  {
    */
   async findAvailable() {
     try {
-      console.log("[PRISMA PRODUCT REPO] Buscando produtos disponíveis");
-      
+      console.log('[PRISMA PRODUCT REPO] Buscando produtos disponíveis');
+
       const prisma = this._getPrismaClient();
       const products = await prisma.product.findMany({
         where: { isAvailable: true },
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produtos disponíveis encontrados:", products.length);
-      return products.map(product => this._mapToEntity(product));
+      console.log('[PRISMA PRODUCT REPO] Produtos disponíveis encontrados:', products.length);
+      return products.map((product) => this._mapToEntity(product));
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao buscar produtos disponíveis:", error.message);
+      console.error('[PRISMA PRODUCT REPO] Erro ao buscar produtos disponíveis:', error.message);
       throw new Error(`Error finding available products: ${error.message}`);
     }
   }
@@ -176,10 +182,10 @@ class PrismaProductRepository  {
    */
   async update(id, productData) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Atualizando produto:", id);
-      
+      console.log('[PRISMA PRODUCT REPO] Atualizando produto:', id);
+
       const prisma = this._getPrismaClient();
-      
+
       const updatedProduct = await prisma.product.update({
         where: { id },
         data: {
@@ -188,16 +194,16 @@ class PrismaProductRepository  {
         },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produto atualizado com sucesso:", updatedProduct.id);
+      console.log('[PRISMA PRODUCT REPO] Produto atualizado com sucesso:', updatedProduct.id);
       return this._mapToEntity(updatedProduct);
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao atualizar produto:", error.message);
-      
+      console.error('[PRISMA PRODUCT REPO] Erro ao atualizar produto:', error.message);
+
       if (error.code === 'P2025') {
-        console.log("[PRISMA PRODUCT REPO] Produto não encontrado para atualização:", id);
+        console.log('[PRISMA PRODUCT REPO] Produto não encontrado para atualização:', id);
         return null;
       }
-      
+
       throw new Error(`Error updating product: ${error.message}`);
     }
   }
@@ -209,23 +215,23 @@ class PrismaProductRepository  {
    */
   async delete(id) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Removendo produto:", id);
-      
+      console.log('[PRISMA PRODUCT REPO] Removendo produto:', id);
+
       const prisma = this._getPrismaClient();
       const deletedProduct = await prisma.product.delete({
         where: { id },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produto removido com sucesso:", deletedProduct.id);
+      console.log('[PRISMA PRODUCT REPO] Produto removido com sucesso:', deletedProduct.id);
       return this._mapToEntity(deletedProduct);
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao remover produto:", error.message);
-      
+      console.error('[PRISMA PRODUCT REPO] Erro ao remover produto:', error.message);
+
       if (error.code === 'P2025') {
-        console.log("[PRISMA PRODUCT REPO] Produto não encontrado para remoção:", id);
+        console.log('[PRISMA PRODUCT REPO] Produto não encontrado para remoção:', id);
         return null;
       }
-      
+
       throw new Error(`Error deleting product: ${error.message}`);
     }
   }
@@ -236,17 +242,17 @@ class PrismaProductRepository  {
    */
   async findAll() {
     try {
-      console.log("[PRISMA PRODUCT REPO] Buscando todos os produtos");
-      
+      console.log('[PRISMA PRODUCT REPO] Buscando todos os produtos');
+
       const prisma = this._getPrismaClient();
       const products = await prisma.product.findMany({
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Total de produtos encontrados:", products.length);
-      return products.map(product => this._mapToEntity(product));
+      console.log('[PRISMA PRODUCT REPO] Total de produtos encontrados:', products.length);
+      return products.map((product) => this._mapToEntity(product));
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao buscar todos os produtos:", error.message);
+      console.error('[PRISMA PRODUCT REPO] Erro ao buscar todos os produtos:', error.message);
       throw new Error(`Error finding all products: ${error.message}`);
     }
   }
@@ -258,10 +264,10 @@ class PrismaProductRepository  {
    */
   async searchByName(name) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Buscando produtos por nome:", name);
-      
+      console.log('[PRISMA PRODUCT REPO] Buscando produtos por nome:', name);
+
       const prisma = this._getPrismaClient();
-      
+
       // No MongoDB com Prisma, usamos contains para busca textual
       const products = await prisma.product.findMany({
         where: {
@@ -279,10 +285,10 @@ class PrismaProductRepository  {
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produtos encontrados na busca:", products.length);
-      return products.map(product => this._mapToEntity(product));
+      console.log('[PRISMA PRODUCT REPO] Produtos encontrados na busca:', products.length);
+      return products.map((product) => this._mapToEntity(product));
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro na busca de produtos:", error.message);
+      console.error('[PRISMA PRODUCT REPO] Erro na busca de produtos:', error.message);
       throw new Error(`Error searching products: ${error.message}`);
     }
   }
@@ -294,8 +300,8 @@ class PrismaProductRepository  {
    */
   async findByCategory(category) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Buscando produtos por categoria:", category);
-      
+      console.log('[PRISMA PRODUCT REPO] Buscando produtos por categoria:', category);
+
       const prisma = this._getPrismaClient();
       const products = await prisma.product.findMany({
         where: {
@@ -305,10 +311,10 @@ class PrismaProductRepository  {
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Produtos encontrados por categoria:", products.length);
-      return products.map(product => this._mapToEntity(product));
+      console.log('[PRISMA PRODUCT REPO] Produtos encontrados por categoria:', products.length);
+      return products.map((product) => this._mapToEntity(product));
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao buscar produtos por categoria:", error.message);
+      console.error('[PRISMA PRODUCT REPO] Erro ao buscar produtos por categoria:', error.message);
       throw new Error(`Error finding products by category: ${error.message}`);
     }
   }
@@ -320,17 +326,20 @@ class PrismaProductRepository  {
    */
   async countByOrganization(organizationId) {
     try {
-      console.log("[PRISMA PRODUCT REPO] Contando produtos por organização:", organizationId);
-      
+      console.log('[PRISMA PRODUCT REPO] Contando produtos por organização:', organizationId);
+
       const prisma = this._getPrismaClient();
       const count = await prisma.product.count({
         where: { organizationId },
       });
 
-      console.log("[PRISMA PRODUCT REPO] Total de produtos da organização:", count);
+      console.log('[PRISMA PRODUCT REPO] Total de produtos da organização:', count);
       return count;
     } catch (error) {
-      console.error("[PRISMA PRODUCT REPO] Erro ao contar produtos por organização:", error.message);
+      console.error(
+        '[PRISMA PRODUCT REPO] Erro ao contar produtos por organização:',
+        error.message
+      );
       throw new Error(`Error counting products by organization: ${error.message}`);
     }
   }

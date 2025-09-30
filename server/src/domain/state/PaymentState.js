@@ -42,7 +42,7 @@ class PaymentState {
       cancelled: 'cancelled',
       canceled: 'cancelled',
       refunded: 'refunded',
-      charged_back: 'charged_back'
+      charged_back: 'charged_back',
     };
 
     return new PaymentState(map[normalized] || 'unknown');

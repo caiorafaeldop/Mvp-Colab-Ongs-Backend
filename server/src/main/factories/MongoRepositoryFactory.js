@@ -1,10 +1,10 @@
 // MongoDB Repositories
-const MongoUserRepository = require("../../infra/repositories/MongoUserRepository");
-const MongoProductRepository = require("../../infra/repositories/MongoProductRepository");
-const MongoCollaborationRepository = require("../../infra/repositories/MongoCollaborationRepository");
-const MongoFileRepository = require("../../infra/repositories/MongoFileRepository");
-const MongoNotificationRepository = require("../../infra/repositories/MongoNotificationRepository");
-const MongoDonationRepository = require("../../infra/repositories/MongoDonationRepository");
+const MongoUserRepository = require('../../infra/repositories/MongoUserRepository');
+const MongoProductRepository = require('../../infra/repositories/MongoProductRepository');
+const MongoCollaborationRepository = require('../../infra/repositories/MongoCollaborationRepository');
+const MongoFileRepository = require('../../infra/repositories/MongoFileRepository');
+const MongoNotificationRepository = require('../../infra/repositories/MongoNotificationRepository');
+const MongoDonationRepository = require('../../infra/repositories/MongoDonationRepository');
 
 /**
  * Factory para criação de repositories MongoDB
@@ -100,7 +100,7 @@ class MongoRepositoryFactory {
       collaborationRepository: this.createCollaborationRepository(),
       fileRepository: this.createFileRepository(),
       notificationRepository: this.createNotificationRepository(),
-      donationRepository: this.createDonationRepository()
+      donationRepository: this.createDonationRepository(),
     };
   }
 
@@ -122,7 +122,7 @@ class MongoRepositoryFactory {
       type: 'MongoDB',
       initialized: this.initialized,
       repositoriesCreated: Object.keys(this.repositories),
-      totalRepositories: Object.keys(this.repositories).length
+      totalRepositories: Object.keys(this.repositories).length,
     };
   }
 
@@ -137,10 +137,10 @@ class MongoRepositoryFactory {
     }
 
     console.log('[MongoRepositoryFactory] Inicializando todos os repositories...');
-    
+
     const repositories = this.getAllRepositories();
     this.initialized = true;
-    
+
     console.log('[MongoRepositoryFactory] Todos os repositories inicializados');
     return repositories;
   }

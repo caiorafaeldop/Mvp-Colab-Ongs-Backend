@@ -12,7 +12,7 @@ class IStorageAdapter {
   async uploadFile(file, options = {}) {
     throw new Error('Method uploadFile must be implemented by concrete adapter');
   }
-  
+
   /**
    * Remove um arquivo do storage
    * @param {string} fileId - ID do arquivo
@@ -21,7 +21,7 @@ class IStorageAdapter {
   async deleteFile(fileId) {
     throw new Error('Method deleteFile must be implemented by concrete adapter');
   }
-  
+
   /**
    * Obtém a URL de um arquivo
    * @param {string} fileId - ID do arquivo

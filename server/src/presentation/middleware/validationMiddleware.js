@@ -14,39 +14,38 @@ const { logger } = require('../../infra/logger');
 const validateDTO = (DTOClass, source = 'body') => {
   return (req, res, next) => {
     const requestLogger = req.logger || logger;
-    
+
     try {
       // Obter dados da fonte especificada
       const data = req[source];
-      
+
       requestLogger.debug('Iniciando validação de dados', {
         middleware: 'validateDTO',
         dtoClass: DTOClass.name,
         source,
-        dataKeys: Object.keys(data || {})
+        dataKeys: Object.keys(data || {}),
       });
 
       // Validar dados usando o DTO
       const validatedData = new DTOClass(data);
-      
+
       // Adicionar dados validados ao request
       req.validatedData = validatedData;
       req.dto = validatedData; // Alias para compatibilidade
-      
+
       requestLogger.debug('Validação concluída com sucesso', {
         middleware: 'validateDTO',
-        dtoClass: DTOClass.name
+        dtoClass: DTOClass.name,
       });
 
       next();
-      
     } catch (error) {
       requestLogger.warn('Erro de validação', {
         middleware: 'validateDTO',
         dtoClass: DTOClass.name,
         source,
         error: error.message,
-        data: req[source]
+        data: req[source],
       });
 
       // Tratar erros do Zod
@@ -55,21 +54,21 @@ const validateDTO = (DTOClass, source = 'body') => {
           success: false,
           message: 'Dados inválidos',
           error: 'VALIDATION_ERROR',
-          details: error.errors.map(err => ({
+          details: error.errors.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
             code: err.code,
-            received: err.received
-          }))
+            received: err.received,
+          })),
         });
       }
-      
+
       // Outros erros de validação
       return res.status(400).json({
         success: false,
         message: 'Erro de validação',
         error: 'VALIDATION_ERROR',
-        details: error.message
+        details: error.message,
       });
     }
   };
@@ -89,17 +88,20 @@ const validateBody = (schema) => {
       requestLogger.debug('Body validado', { middleware: 'validateBody' });
       next();
     } catch (error) {
-      requestLogger.warn('Erro na validação de body', { middleware: 'validateBody', error: error.message });
+      requestLogger.warn('Erro na validação de body', {
+        middleware: 'validateBody',
+        error: error.message,
+      });
       if (error.name === 'ZodError') {
         return res.status(400).json({
           success: false,
           message: 'Body inválido',
           error: 'BODY_VALIDATION_ERROR',
-          details: error.errors.map(err => ({
+          details: error.errors.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
-            code: err.code
-          }))
+            code: err.code,
+          })),
         });
       }
       return res.status(400).json({ success: false, message: 'Erro na validação do body' });
@@ -116,35 +118,34 @@ const validateBody = (schema) => {
 const safeValidateDTO = (DTOClass, source = 'body') => {
   return (req, res, next) => {
     const requestLogger = req.logger || logger;
-    
+
     try {
       const data = req[source];
       const validatedData = new DTOClass(data);
-      
+
       req.validatedData = validatedData;
       req.dto = validatedData;
       req.validationResult = { success: true, data: validatedData };
-      
+
       requestLogger.debug('Validação segura concluída', {
         middleware: 'safeValidateDTO',
         dtoClass: DTOClass.name,
-        success: true
+        success: true,
       });
-      
     } catch (error) {
-      req.validationResult = { 
-        success: false, 
-        error: error.name === 'ZodError' ? error.errors : error.message 
+      req.validationResult = {
+        success: false,
+        error: error.name === 'ZodError' ? error.errors : error.message,
       };
-      
+
       requestLogger.debug('Validação segura falhou', {
         middleware: 'safeValidateDTO',
         dtoClass: DTOClass.name,
         success: false,
-        error: error.message
+        error: error.message,
       });
     }
-    
+
     next();
   };
 };
@@ -157,23 +158,22 @@ const safeValidateDTO = (DTOClass, source = 'body') => {
 const validateParams = (schema) => {
   return (req, res, next) => {
     const requestLogger = req.logger || logger;
-    
+
     try {
       const validatedParams = schema.parse(req.params);
       req.validatedParams = validatedParams;
-      
+
       requestLogger.debug('Parâmetros validados', {
         middleware: 'validateParams',
-        params: validatedParams
+        params: validatedParams,
       });
-      
+
       next();
-      
     } catch (error) {
       requestLogger.warn('Erro na validação de parâmetros', {
         middleware: 'validateParams',
         error: error.message,
-        params: req.params
+        params: req.params,
       });
 
       if (error.name === 'ZodError') {
@@ -181,18 +181,18 @@ const validateParams = (schema) => {
           success: false,
           message: 'Parâmetros inválidos',
           error: 'PARAMS_VALIDATION_ERROR',
-          details: error.errors.map(err => ({
+          details: error.errors.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
-            code: err.code
-          }))
+            code: err.code,
+          })),
         });
       }
-      
+
       return res.status(400).json({
         success: false,
         message: 'Erro na validação de parâmetros',
-        error: 'PARAMS_VALIDATION_ERROR'
+        error: 'PARAMS_VALIDATION_ERROR',
       });
     }
   };
@@ -206,23 +206,22 @@ const validateParams = (schema) => {
 const validateQuery = (schema) => {
   return (req, res, next) => {
     const requestLogger = req.logger || logger;
-    
+
     try {
       const validatedQuery = schema.parse(req.query);
       req.validatedQuery = validatedQuery;
-      
+
       requestLogger.debug('Query parameters validados', {
         middleware: 'validateQuery',
-        query: validatedQuery
+        query: validatedQuery,
       });
-      
+
       next();
-      
     } catch (error) {
       requestLogger.warn('Erro na validação de query', {
         middleware: 'validateQuery',
         error: error.message,
-        query: req.query
+        query: req.query,
       });
 
       if (error.name === 'ZodError') {
@@ -230,18 +229,18 @@ const validateQuery = (schema) => {
           success: false,
           message: 'Query parameters inválidos',
           error: 'QUERY_VALIDATION_ERROR',
-          details: error.errors.map(err => ({
+          details: error.errors.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
-            code: err.code
-          }))
+            code: err.code,
+          })),
         });
       }
-      
+
       return res.status(400).json({
         success: false,
         message: 'Erro na validação de query',
-        error: 'QUERY_VALIDATION_ERROR'
+        error: 'QUERY_VALIDATION_ERROR',
       });
     }
   };
@@ -256,7 +255,7 @@ const validateMultiple = (validators) => {
   return (req, res, next) => {
     const requestLogger = req.logger || logger;
     const errors = [];
-    
+
     try {
       // Validar body se especificado
       if (validators.body) {
@@ -266,7 +265,7 @@ const validateMultiple = (validators) => {
           errors.push({ source: 'body', error });
         }
       }
-      
+
       // Validar params se especificado
       if (validators.params) {
         try {
@@ -275,7 +274,7 @@ const validateMultiple = (validators) => {
           errors.push({ source: 'params', error });
         }
       }
-      
+
       // Validar query se especificado
       if (validators.query) {
         try {
@@ -284,46 +283,45 @@ const validateMultiple = (validators) => {
           errors.push({ source: 'query', error });
         }
       }
-      
+
       // Se houver erros, retornar todos
       if (errors.length > 0) {
         requestLogger.warn('Múltiplos erros de validação', {
           middleware: 'validateMultiple',
           errorsCount: errors.length,
-          sources: errors.map(e => e.source)
+          sources: errors.map((e) => e.source),
         });
 
         const validationErrors = errors.map(({ source, error }) => ({
           source,
-          errors: error.name === 'ZodError' ? error.errors : [{ message: error.message }]
+          errors: error.name === 'ZodError' ? error.errors : [{ message: error.message }],
         }));
 
         return res.status(400).json({
           success: false,
           message: 'Múltiplos erros de validação',
           error: 'MULTIPLE_VALIDATION_ERRORS',
-          details: validationErrors
+          details: validationErrors,
         });
       }
-      
+
       requestLogger.debug('Validação múltipla concluída', {
         middleware: 'validateMultiple',
-        validatedSources: Object.keys(validators)
+        validatedSources: Object.keys(validators),
       });
-      
+
       next();
-      
     } catch (error) {
       requestLogger.error('Erro inesperado na validação múltipla', {
         middleware: 'validateMultiple',
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-      
+
       return res.status(500).json({
         success: false,
         message: 'Erro interno de validação',
-        error: 'INTERNAL_VALIDATION_ERROR'
+        error: 'INTERNAL_VALIDATION_ERROR',
       });
     }
   };
@@ -335,5 +333,5 @@ module.exports = {
   validateParams,
   validateQuery,
   validateBody,
-  validateMultiple
+  validateMultiple,
 };

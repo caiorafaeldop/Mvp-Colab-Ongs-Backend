@@ -1,9 +1,12 @@
-const express = require("express");
-const DonationController = require("../controllers/DonationController");
-const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddleware");
-const { validateBody } = require("../middleware/validationMiddleware");
-const { singleDonationSchema, recurringDonationSchema } = require("../../application/validators/donationSchemas");
-const { DonationChainFactory } = require("../middleware/DonationChainHandler");
+const express = require('express');
+const DonationController = require('../controllers/DonationController');
+const { createSimpleAuthMiddleware } = require('../middleware/SimpleAuthMiddleware');
+const { validateBody } = require('../middleware/validationMiddleware');
+const {
+  singleDonationSchema,
+  recurringDonationSchema,
+} = require('../../application/validators/donationSchemas');
+const { DonationChainFactory } = require('../middleware/DonationChainHandler');
 
 /**
  * @swagger
@@ -78,7 +81,7 @@ const { DonationChainFactory } = require("../middleware/DonationChainHandler");
  *           type: string
  *           format: date-time
  *           description: Data de atualização
- *     
+ *
  *     SingleDonationRequest:
  *       type: object
  *       required:
@@ -117,7 +120,7 @@ const { DonationChainFactory } = require("../middleware/DonationChainHandler");
  *           type: string
  *           description: Mensagem do doador
  *           example: "Parabéns pelo trabalho!"
- *     
+ *
  *     RecurringDonationRequest:
  *       type: object
  *       required:
@@ -225,14 +228,16 @@ const createDonationRoutes = (donationService, authService) => {
    *               $ref: '#/components/schemas/Error'
    */
   // Usar cadeia de handlers coesos para doações únicas
-  router.post("/single", 
+  router.post(
+    '/single',
     validateBody(singleDonationSchema),
     ...DonationChainFactory.createDonationChain(),
     donationController.createSingleDonation
   );
-  
+
   // Alias para compatibilidade com testes existentes
-  router.post("/donate", 
+  router.post(
+    '/donate',
     validateBody(singleDonationSchema),
     ...DonationChainFactory.createDonationChain(),
     donationController.createSingleDonation
@@ -286,7 +291,8 @@ const createDonationRoutes = (donationService, authService) => {
    *                     organizationName:
    *                       type: string
    */
-  router.post("/single-template", 
+  router.post(
+    '/single-template',
     validateBody(singleDonationSchema),
     ...DonationChainFactory.createDonationChain(),
     donationController.createSingleDonationWithTemplate
@@ -348,7 +354,8 @@ const createDonationRoutes = (donationService, authService) => {
    *               $ref: '#/components/schemas/Error'
    */
   // Usar cadeia específica para doações recorrentes
-  router.post("/recurring", 
+  router.post(
+    '/recurring',
     validateBody(recurringDonationSchema),
     ...DonationChainFactory.createRecurringDonationChain(),
     donationController.createRecurringDonation
@@ -400,7 +407,8 @@ const createDonationRoutes = (donationService, authService) => {
    *                     organizationName:
    *                       type: string
    */
-  router.post("/recurring-template", 
+  router.post(
+    '/recurring-template',
     validateBody(recurringDonationSchema),
     ...DonationChainFactory.createRecurringDonationChain(),
     donationController.createRecurringDonationWithTemplate
@@ -445,7 +453,7 @@ const createDonationRoutes = (donationService, authService) => {
    *       400:
    *         description: Erro ao cancelar assinatura
    */
-  router.delete("/recurring/:subscriptionId", donationController.cancelRecurringDonation);
+  router.delete('/recurring/:subscriptionId', donationController.cancelRecurringDonation);
 
   /**
    * @swagger
@@ -492,7 +500,7 @@ const createDonationRoutes = (donationService, authService) => {
    *       400:
    *         description: Erro ao consultar status
    */
-  router.get("/recurring/:subscriptionId/status", donationController.getSubscriptionStatus);
+  router.get('/recurring/:subscriptionId/status', donationController.getSubscriptionStatus);
 
   /**
    * @swagger
@@ -532,7 +540,7 @@ const createDonationRoutes = (donationService, authService) => {
    *                   type: string
    *                   example: "Webhook processado com sucesso"
    */
-  router.post("/webhook", donationController.processWebhook);
+  router.post('/webhook', donationController.processWebhook);
 
   // Rotas protegidas (precisam de autenticação)
   if (auth) {
@@ -611,7 +619,7 @@ const createDonationRoutes = (donationService, authService) => {
      *             schema:
      *               $ref: '#/components/schemas/Error'
      */
-    router.get("/organization/:organizationId", auth, donationController.getDonations);
+    router.get('/organization/:organizationId', auth, donationController.getDonations);
 
     /**
      * @swagger
@@ -650,7 +658,7 @@ const createDonationRoutes = (donationService, authService) => {
      *             schema:
      *               $ref: '#/components/schemas/Error'
      */
-    router.get("/:id", auth, donationController.getDonationById);
+    router.get('/:id', auth, donationController.getDonationById);
 
     /**
      * @swagger
@@ -690,7 +698,7 @@ const createDonationRoutes = (donationService, authService) => {
      *             schema:
      *               $ref: '#/components/schemas/Error'
      */
-    router.delete("/:id/cancel", auth, donationController.cancelRecurringDonation);
+    router.delete('/:id/cancel', auth, donationController.cancelRecurringDonation);
 
     /**
      * @swagger
@@ -757,7 +765,11 @@ const createDonationRoutes = (donationService, authService) => {
      *                       type: integer
      *                       example: 10
      */
-    router.get("/organization/:organizationId/statistics", auth, donationController.getDonationStatistics);
+    router.get(
+      '/organization/:organizationId/statistics',
+      auth,
+      donationController.getDonationStatistics
+    );
 
     /**
      * @swagger
@@ -850,7 +862,11 @@ const createDonationRoutes = (donationService, authService) => {
      *                   type: boolean
      *                   example: true
      */
-    router.get("/organization/:organizationId/report", auth, donationController.generateDonationReport);
+    router.get(
+      '/organization/:organizationId/report',
+      auth,
+      donationController.generateDonationReport
+    );
   }
 
   return router;

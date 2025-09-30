@@ -1,10 +1,13 @@
 /**
  * DecoratorFactory - Factory para criar decorators
- * 
+ *
  * Centraliza criação de decorators e fornece configurações padrão.
  */
 
-const { CacheDecorator, createCachedRepository } = require('../../domain/decorators/CacheDecorator');
+const {
+  CacheDecorator,
+  createCachedRepository,
+} = require('../../domain/decorators/CacheDecorator');
 const { RetryDecorator, createRetryService } = require('../../domain/decorators/RetryDecorator');
 const { logger } = require('../../infra/logger');
 
@@ -19,7 +22,7 @@ class DecoratorFactory {
     const defaultOptions = {
       ttl: 300000, // 5 minutos
       maxSize: 1000,
-      ...options
+      ...options,
     };
 
     logger.info(`[DECORATOR FACTORY] Criando cached repository: ${repository.constructor.name}`);
@@ -37,7 +40,7 @@ class DecoratorFactory {
       maxRetries: 3,
       retryDelay: 1000,
       backoffMultiplier: 2,
-      ...options
+      ...options,
     };
 
     logger.info(`[DECORATOR FACTORY] Criando retry service: ${service.constructor.name}`);
@@ -51,28 +54,28 @@ class DecoratorFactory {
     const configs = {
       // Repositories: cache agressivo
       userRepository: {
-        cache: { ttl: 600000, maxSize: 500 } // 10 minutos, 500 users
+        cache: { ttl: 600000, maxSize: 500 }, // 10 minutos, 500 users
       },
       productRepository: {
-        cache: { ttl: 300000, maxSize: 1000 } // 5 minutos, 1000 products
+        cache: { ttl: 300000, maxSize: 1000 }, // 5 minutos, 1000 products
       },
       donationRepository: {
-        cache: { ttl: 60000, maxSize: 500 } // 1 minuto, 500 donations (dados mais dinâmicos)
+        cache: { ttl: 60000, maxSize: 500 }, // 1 minuto, 500 donations (dados mais dinâmicos)
       },
       organizationRepository: {
-        cache: { ttl: 600000, maxSize: 200 } // 10 minutos, 200 orgs
+        cache: { ttl: 600000, maxSize: 200 }, // 10 minutos, 200 orgs
       },
 
       // Services externos: retry agressivo
       mercadoPagoService: {
-        retry: { maxRetries: 5, retryDelay: 2000, backoffMultiplier: 2 }
+        retry: { maxRetries: 5, retryDelay: 2000, backoffMultiplier: 2 },
       },
       cloudinaryService: {
-        retry: { maxRetries: 3, retryDelay: 1000, backoffMultiplier: 1.5 }
+        retry: { maxRetries: 3, retryDelay: 1000, backoffMultiplier: 1.5 },
       },
       emailService: {
-        retry: { maxRetries: 3, retryDelay: 5000, backoffMultiplier: 2 }
-      }
+        retry: { maxRetries: 3, retryDelay: 5000, backoffMultiplier: 2 },
+      },
     };
 
     return configs[type] || {};
@@ -86,7 +89,7 @@ class DecoratorFactory {
    */
   static decorateRepository(repository, type = 'default') {
     const config = this.getDefaultConfig(type);
-    
+
     if (config.cache) {
       return this.createCachedRepository(repository, config.cache);
     }
@@ -103,7 +106,7 @@ class DecoratorFactory {
    */
   static decorateService(service, type = 'default') {
     const config = this.getDefaultConfig(type);
-    
+
     if (config.retry) {
       return this.createRetryService(service, config.retry);
     }

@@ -30,16 +30,7 @@ class File {
   }
 
   static create(originalName, fileName, fileUrl, fileType, fileSize, ownerId, ownerType = 'user') {
-    return new File(
-      null,
-      originalName,
-      fileName,
-      fileUrl,
-      fileType,
-      fileSize,
-      ownerId,
-      ownerType
-    );
+    return new File(null, originalName, fileName, fileUrl, fileType, fileSize, ownerId, ownerType);
   }
 
   makePublic() {
@@ -62,15 +53,21 @@ class File {
   }
 
   isDocument() {
-    const docTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const docTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
     return docTypes.includes(this.fileType);
   }
 
   getFormattedSize() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (this.fileSize === 0) return '0 Bytes';
+    if (this.fileSize === 0) {
+      return '0 Bytes';
+    }
     const i = Math.floor(Math.log(this.fileSize) / Math.log(1024));
-    return Math.round(this.fileSize / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((this.fileSize / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }
 

@@ -15,7 +15,7 @@ class UserObserver extends IObserver {
       'user.logout',
       'user.profile.updated',
       'user.password.changed',
-      'user.deleted'
+      'user.deleted',
     ];
   }
 
@@ -24,7 +24,7 @@ class UserObserver extends IObserver {
       logger.info(`[${this.name}] Processando evento: ${event.type}`, {
         eventId: event.id,
         userId: event.data?.userId,
-        timestamp: event.timestamp
+        timestamp: event.timestamp,
       });
 
       switch (event.type) {
@@ -53,7 +53,7 @@ class UserObserver extends IObserver {
       logger.error(`[${this.name}] Erro ao processar evento`, {
         error: error.message,
         eventType: event.type,
-        eventId: event.id
+        eventId: event.id,
       });
     }
   }
@@ -75,7 +75,7 @@ class UserObserver extends IObserver {
     logger.info(`[${this.name}] Novo usuário registrado`, {
       userId: event.data.userId,
       email: event.data.email,
-      userType: event.data.userType
+      userType: event.data.userType,
     });
 
     // Lógica adicional:
@@ -90,7 +90,7 @@ class UserObserver extends IObserver {
       userId: event.data.userId,
       email: event.data.email,
       ip: context.ip,
-      userAgent: context.userAgent
+      userAgent: context.userAgent,
     });
 
     // Lógica adicional:
@@ -101,7 +101,7 @@ class UserObserver extends IObserver {
 
   async handleUserLogout(event, context) {
     logger.info(`[${this.name}] Usuário fez logout`, {
-      userId: event.data.userId
+      userId: event.data.userId,
     });
 
     // Lógica adicional:
@@ -112,7 +112,7 @@ class UserObserver extends IObserver {
   async handleProfileUpdated(event, context) {
     logger.info(`[${this.name}] Perfil atualizado`, {
       userId: event.data.userId,
-      fields: event.data.updatedFields
+      fields: event.data.updatedFields,
     });
 
     // Lógica adicional:
@@ -122,7 +122,7 @@ class UserObserver extends IObserver {
 
   async handlePasswordChanged(event, context) {
     logger.info(`[${this.name}] Senha alterada`, {
-      userId: event.data.userId
+      userId: event.data.userId,
     });
 
     // Lógica adicional:
@@ -133,7 +133,7 @@ class UserObserver extends IObserver {
 
   async handleUserDeleted(event, context) {
     logger.info(`[${this.name}] Usuário deletado`, {
-      userId: event.data.userId
+      userId: event.data.userId,
     });
 
     // Lógica adicional:

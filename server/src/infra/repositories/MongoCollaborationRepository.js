@@ -1,26 +1,29 @@
-const Collaboration = require("../../domain/entities/Collaboration");
-const mongoose = require("mongoose");
+const Collaboration = require('../../domain/entities/Collaboration');
+const mongoose = require('mongoose');
 
 // Schema do Collaboration
-const CollaborationSchema = new mongoose.Schema({
-  requesterOrgId: { type: String, required: true },
-  requesterOrgName: { type: String, required: true },
-  targetOrgId: { type: String, required: true },
-  targetOrgName: { type: String, required: true },
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  status: { 
-    type: String, 
-    enum: ['pending', 'accepted', 'rejected', 'active', 'completed', 'cancelled'],
-    default: 'pending'
+const CollaborationSchema = new mongoose.Schema(
+  {
+    requesterOrgId: { type: String, required: true },
+    requesterOrgName: { type: String, required: true },
+    targetOrgId: { type: String, required: true },
+    targetOrgName: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected', 'active', 'completed', 'cancelled'],
+      default: 'pending',
+    },
+    startDate: { type: Date, default: null },
+    endDate: { type: Date, default: null },
+    resources: [{ type: String }],
+    notes: { type: String, default: '' },
   },
-  startDate: { type: Date, default: null },
-  endDate: { type: Date, default: null },
-  resources: [{ type: String }],
-  notes: { type: String, default: '' }
-}, {
-  timestamps: true
-});
+  {
+    timestamps: true,
+  }
+);
 
 const CollaborationModel = mongoose.model('Collaboration', CollaborationSchema);
 
@@ -38,7 +41,7 @@ class MongoCollaborationRepository {
         startDate: collaboration.startDate,
         endDate: collaboration.endDate,
         resources: collaboration.resources,
-        notes: collaboration.notes
+        notes: collaboration.notes,
       };
 
       const savedCollaboration = await CollaborationModel.create(collaborationData);
@@ -60,12 +63,9 @@ class MongoCollaborationRepository {
   async findByOrganizationId(organizationId) {
     try {
       const collaborations = await CollaborationModel.find({
-        $or: [
-          { requesterOrgId: organizationId },
-          { targetOrgId: organizationId }
-        ]
+        $or: [{ requesterOrgId: organizationId }, { targetOrgId: organizationId }],
       }).sort({ createdAt: -1 });
-      return collaborations.map(collab => this._mapToEntity(collab));
+      return collaborations.map((collab) => this._mapToEntity(collab));
     } catch (error) {
       throw new Error(`Error finding collaborations by organization: ${error.message}`);
     }
@@ -74,7 +74,7 @@ class MongoCollaborationRepository {
   async findByStatus(status) {
     try {
       const collaborations = await CollaborationModel.find({ status }).sort({ createdAt: -1 });
-      return collaborations.map(collab => this._mapToEntity(collab));
+      return collaborations.map((collab) => this._mapToEntity(collab));
     } catch (error) {
       throw new Error(`Error finding collaborations by status: ${error.message}`);
     }
@@ -85,10 +85,10 @@ class MongoCollaborationRepository {
       const collaborations = await CollaborationModel.find({
         $or: [
           { requesterOrgId: org1Id, targetOrgId: org2Id },
-          { requesterOrgId: org2Id, targetOrgId: org1Id }
-        ]
+          { requesterOrgId: org2Id, targetOrgId: org1Id },
+        ],
       }).sort({ createdAt: -1 });
-      return collaborations.map(collab => this._mapToEntity(collab));
+      return collaborations.map((collab) => this._mapToEntity(collab));
     } catch (error) {
       throw new Error(`Error finding collaborations between organizations: ${error.message}`);
     }
@@ -119,7 +119,7 @@ class MongoCollaborationRepository {
   async findAll() {
     try {
       const collaborations = await CollaborationModel.find().sort({ createdAt: -1 });
-      return collaborations.map(collab => this._mapToEntity(collab));
+      return collaborations.map((collab) => this._mapToEntity(collab));
     } catch (error) {
       throw new Error(`Error finding all collaborations: ${error.message}`);
     }
@@ -127,10 +127,10 @@ class MongoCollaborationRepository {
 
   async findActiveCollaborations() {
     try {
-      const collaborations = await CollaborationModel.find({ 
-        status: { $in: ['accepted', 'active'] }
+      const collaborations = await CollaborationModel.find({
+        status: { $in: ['accepted', 'active'] },
       }).sort({ createdAt: -1 });
-      return collaborations.map(collab => this._mapToEntity(collab));
+      return collaborations.map((collab) => this._mapToEntity(collab));
     } catch (error) {
       throw new Error(`Error finding active collaborations: ${error.message}`);
     }
@@ -140,9 +140,9 @@ class MongoCollaborationRepository {
     try {
       const collaborations = await CollaborationModel.find({
         targetOrgId: organizationId,
-        status: 'pending'
+        status: 'pending',
       }).sort({ createdAt: -1 });
-      return collaborations.map(collab => this._mapToEntity(collab));
+      return collaborations.map((collab) => this._mapToEntity(collab));
     } catch (error) {
       throw new Error(`Error finding pending collaborations: ${error.message}`);
     }

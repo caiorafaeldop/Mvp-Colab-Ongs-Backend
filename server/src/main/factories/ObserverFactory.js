@@ -64,10 +64,10 @@ class ObserverFactory {
       this.createProductObserver(),
       this.createUserObserver(),
       this.createDonationObserver(),
-      this.createSystemObserver()
+      this.createSystemObserver(),
     ];
 
-    observers.forEach(observer => {
+    observers.forEach((observer) => {
       this.eventManager.addObserver(observer);
     });
 

@@ -14,14 +14,14 @@ const singleDonationSchema = z.object({
   donorZipCode: z.string().optional(),
   message: z.string().optional(),
   isAnonymous: z.boolean().optional(),
-  showInPublicList: z.boolean().optional()
+  showInPublicList: z.boolean().optional(),
 });
 
 const recurringDonationSchema = singleDonationSchema.extend({
-  frequency: z.enum(['monthly', 'weekly', 'yearly']).optional()
+  frequency: z.enum(['monthly', 'weekly', 'yearly']).optional(),
 });
 
 module.exports = {
   singleDonationSchema,
-  recurringDonationSchema
+  recurringDonationSchema,
 };

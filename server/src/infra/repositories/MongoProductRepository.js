@@ -1,8 +1,8 @@
 // Interface removida na limpeza
-const ProductModel = require("../database/models/ProductModel");
-const Product = require("../../domain/entities/Product");
+const ProductModel = require('../database/models/ProductModel');
+const Product = require('../../domain/entities/Product');
 
-class MongoProductRepository  {
+class MongoProductRepository {
   async save(product) {
     try {
       const productData = {
@@ -40,9 +40,7 @@ class MongoProductRepository  {
       const products = await ProductModel.find({ organizationId });
       return products.map((product) => this._mapToEntity(product));
     } catch (error) {
-      throw new Error(
-        `Error finding products by organization: ${error.message}`
-      );
+      throw new Error(`Error finding products by organization: ${error.message}`);
     }
   }
 

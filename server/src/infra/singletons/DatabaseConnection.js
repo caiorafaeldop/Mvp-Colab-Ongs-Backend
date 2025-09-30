@@ -17,7 +17,7 @@ class DatabaseConnection extends ISingleton {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      family: 4
+      family: 4,
     };
   }
 
@@ -32,13 +32,13 @@ class DatabaseConnection extends ISingleton {
       // Double-checked locking para thread safety
       if (!DatabaseConnection._creating) {
         DatabaseConnection._creating = true;
-        
+
         // Second check (com lock)
         if (!DatabaseConnection.instance) {
           DatabaseConnection.instance = new DatabaseConnection();
           console.log('[DatabaseConnection] Nova instância criada');
         }
-        
+
         DatabaseConnection._creating = false;
       }
     }
@@ -58,19 +58,19 @@ class DatabaseConnection extends ISingleton {
         return this.connection;
       }
 
-      this.connectionString = connectionString || process.env.MONGODB_URI || 'mongodb://localhost:27017/marketplace-ongs';
-      
+      this.connectionString =
+        connectionString || process.env.MONGODB_URI || 'mongodb://localhost:27017/marketplace-ongs';
+
       const options = { ...this.options, ...customOptions };
 
       console.log('[DatabaseConnection] Conectando ao MongoDB...');
       this.connection = await mongoose.connect(this.connectionString, options);
-      
+
       this.isConnected = true;
       this.setupEventListeners();
 
       console.log('[DatabaseConnection] Conectado com sucesso ao MongoDB');
       return this.connection;
-
     } catch (error) {
       console.error('[DatabaseConnection] Erro ao conectar:', error.message);
       this.isConnected = false;
@@ -130,7 +130,7 @@ class DatabaseConnection extends ISingleton {
       host: mongoose.connection.host,
       port: mongoose.connection.port,
       name: mongoose.connection.name,
-      collections: Object.keys(mongoose.connection.collections)
+      collections: Object.keys(mongoose.connection.collections),
     };
   }
 
@@ -140,8 +140,10 @@ class DatabaseConnection extends ISingleton {
    */
   async ping() {
     try {
-      if (!this.isConnected) return false;
-      
+      if (!this.isConnected) {
+        return false;
+      }
+
       await mongoose.connection.db.admin().ping();
       return true;
     } catch (error) {
@@ -167,7 +169,7 @@ class DatabaseConnection extends ISingleton {
         objects: stats.objects,
         dataSize: stats.dataSize,
         storageSize: stats.storageSize,
-        indexes: stats.indexes
+        indexes: stats.indexes,
       };
     } catch (error) {
       return { error: error.message };

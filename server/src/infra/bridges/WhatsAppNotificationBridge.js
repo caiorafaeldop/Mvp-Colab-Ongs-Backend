@@ -29,7 +29,7 @@ class WhatsAppNotificationBridge extends INotificationBridge {
       const messageData = {
         to: this.formatPhoneNumber(recipient.phone),
         message: this.buildMessage(notification, recipient, options),
-        type: options.messageType || 'text'
+        type: options.messageType || 'text',
       };
 
       // Adiciona mídia se fornecida
@@ -48,9 +48,8 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         recipient: recipient.phone,
         sentAt: new Date().toISOString(),
-        provider: this.adapter.getProviderName?.() || 'Unknown'
+        provider: this.adapter.getProviderName?.() || 'Unknown',
       };
-
     } catch (error) {
       console.error('[WhatsAppNotificationBridge] Erro no envio:', error.message);
       throw new Error(`WhatsApp sending failed: ${error.message}`);
@@ -66,10 +65,12 @@ class WhatsAppNotificationBridge extends INotificationBridge {
    */
   async sendBulkNotification(notification, recipients, options = {}) {
     try {
-      console.log(`[WhatsAppNotificationBridge] Enviando WhatsApp em lote para ${recipients.length} destinatários`);
+      console.log(
+        `[WhatsAppNotificationBridge] Enviando WhatsApp em lote para ${recipients.length} destinatários`
+      );
 
-      const validRecipients = recipients.filter(r => this.validateRecipient(r));
-      
+      const validRecipients = recipients.filter((r) => this.validateRecipient(r));
+
       if (validRecipients.length === 0) {
         throw new Error('Nenhum destinatário válido encontrado');
       }
@@ -81,15 +82,15 @@ class WhatsAppNotificationBridge extends INotificationBridge {
       // Processa em lotes menores devido às limitações do WhatsApp
       for (let i = 0; i < validRecipients.length; i += batchSize) {
         const batch = validRecipients.slice(i, i + batchSize);
-        
+
         for (const recipient of batch) {
           try {
             const result = await this.sendNotification(notification, recipient, options);
             results.push({ success: true, recipient: recipient.phone, result });
-            
+
             // Delay entre mensagens para evitar rate limiting
             if (delayBetweenMessages > 0) {
-              await new Promise(resolve => setTimeout(resolve, delayBetweenMessages));
+              await new Promise((resolve) => setTimeout(resolve, delayBetweenMessages));
             }
           } catch (error) {
             results.push({ success: false, recipient: recipient.phone, error: error.message });
@@ -98,14 +99,16 @@ class WhatsAppNotificationBridge extends INotificationBridge {
 
         // Delay maior entre lotes
         if (options.delayBetweenBatches && i + batchSize < validRecipients.length) {
-          await new Promise(resolve => setTimeout(resolve, options.delayBetweenBatches));
+          await new Promise((resolve) => setTimeout(resolve, options.delayBetweenBatches));
         }
       }
 
-      const successful = results.filter(r => r.success);
-      const failed = results.filter(r => !r.success);
+      const successful = results.filter((r) => r.success);
+      const failed = results.filter((r) => !r.success);
 
-      console.log(`[WhatsAppNotificationBridge] Lote concluído: ${successful.length}/${recipients.length} sucessos`);
+      console.log(
+        `[WhatsAppNotificationBridge] Lote concluído: ${successful.length}/${recipients.length} sucessos`
+      );
 
       return {
         success: failed.length === 0,
@@ -115,9 +118,8 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         successful: successful.length,
         failed: failed.length,
         results: results,
-        sentAt: new Date().toISOString()
+        sentAt: new Date().toISOString(),
       };
-
     } catch (error) {
       console.error('[WhatsAppNotificationBridge] Erro no envio em lote:', error.message);
       throw new Error(`Bulk WhatsApp sending failed: ${error.message}`);
@@ -133,14 +135,14 @@ class WhatsAppNotificationBridge extends INotificationBridge {
     try {
       if (this.adapter.getMessageStatus) {
         const status = await this.adapter.getMessageStatus(notificationId);
-        
+
         return {
           notificationId,
           channel: this.channelName,
           status: status.status,
           deliveredAt: status.deliveredAt,
           readAt: status.readAt,
-          checkedAt: new Date().toISOString()
+          checkedAt: new Date().toISOString(),
         };
       }
 
@@ -149,9 +151,8 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         status: 'unknown',
         message: 'Status tracking not available for this WhatsApp provider',
-        checkedAt: new Date().toISOString()
+        checkedAt: new Date().toISOString(),
       };
-
     } catch (error) {
       console.error('[WhatsAppNotificationBridge] Erro ao verificar status:', error.message);
       return {
@@ -159,7 +160,7 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         status: 'error',
         error: error.message,
-        checkedAt: new Date().toISOString()
+        checkedAt: new Date().toISOString(),
       };
     }
   }
@@ -177,16 +178,16 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         'media_messages',
         'delivery_status',
         'read_receipts',
-        'instant_delivery'
+        'instant_delivery',
       ],
       limitations: {
         maxRecipients: 1000,
         maxMessageLength: 4096,
         rateLimit: '20 messages/minute',
-        mediaSize: '16MB'
+        mediaSize: '16MB',
       },
       deliveryTime: 'Instant',
-      reliability: 'very_high'
+      reliability: 'very_high',
     };
   }
 
@@ -202,7 +203,7 @@ class WhatsAppNotificationBridge extends INotificationBridge {
 
     // Remove caracteres não numéricos
     const cleanPhone = recipient.phone.replace(/\D/g, '');
-    
+
     // Verifica se tem pelo menos 10 dígitos (formato mínimo internacional)
     return cleanPhone.length >= 10 && cleanPhone.length <= 15;
   }
@@ -215,7 +216,7 @@ class WhatsAppNotificationBridge extends INotificationBridge {
   formatPhoneNumber(phone) {
     // Remove caracteres não numéricos
     let cleanPhone = phone.replace(/\D/g, '');
-    
+
     // Adiciona código do país se não tiver (assume Brasil +55)
     if (cleanPhone.length === 11 && cleanPhone.startsWith('11')) {
       cleanPhone = '55' + cleanPhone;
@@ -309,7 +310,7 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         accessible: true,
         configured: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
@@ -318,7 +319,7 @@ class WhatsAppNotificationBridge extends INotificationBridge {
         accessible: false,
         configured: false,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

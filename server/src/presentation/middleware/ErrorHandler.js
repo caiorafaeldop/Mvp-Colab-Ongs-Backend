@@ -17,66 +17,66 @@ function categorizeError(error) {
       category: 'VALIDATION_ERROR',
       statusCode: 400,
       userMessage: 'Dados fornecidos são inválidos',
-      details: error.errors?.map(err => ({
+      details: error.errors?.map((err) => ({
         field: err.path?.join('.'),
         message: err.message,
-        code: err.code
-      }))
+        code: err.code,
+      })),
     };
   }
-  
+
   // Erros de autenticação JWT
   if (error.name === 'JsonWebTokenError' || error.message?.includes('token')) {
     return {
       category: 'AUTHENTICATION_ERROR',
       statusCode: 401,
       userMessage: 'Token de autenticação inválido ou expirado',
-      details: { tokenError: error.message }
+      details: { tokenError: error.message },
     };
   }
-  
+
   // Erros de autorização
   if (error.message?.includes('permission') || error.message?.includes('access')) {
     return {
       category: 'AUTHORIZATION_ERROR',
       statusCode: 403,
-      userMessage: 'Acesso negado para este recurso'
+      userMessage: 'Acesso negado para este recurso',
     };
   }
-  
+
   // Erros de banco de dados
   if (error.name === 'MongoError' || error.name === 'ValidationError') {
     return {
       category: 'DATABASE_ERROR',
       statusCode: 500,
       userMessage: 'Erro interno do servidor',
-      details: process.env.NODE_ENV !== 'production' ? { dbError: error.message } : undefined
+      details: process.env.NODE_ENV !== 'production' ? { dbError: error.message } : undefined,
     };
   }
-  
+
   // Erros de rede/API externa
   if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
     return {
       category: 'EXTERNAL_SERVICE_ERROR',
       statusCode: 503,
-      userMessage: 'Serviço temporariamente indisponível'
+      userMessage: 'Serviço temporariamente indisponível',
     };
   }
-  
+
   // Erros de negócio customizados
   if (error.status && error.status < 500) {
     return {
       category: 'BUSINESS_ERROR',
       statusCode: error.status,
-      userMessage: error.message
+      userMessage: error.message,
     };
   }
-  
+
   // Erro interno genérico
   return {
     category: 'INTERNAL_ERROR',
     statusCode: 500,
-    userMessage: 'Erro interno do servidor'
+    userMessage: 'Erro interno do servidor',
   };
 }
 
@@ -91,10 +91,10 @@ function errorHandler(err, req, res, next) {
   const requestLogger = req.logger || logger;
   const requestId = req.requestId || 'unknown';
   const duration = req.startTime ? Date.now() - req.startTime : 0;
-  
+
   // Categorizar erro
   const errorInfo = categorizeError(err);
-  
+
   // Log estruturado do erro
   const logData = {
     requestId,
@@ -110,10 +110,10 @@ function errorHandler(err, req, res, next) {
     originalError: {
       name: err.name,
       message: err.message,
-      stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined
-    }
+      stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined,
+    },
   };
-  
+
   // Log baseado na severidade
   if (errorInfo.statusCode >= 500) {
     requestLogger.error('Erro interno capturado pelo error handler', logData);
@@ -122,35 +122,35 @@ function errorHandler(err, req, res, next) {
   } else {
     requestLogger.info('Erro capturado pelo error handler', logData);
   }
-  
+
   // Preparar resposta para o cliente
   const errorResponse = {
     success: false,
     message: errorInfo.userMessage,
     error: errorInfo.category,
     requestId,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
+
   // Adicionar detalhes se disponíveis e ambiente apropriado
   if (errorInfo.details && (process.env.NODE_ENV !== 'production' || errorInfo.statusCode < 500)) {
     errorResponse.details = errorInfo.details;
   }
-  
+
   // Adicionar stack trace em desenvolvimento
   if (process.env.NODE_ENV === 'development') {
     errorResponse.stack = err.stack;
   }
-  
+
   // Verificar se headers já foram enviados
   if (res.headersSent) {
     requestLogger.warn('Headers já enviados, não é possível enviar resposta de erro', {
       requestId,
-      error: err.message
+      error: err.message,
     });
     return;
   }
-  
+
   // Enviar resposta de erro
   res.status(errorInfo.statusCode).json(errorResponse);
 }
@@ -161,15 +161,15 @@ function errorHandler(err, req, res, next) {
  */
 function notFoundHandler(req, res, next) {
   const requestLogger = req.logger || logger;
-  
+
   requestLogger.warn('Rota não encontrada', {
     requestId: req.requestId,
     method: req.method,
     url: req.url,
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
   });
-  
+
   const error = new Error(`Rota ${req.method} ${req.url} não encontrada`);
   error.status = 404;
   next(error);
@@ -189,5 +189,5 @@ module.exports = {
   errorHandler,
   notFoundHandler,
   asyncHandler,
-  categorizeError
+  categorizeError,
 };

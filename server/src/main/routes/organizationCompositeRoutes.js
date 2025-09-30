@@ -1,12 +1,15 @@
 /**
  * Organization Composite Routes - Rotas para hierarquias de organizações
- * 
+ *
  * Define endpoints HTTP para operações com o padrão Composite.
  * Permite gerenciar estruturas hierárquicas de organizações através de APIs REST.
  */
 
 const express = require('express');
-const { validateBody, validateParams } = require('../../presentation/middleware/validationMiddleware');
+const {
+  validateBody,
+  validateParams,
+} = require('../../presentation/middleware/validationMiddleware');
 const { authenticateToken } = require('../../presentation/middleware/AuthMiddleware');
 
 // Importações dos factories
@@ -38,25 +41,25 @@ const organizationSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   type: z.enum(['independent', 'matrix', 'branch']).optional(),
-  parentId: z.string().optional()
+  parentId: z.string().optional(),
 });
 
 const idSchema = z.object({
-  id: z.string().min(1)
+  id: z.string().min(1),
 });
 
 const childSchema = z.object({
-  childId: z.string().min(1)
+  childId: z.string().min(1),
 });
 
 const pathParamsSchema = z.object({
   parentId: z.string().min(1),
-  childId: z.string().min(1)
+  childId: z.string().min(1),
 });
 
 const searchParamsSchema = z.object({
   treeRootId: z.string().min(1),
-  targetId: z.string().min(1)
+  targetId: z.string().min(1),
 });
 
 /**
@@ -87,7 +90,7 @@ const searchParamsSchema = z.object({
  *           type: string
  *           format: objectId
  *           description: ID da organização pai (para filiais)
- *     
+ *
  *     OrganizationTree:
  *       type: object
  *       properties:
@@ -127,11 +130,8 @@ const searchParamsSchema = z.object({
  *       401:
  *         description: Token inválido
  */
-router.post(
-  '/',
-  authenticateToken,
-  validateBody(organizationSchema),
-  (req, res) => organizationCompositeController.createOrganization(req, res)
+router.post('/', authenticateToken, validateBody(organizationSchema), (req, res) =>
+  organizationCompositeController.createOrganization(req, res)
 );
 
 /**
@@ -169,10 +169,8 @@ router.post(
  *       404:
  *         description: Organização não encontrada
  */
-router.get(
-  '/:id/tree',
-  validateParams(idSchema),
-  (req, res) => organizationCompositeController.getOrganizationTree(req, res)
+router.get('/:id/tree', validateParams(idSchema), (req, res) =>
+  organizationCompositeController.getOrganizationTree(req, res)
 );
 
 /**
@@ -212,10 +210,8 @@ router.get(
  *       404:
  *         description: Organização não encontrada
  */
-router.get(
-  '/:id/metrics',
-  validateParams(idSchema),
-  (req, res) => organizationCompositeController.getOrganizationMetrics(req, res)
+router.get('/:id/metrics', validateParams(idSchema), (req, res) =>
+  organizationCompositeController.getOrganizationMetrics(req, res)
 );
 
 /**
@@ -320,9 +316,8 @@ router.delete(
  *                 total:
  *                   type: number
  */
-router.get(
-  '/matrices',
-  (req, res) => organizationCompositeController.getAllMatrixOrganizations(req, res)
+router.get('/matrices', (req, res) =>
+  organizationCompositeController.getAllMatrixOrganizations(req, res)
 );
 
 /**
@@ -350,10 +345,8 @@ router.get(
  *       404:
  *         description: Organização não encontrada na árvore
  */
-router.get(
-  '/:treeRootId/search/:targetId',
-  validateParams(searchParamsSchema),
-  (req, res) => organizationCompositeController.findOrganizationInTree(req, res)
+router.get('/:treeRootId/search/:targetId', validateParams(searchParamsSchema), (req, res) =>
+  organizationCompositeController.findOrganizationInTree(req, res)
 );
 
 /**
@@ -375,10 +368,8 @@ router.get(
  *       404:
  *         description: Organização não encontrada
  */
-router.get(
-  '/:id/display',
-  validateParams(idSchema),
-  (req, res) => organizationCompositeController.displayOrganizationTree(req, res)
+router.get('/:id/display', validateParams(idSchema), (req, res) =>
+  organizationCompositeController.displayOrganizationTree(req, res)
 );
 
 /**
@@ -393,9 +384,6 @@ router.get(
  *       503:
  *         description: Sistema indisponível
  */
-router.get(
-  '/health',
-  (req, res) => organizationCompositeController.healthCheck(req, res)
-);
+router.get('/health', (req, res) => organizationCompositeController.healthCheck(req, res));
 
 module.exports = router;

@@ -1,14 +1,5 @@
 class User {
-  constructor(
-    id,
-    name,
-    email,
-    password,
-    userType,
-    phone,
-    createdAt,
-    updatedAt
-  ) {
+  constructor(id, name, email, password, userType, phone, createdAt, updatedAt) {
     this.id = id;
     this.name = name;
     this.email = email;
@@ -20,11 +11,11 @@ class User {
   }
 
   static createCommonUser(name, email, password, phone) {
-    return new User(null, name, email, password, "common", phone);
+    return new User(null, name, email, password, 'common', phone);
   }
 
   static createOrganizationUser(name, email, password, phone) {
-    return new User(null, name, email, password, "organization", phone);
+    return new User(null, name, email, password, 'organization', phone);
   }
 
   updateProfile(name, phone) {
@@ -40,4 +31,3 @@ class User {
 }
 
 module.exports = User;
-

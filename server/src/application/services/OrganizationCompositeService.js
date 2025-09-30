@@ -1,6 +1,6 @@
 /**
  * OrganizationCompositeService - Lógica de negócio para hierarquias de organizações
- * 
+ *
  * Implementa o padrão Composite para gerenciar organizações com filiais.
  * Fornece operações de alto nível para criar, gerenciar e consultar
  * estruturas hierárquicas de organizações.
@@ -37,18 +37,19 @@ class OrganizationCompositeService {
 
       // Salvar no banco
       const savedOrg = await this.organizationRepository.create(orgData);
-      
+
       // Criar componente usando factory
       const orgComponent = this.compositeFactory.createOrganization(savedOrg);
 
-      logger.info(`[COMPOSITE SERVICE] Organização criada: ${orgComponent.name} (${orgComponent.isComposite() ? 'COMPOSITE' : 'LEAF'})`);
+      logger.info(
+        `[COMPOSITE SERVICE] Organização criada: ${orgComponent.name} (${orgComponent.isComposite() ? 'COMPOSITE' : 'LEAF'})`
+      );
 
       return {
         success: true,
         data: orgComponent.getInfo(),
-        type: orgComponent.isComposite() ? 'composite' : 'leaf'
+        type: orgComponent.isComposite() ? 'composite' : 'leaf',
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao criar organização:', error);
       throw error;
@@ -63,17 +64,16 @@ class OrganizationCompositeService {
   async getOrganizationTree(organizationId) {
     try {
       const tree = await this.compositeFactory.buildOrganizationTree(organizationId);
-      
+
       return {
         success: true,
         data: {
           tree: tree.getOrganizationTree(),
           display: tree.display(),
           totalOrganizations: tree.countOrganizations(),
-          isComposite: tree.isComposite()
-        }
+          isComposite: tree.isComposite(),
+        },
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao buscar árvore:', error);
       throw error;
@@ -88,10 +88,10 @@ class OrganizationCompositeService {
   async getOrganizationMetrics(organizationId) {
     try {
       const orgComponent = await this.compositeFactory.buildOrganizationTree(organizationId);
-      
+
       const [totalProducts, totalDonations] = await Promise.all([
         orgComponent.getTotalProducts(),
-        orgComponent.getTotalDonations()
+        orgComponent.getTotalDonations(),
       ]);
 
       return {
@@ -105,11 +105,10 @@ class OrganizationCompositeService {
           totalDonations,
           metrics: {
             averageProductsPerOrg: Math.round(totalProducts / orgComponent.countOrganizations()),
-            averageDonationsPerOrg: Math.round(totalDonations / orgComponent.countOrganizations())
-          }
-        }
+            averageDonationsPerOrg: Math.round(totalDonations / orgComponent.countOrganizations()),
+          },
+        },
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao calcular métricas:', error);
       throw error;
@@ -127,11 +126,15 @@ class OrganizationCompositeService {
       // Validar se ambas existem
       const [parent, child] = await Promise.all([
         this.organizationRepository.findById(parentId),
-        this.organizationRepository.findById(childId)
+        this.organizationRepository.findById(childId),
       ]);
 
-      if (!parent) throw new Error(`Organização pai ${parentId} não encontrada`);
-      if (!child) throw new Error(`Organização filha ${childId} não encontrada`);
+      if (!parent) {
+        throw new Error(`Organização pai ${parentId} não encontrada`);
+      }
+      if (!child) {
+        throw new Error(`Organização filha ${childId} não encontrada`);
+      }
 
       // Validar se não vai criar ciclo
       await this._validateNoCycle(parentId, childId);
@@ -147,9 +150,8 @@ class OrganizationCompositeService {
       return {
         success: true,
         message: `${child.name} adicionada como filial de ${parent.name}`,
-        data: tree.getOrganizationTree()
+        data: tree.getOrganizationTree(),
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao adicionar filial:', error);
       throw error;
@@ -165,7 +167,9 @@ class OrganizationCompositeService {
   async removeChildOrganization(parentId, childId) {
     try {
       const child = await this.organizationRepository.findById(childId);
-      if (!child) throw new Error(`Organização filha ${childId} não encontrada`);
+      if (!child) {
+        throw new Error(`Organização filha ${childId} não encontrada`);
+      }
 
       if (child.parentId !== parentId) {
         throw new Error(`${childId} não é filial de ${parentId}`);
@@ -179,9 +183,8 @@ class OrganizationCompositeService {
       return {
         success: true,
         message: `${child.name} removida como filial e tornou-se independente`,
-        data: { childId, parentId: null }
+        data: { childId, parentId: null },
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao remover filial:', error);
       throw error;
@@ -195,22 +198,21 @@ class OrganizationCompositeService {
   async getAllMatrixOrganizations() {
     try {
       const matrices = await this.compositeFactory.getAllMatrixOrganizations();
-      
+
       const result = await Promise.all(
         matrices.map(async (matrix) => ({
           ...matrix.getOrganizationTree(),
           totalOrganizations: matrix.countOrganizations(),
           totalProducts: await matrix.getTotalProducts(),
-          totalDonations: await matrix.getTotalDonations()
+          totalDonations: await matrix.getTotalDonations(),
         }))
       );
 
       return {
         success: true,
         data: result,
-        total: result.length
+        total: result.length,
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao buscar matrizes:', error);
       throw error;
@@ -231,7 +233,7 @@ class OrganizationCompositeService {
       if (!found) {
         return {
           success: false,
-          message: `Organização ${targetId} não encontrada na árvore de ${treeRootId}`
+          message: `Organização ${targetId} não encontrada na árvore de ${treeRootId}`,
         };
       }
 
@@ -240,10 +242,9 @@ class OrganizationCompositeService {
         data: {
           ...found.getInfo(),
           isComposite: found.isComposite(),
-          path: this._getOrganizationPath(tree, targetId)
-        }
+          path: this._getOrganizationPath(tree, targetId),
+        },
       };
-
     } catch (error) {
       logger.error('[COMPOSITE SERVICE] Erro ao buscar na árvore:', error);
       throw error;
@@ -287,7 +288,7 @@ class OrganizationCompositeService {
     try {
       const childTree = await this.compositeFactory.buildOrganizationTree(childId);
       const foundParent = childTree.findById(parentId);
-      
+
       if (foundParent) {
         throw new Error('Operação criaria um ciclo na hierarquia');
       }
@@ -306,15 +307,15 @@ class OrganizationCompositeService {
    */
   _getOrganizationPath(tree, targetId) {
     const path = [];
-    
+
     const findPath = (node, target, currentPath) => {
       currentPath.push({ id: node.id, name: node.name });
-      
+
       if (node.id === target) {
         path.push(...currentPath);
         return true;
       }
-      
+
       if (node.isComposite()) {
         for (const child of node.getChildren()) {
           if (findPath(child, target, [...currentPath])) {
@@ -322,10 +323,10 @@ class OrganizationCompositeService {
           }
         }
       }
-      
+
       return false;
     };
-    
+
     findPath(tree, targetId, []);
     return path;
   }

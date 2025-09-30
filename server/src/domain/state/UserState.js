@@ -10,7 +10,7 @@ class UserState extends BaseState {
     INACTIVE: 'inactive',
     SUSPENDED: 'suspended',
     BANNED: 'banned',
-    DELETED: 'deleted'
+    DELETED: 'deleted',
   };
 
   static TRANSITIONS = {
@@ -19,7 +19,7 @@ class UserState extends BaseState {
     inactive: ['active', 'deleted'],
     suspended: ['active', 'banned', 'deleted'],
     banned: ['deleted'], // Ban permanente, só pode ser deletado
-    deleted: [] // Estado final
+    deleted: [], // Estado final
   };
 
   constructor(currentState = UserState.STATES.PENDING_VERIFICATION) {
@@ -34,7 +34,7 @@ class UserState extends BaseState {
       action: 'activate',
       verifiedBy,
       activatedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -46,7 +46,7 @@ class UserState extends BaseState {
       action: 'deactivate',
       reason,
       deactivatedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -61,7 +61,7 @@ class UserState extends BaseState {
       suspendedBy,
       suspendedAt: new Date().toISOString(),
       expiresAt: duration ? new Date(Date.now() + duration).toISOString() : null,
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -74,7 +74,7 @@ class UserState extends BaseState {
       reason,
       bannedBy,
       bannedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -86,7 +86,7 @@ class UserState extends BaseState {
       action: 'delete',
       deletedBy,
       deletedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -101,10 +101,7 @@ class UserState extends BaseState {
    * Verifica se pode fazer login
    */
   canLogin() {
-    return this.isOneOf([
-      UserState.STATES.ACTIVE,
-      UserState.STATES.INACTIVE
-    ]);
+    return this.isOneOf([UserState.STATES.ACTIVE, UserState.STATES.INACTIVE]);
   }
 
   /**
@@ -114,7 +111,7 @@ class UserState extends BaseState {
     return this.isOneOf([
       UserState.STATES.SUSPENDED,
       UserState.STATES.BANNED,
-      UserState.STATES.DELETED
+      UserState.STATES.DELETED,
     ]);
   }
 

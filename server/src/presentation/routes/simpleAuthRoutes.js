@@ -1,6 +1,6 @@
-const express = require("express");
-const SimpleAuthController = require("../controllers/SimpleAuthController");
-const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddleware");
+const express = require('express');
+const SimpleAuthController = require('../controllers/SimpleAuthController');
+const { createSimpleAuthMiddleware } = require('../middleware/SimpleAuthMiddleware');
 
 /**
  * @swagger
@@ -11,7 +11,7 @@ const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddlewa
  *       scheme: bearer
  *       bearerFormat: JWT
  *       description: "JWT token obtido através do endpoint de login"
- *   
+ *
  *   schemas:
  *     SimpleLoginRequest:
  *       type: object
@@ -29,7 +29,7 @@ const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddlewa
  *           format: password
  *           description: Senha do usuário
  *           example: "minhasenha123"
- *     
+ *
  *     SimpleRegisterRequest:
  *       type: object
  *       required:
@@ -61,7 +61,7 @@ const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddlewa
  *           type: string
  *           description: Telefone de contato (opcional)
  *           example: "11999999999"
- *     
+ *
  *     SimpleAuthResponse:
  *       type: object
  *       properties:
@@ -84,7 +84,7 @@ const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddlewa
  *               type: string
  *               description: Token JWT de refresh (7 dias)
  *               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *     
+ *
  *     RefreshTokenRequest:
  *       type: object
  *       required:
@@ -102,7 +102,7 @@ let cachedAuthService = null;
 
 const createSimpleAuthRoutes = (authService) => {
   const router = express.Router();
-  
+
   // Reutilizar controller se o service for o mesmo
   if (!cachedAuthController || cachedAuthService !== authService) {
     cachedAuthController = new SimpleAuthController(authService);
@@ -114,7 +114,7 @@ const createSimpleAuthRoutes = (authService) => {
   const authMiddleware = createSimpleAuthMiddleware(authService);
 
   // Public routes
-  
+
   /**
    * @swagger
    * /api/auth/login:
@@ -148,7 +148,7 @@ const createSimpleAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/login", cachedAuthController.login);
+  router.post('/login', cachedAuthController.login);
 
   /**
    * @swagger
@@ -177,7 +177,7 @@ const createSimpleAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/register", cachedAuthController.register);
+  router.post('/register', cachedAuthController.register);
 
   /**
    * @swagger
@@ -222,7 +222,7 @@ const createSimpleAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/refresh", cachedAuthController.refresh);
+  router.post('/refresh', cachedAuthController.refresh);
 
   /**
    * @swagger
@@ -246,10 +246,10 @@ const createSimpleAuthRoutes = (authService) => {
    *                   type: string
    *                   example: "Logout successful"
    */
-  router.post("/logout", cachedAuthController.logout);
+  router.post('/logout', cachedAuthController.logout);
 
   // Protected routes
-  
+
   /**
    * @swagger
    * /api/auth/profile:
@@ -285,7 +285,7 @@ const createSimpleAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.get("/profile", authMiddleware, cachedAuthController.getProfile);
+  router.get('/profile', authMiddleware, cachedAuthController.getProfile);
 
   return router;
 };

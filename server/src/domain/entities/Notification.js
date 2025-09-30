@@ -28,13 +28,7 @@ class Notification {
   }
 
   static create(userId, title, message, type = 'info') {
-    return new Notification(
-      null,
-      userId,
-      title,
-      message,
-      type
-    );
+    return new Notification(null, userId, title, message, type);
   }
 
   static createCollaborationNotification(userId, title, message, collaborationId) {
@@ -85,9 +79,15 @@ class Notification {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}m atrás`;
-    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffMins < 1) {
+      return 'Agora';
+    }
+    if (diffMins < 60) {
+      return `${diffMins}m atrás`;
+    }
+    if (diffHours < 24) {
+      return `${diffHours}h atrás`;
+    }
     return `${diffDays}d atrás`;
   }
 }

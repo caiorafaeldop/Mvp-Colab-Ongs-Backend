@@ -9,7 +9,7 @@ class IUserRepository {
    * @returns {Promise<User>} Usuário salvo
    */
   async save(user) {
-    throw new Error("Method save() must be implemented");
+    throw new Error('Method save() must be implemented');
   }
 
   /**
@@ -18,7 +18,7 @@ class IUserRepository {
    * @returns {Promise<User|null>} Usuário encontrado ou null
    */
   async findById(id) {
-    throw new Error("Method findById() must be implemented");
+    throw new Error('Method findById() must be implemented');
   }
 
   /**
@@ -27,7 +27,7 @@ class IUserRepository {
    * @returns {Promise<User|null>} Usuário encontrado ou null
    */
   async findByEmail(email) {
-    throw new Error("Method findByEmail() must be implemented");
+    throw new Error('Method findByEmail() must be implemented');
   }
 
   /**
@@ -36,7 +36,7 @@ class IUserRepository {
    * @returns {Promise<User[]>} Lista de usuários
    */
   async findByUserType(userType) {
-    throw new Error("Method findByUserType() must be implemented");
+    throw new Error('Method findByUserType() must be implemented');
   }
 
   /**
@@ -46,7 +46,7 @@ class IUserRepository {
    * @returns {Promise<User|null>} Usuário atualizado ou null
    */
   async update(id, userData) {
-    throw new Error("Method update() must be implemented");
+    throw new Error('Method update() must be implemented');
   }
 
   /**
@@ -55,7 +55,7 @@ class IUserRepository {
    * @returns {Promise<User|null>} Usuário removido ou null
    */
   async delete(id) {
-    throw new Error("Method delete() must be implemented");
+    throw new Error('Method delete() must be implemented');
   }
 
   /**
@@ -63,7 +63,7 @@ class IUserRepository {
    * @returns {Promise<User[]>} Lista de todos os usuários
    */
   async findAll() {
-    throw new Error("Method findAll() must be implemented");
+    throw new Error('Method findAll() must be implemented');
   }
 
   /**
@@ -72,7 +72,7 @@ class IUserRepository {
    * @returns {Promise<boolean>} True se existe, false caso contrário
    */
   async existsByEmail(email) {
-    throw new Error("Method existsByEmail() must be implemented");
+    throw new Error('Method existsByEmail() must be implemented');
   }
 
   /**
@@ -80,7 +80,7 @@ class IUserRepository {
    * @returns {Promise<number>} Número de usuários
    */
   async count() {
-    throw new Error("Method count() must be implemented");
+    throw new Error('Method count() must be implemented');
   }
 
   /**
@@ -90,7 +90,7 @@ class IUserRepository {
    * @returns {Promise<{users: User[], total: number, page: number, totalPages: number}>}
    */
   async findWithPagination(page, limit) {
-    throw new Error("Method findWithPagination() must be implemented");
+    throw new Error('Method findWithPagination() must be implemented');
   }
 }
 

@@ -4,9 +4,9 @@
  */
 
 // Middlewares de correlação e contexto
-const { 
-  requestCorrelationMiddleware, 
-  requestContextMiddleware 
+const {
+  requestCorrelationMiddleware,
+  requestContextMiddleware,
 } = require('./RequestCorrelationMiddleware');
 
 // Middlewares base e factory
@@ -19,7 +19,7 @@ const {
   validateParams,
   validateQuery,
   validateBody,
-  validateMultiple
+  validateMultiple,
 } = require('./validationMiddleware');
 
 // Middleware de autenticação
@@ -29,7 +29,7 @@ const { createSimpleAuthMiddleware, authMiddleware } = require('./SimpleAuthMidd
 const {
   createRateLimitMiddleware,
   RateLimitPresets,
-  createCombinedRateLimit
+  createCombinedRateLimit,
 } = require('./RateLimitMiddleware');
 
 // Handlers específicos para doações
@@ -38,16 +38,11 @@ const {
   DonationPolicyHandler,
   DonationRateLimitHandler,
   DonationContextHandler,
-  DonationChainFactory
+  DonationChainFactory,
 } = require('./DonationChainHandler');
 
 // Error handlers
-const {
-  errorHandler,
-  notFoundHandler,
-  asyncHandler,
-  categorizeError
-} = require('./ErrorHandler');
+const { errorHandler, notFoundHandler, asyncHandler, categorizeError } = require('./ErrorHandler');
 
 /**
  * Configuração padrão da cadeia de middlewares para aplicação
@@ -60,28 +55,28 @@ function createDefaultMiddlewareChain(options = {}) {
     enableRateLimit = true,
     rateLimitPreset = 'general',
     enableAuth = false,
-    authService = null
+    authService = null,
   } = options;
-  
+
   const chain = [];
-  
+
   // 1. Correlação de requests (sempre primeiro)
   if (enableCorrelation) {
     chain.push(requestCorrelationMiddleware);
     chain.push(requestContextMiddleware);
   }
-  
+
   // 2. Rate limiting geral
   if (enableRateLimit) {
     const rateLimiter = RateLimitPresets[rateLimitPreset] || RateLimitPresets.general;
     chain.push(rateLimiter());
   }
-  
+
   // 3. Autenticação (se habilitada)
   if (enableAuth && authService) {
     chain.push(createSimpleAuthMiddleware(authService));
   }
-  
+
   return chain;
 }
 
@@ -101,11 +96,7 @@ function createAPIMiddlewareChain(authService) {
  * Configuração para rotas de autenticação
  */
 function createAuthMiddlewareChain() {
-  return [
-    requestCorrelationMiddleware,
-    requestContextMiddleware,
-    RateLimitPresets.auth()
-  ];
+  return [requestCorrelationMiddleware, requestContextMiddleware, RateLimitPresets.auth()];
 }
 
 /**
@@ -116,7 +107,7 @@ function createUploadMiddlewareChain(authService) {
     requestCorrelationMiddleware,
     requestContextMiddleware,
     RateLimitPresets.upload(),
-    createSimpleAuthMiddleware(authService)
+    createSimpleAuthMiddleware(authService),
   ];
 }
 
@@ -126,7 +117,7 @@ function createUploadMiddlewareChain(authService) {
 function createWebhookMiddlewareChain() {
   return [
     requestCorrelationMiddleware,
-    RateLimitPresets.webhook()
+    RateLimitPresets.webhook(),
     // Não incluir contexto completo para webhooks (performance)
   ];
 }
@@ -148,24 +139,24 @@ module.exports = {
   createRateLimitMiddleware,
   RateLimitPresets,
   createCombinedRateLimit,
-  
+
   // Handlers específicos
   DonationValidationHandler,
   DonationPolicyHandler,
   DonationRateLimitHandler,
   DonationContextHandler,
   DonationChainFactory,
-  
+
   // Error handlers
   errorHandler,
   notFoundHandler,
   asyncHandler,
   categorizeError,
-  
+
   // Configurações de cadeia
   createDefaultMiddlewareChain,
   createAPIMiddlewareChain,
   createAuthMiddlewareChain,
   createUploadMiddlewareChain,
-  createWebhookMiddlewareChain
+  createWebhookMiddlewareChain,
 };

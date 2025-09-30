@@ -1,8 +1,8 @@
 /**
  * COMPOSITE (Composite Pattern)
- * 
+ *
  * OrganizationComposite - Organização matriz (com filiais)
- * 
+ *
  * Pode conter outras organizações (Composite ou Leaf).
  * Operações são executadas recursivamente em toda a árvore.
  */
@@ -43,8 +43,8 @@ class OrganizationComposite extends OrganizationComponent {
    * @param {string} childId
    */
   remove(childId) {
-    const index = this.children.findIndex(c => c.id === childId);
-    
+    const index = this.children.findIndex((c) => c.id === childId);
+
     if (index === -1) {
       logger.warn(`[COMPOSITE] Filial ${childId} não encontrada em ${this.name}`);
       return false;
@@ -61,7 +61,7 @@ class OrganizationComposite extends OrganizationComponent {
    * @returns {OrganizationComponent|null}
    */
   getChild(childId) {
-    return this.children.find(c => c.id === childId) || null;
+    return this.children.find((c) => c.id === childId) || null;
   }
 
   /**
@@ -198,7 +198,7 @@ class OrganizationComposite extends OrganizationComponent {
       name: this.name,
       type: this.type,
       isComposite: true,
-      children: this.children.map(child => {
+      children: this.children.map((child) => {
         if (child.isComposite()) {
           return child.getOrganizationTree();
         }
@@ -207,9 +207,9 @@ class OrganizationComposite extends OrganizationComponent {
           name: child.name,
           type: child.type,
           isComposite: false,
-          children: []
+          children: [],
         };
-      })
+      }),
     };
   }
 
@@ -230,7 +230,9 @@ class OrganizationComposite extends OrganizationComponent {
 
       if (child.isComposite()) {
         const found = child.findById(orgId);
-        if (found) return found;
+        if (found) {
+          return found;
+        }
       }
     }
 

@@ -1,13 +1,13 @@
 // Interface removida na limpeza
-const User = require("../../domain/entities/User");
-const PrismaService = require("../singletons/PrismaService");
+const User = require('../../domain/entities/User');
+const PrismaService = require('../singletons/PrismaService');
 
 /**
  * Implementação Prisma do Repository Pattern para Usuários
  * Segue os princípios SOLID e Clean Architecture
  * Mantém compatibilidade com a interface existente
  */
-class PrismaUserRepository  {
+class PrismaUserRepository {
   constructor() {
     // super() removido na limpeza
     this.prismaService = PrismaService.getInstance();
@@ -60,7 +60,7 @@ class PrismaUserRepository  {
     };
 
     // Remove campos undefined
-    Object.keys(data).forEach(key => {
+    Object.keys(data).forEach((key) => {
       if (data[key] === undefined) {
         delete data[key];
       }
@@ -76,8 +76,11 @@ class PrismaUserRepository  {
    */
   async save(user) {
     try {
-      console.log("[PRISMA USER REPO] Salvando usuário:", { email: user.email, userType: user.userType });
-      
+      console.log('[PRISMA USER REPO] Salvando usuário:', {
+        email: user.email,
+        userType: user.userType,
+      });
+
       const prisma = this._getPrismaClient();
       const userData = this._mapToPrismaData(user);
 
@@ -85,16 +88,16 @@ class PrismaUserRepository  {
         data: userData,
       });
 
-      console.log("[PRISMA USER REPO] Usuário salvo com sucesso:", savedUser.id);
+      console.log('[PRISMA USER REPO] Usuário salvo com sucesso:', savedUser.id);
       return this._mapToEntity(savedUser);
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao salvar usuário:", error.message);
-      
+      console.error('[PRISMA USER REPO] Erro ao salvar usuário:', error.message);
+
       // Tratamento específico para erros do Prisma
       if (error.code === 'P2002') {
         throw new Error(`Email já está em uso: ${user.email}`);
       }
-      
+
       throw new Error(`Error saving user: ${error.message}`);
     }
   }
@@ -106,17 +109,17 @@ class PrismaUserRepository  {
    */
   async findById(id) {
     try {
-      console.log("[PRISMA USER REPO] Buscando usuário por ID:", id);
-      
+      console.log('[PRISMA USER REPO] Buscando usuário por ID:', id);
+
       const prisma = this._getPrismaClient();
       const user = await prisma.user.findUnique({
         where: { id },
       });
 
-      console.log("[PRISMA USER REPO] Usuário encontrado:", !!user);
+      console.log('[PRISMA USER REPO] Usuário encontrado:', !!user);
       return user ? this._mapToEntity(user) : null;
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao buscar usuário por ID:", error.message);
+      console.error('[PRISMA USER REPO] Erro ao buscar usuário por ID:', error.message);
       throw new Error(`Error finding user by ID: ${error.message}`);
     }
   }
@@ -128,17 +131,17 @@ class PrismaUserRepository  {
    */
   async findByEmail(email) {
     try {
-      console.log("[PRISMA USER REPO] Buscando usuário por email:", email);
-      
+      console.log('[PRISMA USER REPO] Buscando usuário por email:', email);
+
       const prisma = this._getPrismaClient();
       const user = await prisma.user.findUnique({
         where: { email: email.toLowerCase() },
       });
 
-      console.log("[PRISMA USER REPO] Usuário encontrado por email:", !!user);
+      console.log('[PRISMA USER REPO] Usuário encontrado por email:', !!user);
       return user ? this._mapToEntity(user) : null;
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao buscar usuário por email:", error.message);
+      console.error('[PRISMA USER REPO] Erro ao buscar usuário por email:', error.message);
       throw new Error(`Error finding user by email: ${error.message}`);
     }
   }
@@ -150,18 +153,18 @@ class PrismaUserRepository  {
    */
   async findByUserType(userType) {
     try {
-      console.log("[PRISMA USER REPO] Buscando usuários por tipo:", userType);
-      
+      console.log('[PRISMA USER REPO] Buscando usuários por tipo:', userType);
+
       const prisma = this._getPrismaClient();
       const users = await prisma.user.findMany({
         where: { userType },
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA USER REPO] Usuários encontrados por tipo:", users.length);
-      return users.map(user => this._mapToEntity(user));
+      console.log('[PRISMA USER REPO] Usuários encontrados por tipo:', users.length);
+      return users.map((user) => this._mapToEntity(user));
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao buscar usuários por tipo:", error.message);
+      console.error('[PRISMA USER REPO] Erro ao buscar usuários por tipo:', error.message);
       throw new Error(`Error finding users by type: ${error.message}`);
     }
   }
@@ -174,10 +177,10 @@ class PrismaUserRepository  {
    */
   async update(id, userData) {
     try {
-      console.log("[PRISMA USER REPO] Atualizando usuário:", id);
-      
+      console.log('[PRISMA USER REPO] Atualizando usuário:', id);
+
       const prisma = this._getPrismaClient();
-      
+
       // Normalizar email se fornecido
       if (userData.email) {
         userData.email = userData.email.toLowerCase();
@@ -188,20 +191,20 @@ class PrismaUserRepository  {
         data: userData,
       });
 
-      console.log("[PRISMA USER REPO] Usuário atualizado com sucesso:", updatedUser.id);
+      console.log('[PRISMA USER REPO] Usuário atualizado com sucesso:', updatedUser.id);
       return this._mapToEntity(updatedUser);
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao atualizar usuário:", error.message);
-      
+      console.error('[PRISMA USER REPO] Erro ao atualizar usuário:', error.message);
+
       if (error.code === 'P2025') {
-        console.log("[PRISMA USER REPO] Usuário não encontrado para atualização:", id);
+        console.log('[PRISMA USER REPO] Usuário não encontrado para atualização:', id);
         return null;
       }
-      
+
       if (error.code === 'P2002') {
         throw new Error(`Email já está em uso: ${userData.email}`);
       }
-      
+
       throw new Error(`Error updating user: ${error.message}`);
     }
   }
@@ -213,23 +216,23 @@ class PrismaUserRepository  {
    */
   async delete(id) {
     try {
-      console.log("[PRISMA USER REPO] Removendo usuário:", id);
-      
+      console.log('[PRISMA USER REPO] Removendo usuário:', id);
+
       const prisma = this._getPrismaClient();
       const deletedUser = await prisma.user.delete({
         where: { id },
       });
 
-      console.log("[PRISMA USER REPO] Usuário removido com sucesso:", deletedUser.id);
+      console.log('[PRISMA USER REPO] Usuário removido com sucesso:', deletedUser.id);
       return this._mapToEntity(deletedUser);
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao remover usuário:", error.message);
-      
+      console.error('[PRISMA USER REPO] Erro ao remover usuário:', error.message);
+
       if (error.code === 'P2025') {
-        console.log("[PRISMA USER REPO] Usuário não encontrado para remoção:", id);
+        console.log('[PRISMA USER REPO] Usuário não encontrado para remoção:', id);
         return null;
       }
-      
+
       throw new Error(`Error deleting user: ${error.message}`);
     }
   }
@@ -240,17 +243,17 @@ class PrismaUserRepository  {
    */
   async findAll() {
     try {
-      console.log("[PRISMA USER REPO] Buscando todos os usuários");
-      
+      console.log('[PRISMA USER REPO] Buscando todos os usuários');
+
       const prisma = this._getPrismaClient();
       const users = await prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA USER REPO] Total de usuários encontrados:", users.length);
-      return users.map(user => this._mapToEntity(user));
+      console.log('[PRISMA USER REPO] Total de usuários encontrados:', users.length);
+      return users.map((user) => this._mapToEntity(user));
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao buscar todos os usuários:", error.message);
+      console.error('[PRISMA USER REPO] Erro ao buscar todos os usuários:', error.message);
       throw new Error(`Error finding all users: ${error.message}`);
     }
   }
@@ -262,18 +265,18 @@ class PrismaUserRepository  {
    */
   async existsByEmail(email) {
     try {
-      console.log("[PRISMA USER REPO] Verificando existência por email:", email);
-      
+      console.log('[PRISMA USER REPO] Verificando existência por email:', email);
+
       const prisma = this._getPrismaClient();
       const count = await prisma.user.count({
         where: { email: email.toLowerCase() },
       });
 
       const exists = count > 0;
-      console.log("[PRISMA USER REPO] Usuário existe por email:", exists);
+      console.log('[PRISMA USER REPO] Usuário existe por email:', exists);
       return exists;
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao verificar existência por email:", error.message);
+      console.error('[PRISMA USER REPO] Erro ao verificar existência por email:', error.message);
       throw new Error(`Error checking user existence by email: ${error.message}`);
     }
   }
@@ -284,15 +287,15 @@ class PrismaUserRepository  {
    */
   async count() {
     try {
-      console.log("[PRISMA USER REPO] Contando usuários");
-      
+      console.log('[PRISMA USER REPO] Contando usuários');
+
       const prisma = this._getPrismaClient();
       const count = await prisma.user.count();
 
-      console.log("[PRISMA USER REPO] Total de usuários:", count);
+      console.log('[PRISMA USER REPO] Total de usuários:', count);
       return count;
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro ao contar usuários:", error.message);
+      console.error('[PRISMA USER REPO] Erro ao contar usuários:', error.message);
       throw new Error(`Error counting users: ${error.message}`);
     }
   }
@@ -305,8 +308,8 @@ class PrismaUserRepository  {
    */
   async findWithPagination(page = 1, limit = 10) {
     try {
-      console.log("[PRISMA USER REPO] Buscando usuários com paginação:", { page, limit });
-      
+      console.log('[PRISMA USER REPO] Buscando usuários com paginação:', { page, limit });
+
       const prisma = this._getPrismaClient();
       const skip = (page - 1) * limit;
 
@@ -321,13 +324,13 @@ class PrismaUserRepository  {
 
       const totalPages = Math.ceil(total / limit);
       const result = {
-        users: users.map(user => this._mapToEntity(user)),
+        users: users.map((user) => this._mapToEntity(user)),
         total,
         page,
         totalPages,
       };
 
-      console.log("[PRISMA USER REPO] Paginação concluída:", {
+      console.log('[PRISMA USER REPO] Paginação concluída:', {
         encontrados: users.length,
         total,
         página: page,
@@ -336,7 +339,7 @@ class PrismaUserRepository  {
 
       return result;
     } catch (error) {
-      console.error("[PRISMA USER REPO] Erro na paginação:", error.message);
+      console.error('[PRISMA USER REPO] Erro na paginação:', error.message);
       throw new Error(`Error in pagination: ${error.message}`);
     }
   }

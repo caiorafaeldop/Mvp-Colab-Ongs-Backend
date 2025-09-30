@@ -1,4 +1,4 @@
-const Product = require("../../domain/entities/Product");
+const Product = require('../../domain/entities/Product');
 const { getInstance: getEventManager } = require('../../infra/events/EventManager');
 
 class ProductService {
@@ -12,8 +12,8 @@ class ProductService {
     try {
       // Verify if user is an organization
       const organization = await this.userRepository.findById(organizationId);
-      if (!organization || organization.userType !== "organization") {
-        throw new Error("Only organizations can create products");
+      if (!organization || organization.userType !== 'organization') {
+        throw new Error('Only organizations can create products');
       }
 
       // Validate product data
@@ -35,14 +35,18 @@ class ProductService {
       const savedProduct = await this.productRepository.save(product);
 
       // Emit event
-      await this.eventManager.emit('product.created', {
-        productId: savedProduct.id,
-        productName: savedProduct.name,
-        organizationId: savedProduct.organizationId,
-        organizationName: savedProduct.organizationName,
-        price: savedProduct.price,
-        category: savedProduct.category
-      }, { source: 'ProductService' });
+      await this.eventManager.emit(
+        'product.created',
+        {
+          productId: savedProduct.id,
+          productName: savedProduct.name,
+          organizationId: savedProduct.organizationId,
+          organizationName: savedProduct.organizationName,
+          price: savedProduct.price,
+          category: savedProduct.category,
+        },
+        { source: 'ProductService' }
+      );
 
       return {
         id: savedProduct.id,
@@ -67,11 +71,11 @@ class ProductService {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
       if (!existingProduct) {
-        throw new Error("Product not found");
+        throw new Error('Product not found');
       }
 
       if (existingProduct.organizationId !== organizationId) {
-        throw new Error("You can only update your own products");
+        throw new Error('You can only update your own products');
       }
 
       // Validate product data
@@ -88,14 +92,18 @@ class ProductService {
       });
 
       // Emit event
-      await this.eventManager.emit('product.updated', {
-        productId: updatedProduct.id,
-        changes: {
-          name: productData.name !== existingProduct.name,
-          price: productData.price !== existingProduct.price,
-          stock: productData.stock !== existingProduct.stock
-        }
-      }, { source: 'ProductService' });
+      await this.eventManager.emit(
+        'product.updated',
+        {
+          productId: updatedProduct.id,
+          changes: {
+            name: productData.name !== existingProduct.name,
+            price: productData.price !== existingProduct.price,
+            stock: productData.stock !== existingProduct.stock,
+          },
+        },
+        { source: 'ProductService' }
+      );
 
       return {
         id: updatedProduct.id,
@@ -120,22 +128,26 @@ class ProductService {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
       if (!existingProduct) {
-        throw new Error("Product not found");
+        throw new Error('Product not found');
       }
 
       if (existingProduct.organizationId !== organizationId) {
-        throw new Error("You can only delete your own products");
+        throw new Error('You can only delete your own products');
       }
 
       await this.productRepository.delete(id);
 
       // Emit event
-      await this.eventManager.emit('product.deleted', {
-        productId: id,
-        organizationId: existingProduct.organizationId
-      }, { source: 'ProductService' });
+      await this.eventManager.emit(
+        'product.deleted',
+        {
+          productId: id,
+          organizationId: existingProduct.organizationId,
+        },
+        { source: 'ProductService' }
+      );
 
-      return { message: "Product deleted successfully" };
+      return { message: 'Product deleted successfully' };
     } catch (error) {
       throw new Error(`Error deleting product: ${error.message}`);
     }
@@ -145,7 +157,7 @@ class ProductService {
     try {
       const product = await this.productRepository.findById(id);
       if (!product) {
-        throw new Error("Product not found");
+        throw new Error('Product not found');
       }
 
       return {
@@ -169,8 +181,7 @@ class ProductService {
 
   async getProductsByOrganization(organizationId) {
     try {
-      const products =
-        await this.productRepository.findByOrganizationId(organizationId);
+      const products = await this.productRepository.findByOrganizationId(organizationId);
 
       return products.map((product) => ({
         id: product.id,
@@ -246,11 +257,11 @@ class ProductService {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
       if (!existingProduct) {
-        throw new Error("Product not found");
+        throw new Error('Product not found');
       }
 
       if (existingProduct.organizationId !== organizationId) {
-        throw new Error("You can only update your own products");
+        throw new Error('You can only update your own products');
       }
 
       // Toggle availability
@@ -260,10 +271,14 @@ class ProductService {
       });
 
       // Emit event
-      await this.eventManager.emit('product.availability.changed', {
-        productId: updatedProduct.id,
-        isAvailable: updatedProduct.isAvailable
-      }, { source: 'ProductService' });
+      await this.eventManager.emit(
+        'product.availability.changed',
+        {
+          productId: updatedProduct.id,
+          isAvailable: updatedProduct.isAvailable,
+        },
+        { source: 'ProductService' }
+      );
 
       return {
         id: updatedProduct.id,
@@ -283,16 +298,16 @@ class ProductService {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
       if (!existingProduct) {
-        throw new Error("Product not found");
+        throw new Error('Product not found');
       }
 
       if (existingProduct.organizationId !== organizationId) {
-        throw new Error("You can only update your own products");
+        throw new Error('You can only update your own products');
       }
 
       // Validate stock
-      if (typeof stock !== "number" || stock < 0) {
-        throw new Error("Stock must be a number greater than or equal to zero");
+      if (typeof stock !== 'number' || stock < 0) {
+        throw new Error('Stock must be a number greater than or equal to zero');
       }
 
       // Update stock
@@ -302,12 +317,16 @@ class ProductService {
 
       // Emit low stock event if needed
       if (stock < 5 && stock > 0) {
-        await this.eventManager.emit('product.stock.low', {
-          productId: updatedProduct.id,
-          productName: updatedProduct.name,
-          currentStock: stock,
-          threshold: 5
-        }, { source: 'ProductService' });
+        await this.eventManager.emit(
+          'product.stock.low',
+          {
+            productId: updatedProduct.id,
+            productName: updatedProduct.name,
+            currentStock: stock,
+            threshold: 5,
+          },
+          { source: 'ProductService' }
+        );
       }
 
       return {
@@ -323,18 +342,15 @@ class ProductService {
 
   _validateProductData(productData) {
     if (!productData.name || productData.name.trim().length === 0) {
-      throw new Error("Product name is required");
+      throw new Error('Product name is required');
     }
 
-    if (
-      !productData.description ||
-      productData.description.trim().length === 0
-    ) {
-      throw new Error("Product description is required");
+    if (!productData.description || productData.description.trim().length === 0) {
+      throw new Error('Product description is required');
     }
 
     if (!productData.price || productData.price <= 0) {
-      throw new Error("Product price must be greater than zero");
+      throw new Error('Product price must be greater than zero');
     }
 
     if (
@@ -343,7 +359,7 @@ class ProductService {
       productData.imageUrls.length === 0 ||
       !productData.imageUrls.every((url) => url.trim().length > 0)
     ) {
-      throw new Error("At least one non-empty product image URL is required");
+      throw new Error('At least one non-empty product image URL is required');
     }
   }
 }

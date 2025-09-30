@@ -1,13 +1,13 @@
 // Interface removida na limpeza
-const Collaboration = require("../../domain/entities/Collaboration");
-const PrismaService = require("../singletons/PrismaService");
+const Collaboration = require('../../domain/entities/Collaboration');
+const PrismaService = require('../singletons/PrismaService');
 
 /**
  * Implementação Prisma do Repository Pattern para Colaborações
  * Segue os princípios SOLID e Clean Architecture
  * Mantém compatibilidade com a interface existente
  */
-class PrismaCollaborationRepository  {
+class PrismaCollaborationRepository {
   constructor() {
     // super() removido na limpeza
     this.prismaService = PrismaService.getInstance();
@@ -64,7 +64,7 @@ class PrismaCollaborationRepository  {
     };
 
     // Remove campos undefined
-    Object.keys(data).forEach(key => {
+    Object.keys(data).forEach((key) => {
       if (data[key] === undefined) {
         delete data[key];
       }
@@ -80,12 +80,12 @@ class PrismaCollaborationRepository  {
    */
   async save(collaboration) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Salvando colaboração:", { 
-        title: collaboration.title, 
+      console.log('[PRISMA COLLABORATION REPO] Salvando colaboração:', {
+        title: collaboration.title,
         requesterOrgId: collaboration.requesterOrgId,
-        targetOrgId: collaboration.targetOrgId 
+        targetOrgId: collaboration.targetOrgId,
       });
-      
+
       const prisma = this._getPrismaClient();
       const collaborationData = this._mapToPrismaData(collaboration);
 
@@ -93,10 +93,13 @@ class PrismaCollaborationRepository  {
         data: collaborationData,
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaboração salva com sucesso:", savedCollaboration.id);
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaboração salva com sucesso:',
+        savedCollaboration.id
+      );
       return this._mapToEntity(savedCollaboration);
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao salvar colaboração:", error.message);
+      console.error('[PRISMA COLLABORATION REPO] Erro ao salvar colaboração:', error.message);
       throw new Error(`Error saving collaboration: ${error.message}`);
     }
   }
@@ -108,17 +111,20 @@ class PrismaCollaborationRepository  {
    */
   async findById(id) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando colaboração por ID:", id);
-      
+      console.log('[PRISMA COLLABORATION REPO] Buscando colaboração por ID:', id);
+
       const prisma = this._getPrismaClient();
       const collaboration = await prisma.collaboration.findUnique({
         where: { id },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaboração encontrada:", !!collaboration);
+      console.log('[PRISMA COLLABORATION REPO] Colaboração encontrada:', !!collaboration);
       return collaboration ? this._mapToEntity(collaboration) : null;
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar colaboração por ID:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar colaboração por ID:',
+        error.message
+      );
       throw new Error(`Error finding collaboration by id: ${error.message}`);
     }
   }
@@ -130,23 +136,29 @@ class PrismaCollaborationRepository  {
    */
   async findByOrganizationId(organizationId) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando colaborações por organização:", organizationId);
-      
+      console.log(
+        '[PRISMA COLLABORATION REPO] Buscando colaborações por organização:',
+        organizationId
+      );
+
       const prisma = this._getPrismaClient();
       const collaborations = await prisma.collaboration.findMany({
         where: {
-          OR: [
-            { requesterOrgId: organizationId },
-            { targetOrgId: organizationId },
-          ],
+          OR: [{ requesterOrgId: organizationId }, { targetOrgId: organizationId }],
         },
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaborações encontradas por organização:", collaborations.length);
-      return collaborations.map(collaboration => this._mapToEntity(collaboration));
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaborações encontradas por organização:',
+        collaborations.length
+      );
+      return collaborations.map((collaboration) => this._mapToEntity(collaboration));
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar colaborações por organização:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar colaborações por organização:',
+        error.message
+      );
       throw new Error(`Error finding collaborations by organization: ${error.message}`);
     }
   }
@@ -158,18 +170,24 @@ class PrismaCollaborationRepository  {
    */
   async findByStatus(status) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando colaborações por status:", status);
-      
+      console.log('[PRISMA COLLABORATION REPO] Buscando colaborações por status:', status);
+
       const prisma = this._getPrismaClient();
       const collaborations = await prisma.collaboration.findMany({
         where: { status },
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaborações encontradas por status:", collaborations.length);
-      return collaborations.map(collaboration => this._mapToEntity(collaboration));
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaborações encontradas por status:',
+        collaborations.length
+      );
+      return collaborations.map((collaboration) => this._mapToEntity(collaboration));
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar colaborações por status:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar colaborações por status:',
+        error.message
+      );
       throw new Error(`Error finding collaborations by status: ${error.message}`);
     }
   }
@@ -182,8 +200,11 @@ class PrismaCollaborationRepository  {
    */
   async findBetweenOrganizations(org1Id, org2Id) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando colaborações entre organizações:", { org1Id, org2Id });
-      
+      console.log('[PRISMA COLLABORATION REPO] Buscando colaborações entre organizações:', {
+        org1Id,
+        org2Id,
+      });
+
       const prisma = this._getPrismaClient();
       const collaborations = await prisma.collaboration.findMany({
         where: {
@@ -195,10 +216,16 @@ class PrismaCollaborationRepository  {
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaborações encontradas entre organizações:", collaborations.length);
-      return collaborations.map(collaboration => this._mapToEntity(collaboration));
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaborações encontradas entre organizações:',
+        collaborations.length
+      );
+      return collaborations.map((collaboration) => this._mapToEntity(collaboration));
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar colaborações entre organizações:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar colaborações entre organizações:',
+        error.message
+      );
       throw new Error(`Error finding collaborations between organizations: ${error.message}`);
     }
   }
@@ -211,10 +238,10 @@ class PrismaCollaborationRepository  {
    */
   async update(id, collaborationData) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Atualizando colaboração:", id);
-      
+      console.log('[PRISMA COLLABORATION REPO] Atualizando colaboração:', id);
+
       const prisma = this._getPrismaClient();
-      
+
       const updatedCollaboration = await prisma.collaboration.update({
         where: { id },
         data: {
@@ -223,16 +250,19 @@ class PrismaCollaborationRepository  {
         },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaboração atualizada com sucesso:", updatedCollaboration.id);
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaboração atualizada com sucesso:',
+        updatedCollaboration.id
+      );
       return this._mapToEntity(updatedCollaboration);
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao atualizar colaboração:", error.message);
-      
+      console.error('[PRISMA COLLABORATION REPO] Erro ao atualizar colaboração:', error.message);
+
       if (error.code === 'P2025') {
-        console.log("[PRISMA COLLABORATION REPO] Colaboração não encontrada para atualização:", id);
+        console.log('[PRISMA COLLABORATION REPO] Colaboração não encontrada para atualização:', id);
         return null;
       }
-      
+
       throw new Error(`Error updating collaboration: ${error.message}`);
     }
   }
@@ -244,23 +274,26 @@ class PrismaCollaborationRepository  {
    */
   async delete(id) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Removendo colaboração:", id);
-      
+      console.log('[PRISMA COLLABORATION REPO] Removendo colaboração:', id);
+
       const prisma = this._getPrismaClient();
       const deletedCollaboration = await prisma.collaboration.delete({
         where: { id },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaboração removida com sucesso:", deletedCollaboration.id);
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaboração removida com sucesso:',
+        deletedCollaboration.id
+      );
       return this._mapToEntity(deletedCollaboration);
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao remover colaboração:", error.message);
-      
+      console.error('[PRISMA COLLABORATION REPO] Erro ao remover colaboração:', error.message);
+
       if (error.code === 'P2025') {
-        console.log("[PRISMA COLLABORATION REPO] Colaboração não encontrada para remoção:", id);
+        console.log('[PRISMA COLLABORATION REPO] Colaboração não encontrada para remoção:', id);
         return null;
       }
-      
+
       throw new Error(`Error deleting collaboration: ${error.message}`);
     }
   }
@@ -271,17 +304,23 @@ class PrismaCollaborationRepository  {
    */
   async findAll() {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando todas as colaborações");
-      
+      console.log('[PRISMA COLLABORATION REPO] Buscando todas as colaborações');
+
       const prisma = this._getPrismaClient();
       const collaborations = await prisma.collaboration.findMany({
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Total de colaborações encontradas:", collaborations.length);
-      return collaborations.map(collaboration => this._mapToEntity(collaboration));
+      console.log(
+        '[PRISMA COLLABORATION REPO] Total de colaborações encontradas:',
+        collaborations.length
+      );
+      return collaborations.map((collaboration) => this._mapToEntity(collaboration));
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar todas as colaborações:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar todas as colaborações:',
+        error.message
+      );
       throw new Error(`Error finding all collaborations: ${error.message}`);
     }
   }
@@ -292,8 +331,8 @@ class PrismaCollaborationRepository  {
    */
   async findActiveCollaborations() {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando colaborações ativas");
-      
+      console.log('[PRISMA COLLABORATION REPO] Buscando colaborações ativas');
+
       const prisma = this._getPrismaClient();
       const collaborations = await prisma.collaboration.findMany({
         where: {
@@ -304,10 +343,16 @@ class PrismaCollaborationRepository  {
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaborações ativas encontradas:", collaborations.length);
-      return collaborations.map(collaboration => this._mapToEntity(collaboration));
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaborações ativas encontradas:',
+        collaborations.length
+      );
+      return collaborations.map((collaboration) => this._mapToEntity(collaboration));
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar colaborações ativas:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar colaborações ativas:',
+        error.message
+      );
       throw new Error(`Error finding active collaborations: ${error.message}`);
     }
   }
@@ -319,28 +364,34 @@ class PrismaCollaborationRepository  {
    */
   async findPendingCollaborations(organizationId) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Buscando colaborações pendentes para organização:", organizationId);
-      
+      console.log(
+        '[PRISMA COLLABORATION REPO] Buscando colaborações pendentes para organização:',
+        organizationId
+      );
+
       const prisma = this._getPrismaClient();
       const collaborations = await prisma.collaboration.findMany({
         where: {
           AND: [
             { status: 'pending' },
             {
-              OR: [
-                { requesterOrgId: organizationId },
-                { targetOrgId: organizationId },
-              ],
+              OR: [{ requesterOrgId: organizationId }, { targetOrgId: organizationId }],
             },
           ],
         },
         orderBy: { createdAt: 'desc' },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Colaborações pendentes encontradas:", collaborations.length);
-      return collaborations.map(collaboration => this._mapToEntity(collaboration));
+      console.log(
+        '[PRISMA COLLABORATION REPO] Colaborações pendentes encontradas:',
+        collaborations.length
+      );
+      return collaborations.map((collaboration) => this._mapToEntity(collaboration));
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao buscar colaborações pendentes:", error.message);
+      console.error(
+        '[PRISMA COLLABORATION REPO] Erro ao buscar colaborações pendentes:',
+        error.message
+      );
       throw new Error(`Error finding pending collaborations: ${error.message}`);
     }
   }
@@ -353,27 +404,27 @@ class PrismaCollaborationRepository  {
    */
   async countByStatusAndOrganization(organizationId, status) {
     try {
-      console.log("[PRISMA COLLABORATION REPO] Contando colaborações por status e organização:", { organizationId, status });
-      
+      console.log('[PRISMA COLLABORATION REPO] Contando colaborações por status e organização:', {
+        organizationId,
+        status,
+      });
+
       const prisma = this._getPrismaClient();
       const count = await prisma.collaboration.count({
         where: {
           AND: [
             { status },
             {
-              OR: [
-                { requesterOrgId: organizationId },
-                { targetOrgId: organizationId },
-              ],
+              OR: [{ requesterOrgId: organizationId }, { targetOrgId: organizationId }],
             },
           ],
         },
       });
 
-      console.log("[PRISMA COLLABORATION REPO] Total de colaborações encontradas:", count);
+      console.log('[PRISMA COLLABORATION REPO] Total de colaborações encontradas:', count);
       return count;
     } catch (error) {
-      console.error("[PRISMA COLLABORATION REPO] Erro ao contar colaborações:", error.message);
+      console.error('[PRISMA COLLABORATION REPO] Erro ao contar colaborações:', error.message);
       throw new Error(`Error counting collaborations: ${error.message}`);
     }
   }

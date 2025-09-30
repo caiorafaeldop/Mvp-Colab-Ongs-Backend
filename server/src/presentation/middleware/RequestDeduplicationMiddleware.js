@@ -7,7 +7,7 @@ class RequestDeduplicationMiddleware {
     this.requestCache = new Map();
     this.cleanupInterval = 30000; // 30 segundos
     this.requestTimeout = 10000; // 10 segundos
-    
+
     // Limpeza automática do cache
     setInterval(() => {
       this.cleanup();
@@ -23,7 +23,7 @@ class RequestDeduplicationMiddleware {
     const { method, originalUrl, ip } = req;
     const body = method === 'POST' || method === 'PUT' ? JSON.stringify(req.body) : '';
     const userAgent = req.get('User-Agent') || '';
-    
+
     return `${method}:${originalUrl}:${ip}:${userAgent}:${body}`;
   }
 
@@ -38,18 +38,18 @@ class RequestDeduplicationMiddleware {
   middleware = (req, res, next) => {
     // Pular deduplicação para rotas específicas
     const skipRoutes = ['/health'];
-    if (skipRoutes.some(route => req.originalUrl.includes(route))) {
+    if (skipRoutes.some((route) => req.originalUrl.includes(route))) {
       return next();
     }
 
     // Configurações especiais para diferentes endpoints
     let timeoutForThisRequest = this.requestTimeout;
-    
+
     // Refresh token: timeout menor para evitar loops
     if (req.originalUrl.includes('/api/auth/refresh')) {
       timeoutForThisRequest = 2000; // 2 segundos apenas
     }
-    
+
     // Logout: timeout muito pequeno
     if (req.originalUrl.includes('/api/auth/logout')) {
       timeoutForThisRequest = 1000; // 1 segundo apenas
@@ -57,18 +57,18 @@ class RequestDeduplicationMiddleware {
 
     const requestKey = this.generateRequestKey(req);
     const now = Date.now();
-    
+
     // Verificar se a requisição já está sendo processada
     if (this.requestCache.has(requestKey)) {
       const cachedRequest = this.requestCache.get(requestKey);
-      
+
       // Se ainda está dentro do timeout, bloquear
       if (now - cachedRequest.timestamp < timeoutForThisRequest) {
         console.log(`[DEDUP] Requisição duplicada bloqueada: ${req.method} ${req.originalUrl}`);
         return res.status(429).json({
           success: false,
           message: 'Duplicate request detected. Please wait before trying again.',
-          retryAfter: Math.ceil((timeoutForThisRequest - (now - cachedRequest.timestamp)) / 1000)
+          retryAfter: Math.ceil((timeoutForThisRequest - (now - cachedRequest.timestamp)) / 1000),
         });
       }
     }
@@ -77,7 +77,7 @@ class RequestDeduplicationMiddleware {
     this.requestCache.set(requestKey, {
       timestamp: now,
       method: req.method,
-      url: req.originalUrl
+      url: req.originalUrl,
     });
 
     console.log(`[DEDUP] Requisição processada: ${req.method} ${req.originalUrl}`);
@@ -85,8 +85,8 @@ class RequestDeduplicationMiddleware {
     // Remover do cache quando a resposta for enviada
     const originalSend = res.send.bind(res);
     const middleware = this;
-    
-    res.send = function(data) {
+
+    res.send = function (data) {
       middleware.requestCache.delete(requestKey);
       return originalSend(data);
     };
@@ -100,14 +100,14 @@ class RequestDeduplicationMiddleware {
   cleanup() {
     const now = Date.now();
     let cleaned = 0;
-    
+
     for (const [key, request] of this.requestCache.entries()) {
       if (now - request.timestamp > this.requestTimeout) {
         this.requestCache.delete(key);
         cleaned++;
       }
     }
-    
+
     if (cleaned > 0) {
       console.log(`[DEDUP] Cache limpo: ${cleaned} entradas removidas`);
     }
@@ -120,11 +120,11 @@ class RequestDeduplicationMiddleware {
   getStats() {
     return {
       totalCached: this.requestCache.size,
-      requests: Array.from(this.requestCache.values()).map(req => ({
+      requests: Array.from(this.requestCache.values()).map((req) => ({
         method: req.method,
         url: req.url,
-        age: Date.now() - req.timestamp
-      }))
+        age: Date.now() - req.timestamp,
+      })),
     };
   }
 
@@ -145,5 +145,5 @@ module.exports = {
   RequestDeduplicationMiddleware,
   deduplicationMiddleware: deduplicationMiddleware.middleware,
   getDeduplicationStats: () => deduplicationMiddleware.getStats(),
-  clearDeduplicationCache: () => deduplicationMiddleware.clearCache()
+  clearDeduplicationCache: () => deduplicationMiddleware.clearCache(),
 };

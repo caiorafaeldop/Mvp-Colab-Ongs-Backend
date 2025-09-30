@@ -37,27 +37,20 @@ class Collaboration {
    * @param {string} description - Descrição da colaboração
    * @returns {Collaboration} Nova instância de colaboração
    */
-  static create(
-    requesterOrgId,
-    requesterOrgName,
-    targetOrgId,
-    targetOrgName,
-    title,
-    description
-  ) {
+  static create(requesterOrgId, requesterOrgName, targetOrgId, targetOrgName, title, description) {
     // Validações básicas
     if (!requesterOrgId || !targetOrgId) {
       throw new Error('Requester and target organization IDs are required');
     }
-    
+
     if (!requesterOrgName || !targetOrgName) {
       throw new Error('Requester and target organization names are required');
     }
-    
+
     if (!title || title.trim().length === 0) {
       throw new Error('Collaboration title is required');
     }
-    
+
     if (!description || description.trim().length === 0) {
       throw new Error('Collaboration description is required');
     }
@@ -145,13 +138,13 @@ class Collaboration {
    */
   update(updateData) {
     const allowedFields = ['title', 'description'];
-    
-    Object.keys(updateData).forEach(key => {
+
+    Object.keys(updateData).forEach((key) => {
       if (allowedFields.includes(key) && updateData[key] !== undefined) {
         this[key] = updateData[key];
       }
     });
-    
+
     this.updatedAt = new Date();
   }
 
@@ -170,7 +163,7 @@ class Collaboration {
       description: this.description,
       status: this.status,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
     };
   }
 }

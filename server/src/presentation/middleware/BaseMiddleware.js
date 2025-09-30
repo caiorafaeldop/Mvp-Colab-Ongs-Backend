@@ -13,7 +13,7 @@ class BaseMiddleware {
   constructor(name) {
     this.name = name;
   }
-  
+
   /**
    * Método principal que deve ser implementado por middlewares concretos
    * @param {Object} req - Request do Express
@@ -23,46 +23,45 @@ class BaseMiddleware {
   async handle(req, res, next) {
     throw new Error(`Method handle must be implemented by ${this.constructor.name}`);
   }
-  
+
   /**
    * Wrapper que adiciona logging e tratamento de erro padrão
    * @param {Object} req - Request do Express
-   * @param {Object} res - Response do Express  
+   * @param {Object} res - Response do Express
    * @param {Function} next - Função next do Express
    */
   async execute(req, res, next) {
     const requestLogger = req.logger || logger;
     const startTime = Date.now();
-    
+
     try {
       requestLogger.debug(`Middleware ${this.name} iniciado`, {
         middleware: this.name,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
-      
+
       await this.handle(req, res, next);
-      
+
       const duration = Date.now() - startTime;
       requestLogger.debug(`Middleware ${this.name} concluído`, {
         middleware: this.name,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
-      
     } catch (error) {
       const duration = Date.now() - startTime;
       requestLogger.error(`Middleware ${this.name} falhou`, {
         middleware: this.name,
         error: error.message,
         duration: `${duration}ms`,
-        stack: error.stack
+        stack: error.stack,
       });
-      
+
       // Chamar próximo middleware com erro
       next(error);
     }
   }
-  
+
   /**
    * Cria função middleware compatível com Express
    * @returns {Function} Middleware do Express
@@ -70,7 +69,7 @@ class BaseMiddleware {
   toExpressMiddleware() {
     return (req, res, next) => this.execute(req, res, next);
   }
-  
+
   /**
    * Método utilitário para criar resposta de erro padronizada
    * @param {Object} res - Response do Express
@@ -84,20 +83,20 @@ class BaseMiddleware {
       success: false,
       message,
       error: errorCode || 'MIDDLEWARE_ERROR',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     if (details) {
       errorResponse.details = details;
     }
-    
+
     if (res.headersSent) {
       return; // Headers já enviados, não pode responder
     }
-    
+
     res.status(statusCode).json(errorResponse);
   }
-  
+
   /**
    * Método utilitário para validar se request pode prosseguir
    * @param {Object} req - Request do Express
@@ -106,7 +105,7 @@ class BaseMiddleware {
   canProceed(req) {
     return !req.middlewareError && !req.skipRemaining;
   }
-  
+
   /**
    * Marca request para pular middlewares restantes
    * @param {Object} req - Request do Express
@@ -115,11 +114,11 @@ class BaseMiddleware {
   skipRemaining(req, reason = 'middleware_decision') {
     req.skipRemaining = true;
     req.skipReason = reason;
-    
+
     const requestLogger = req.logger || logger;
     requestLogger.debug(`Middlewares restantes pulados por ${this.name}`, {
       middleware: this.name,
-      reason
+      reason,
     });
   }
 }
@@ -135,17 +134,17 @@ class MiddlewareFactory {
    * @returns {BaseMiddleware} Instância do middleware
    */
   static createValidator(name, validator) {
-    return new class extends BaseMiddleware {
+    return new (class extends BaseMiddleware {
       constructor() {
         super(name);
         this.validator = validator;
       }
-      
+
       async handle(req, res, next) {
         if (!this.canProceed(req)) {
           return next();
         }
-        
+
         try {
           const result = await this.validator(req, res);
           if (result === false) {
@@ -157,9 +156,9 @@ class MiddlewareFactory {
           this.sendError(res, 400, error.message, 'VALIDATION_ERROR');
         }
       }
-    }();
+    })();
   }
-  
+
   /**
    * Cria middleware de autorização com contrato padronizado
    * @param {string} name - Nome do middleware
@@ -167,17 +166,17 @@ class MiddlewareFactory {
    * @returns {BaseMiddleware} Instância do middleware
    */
   static createAuthorizer(name, authorizer) {
-    return new class extends BaseMiddleware {
+    return new (class extends BaseMiddleware {
       constructor() {
         super(name);
         this.authorizer = authorizer;
       }
-      
+
       async handle(req, res, next) {
         if (!this.canProceed(req)) {
           return next();
         }
-        
+
         try {
           const authorized = await this.authorizer(req, res);
           if (!authorized) {
@@ -189,11 +188,11 @@ class MiddlewareFactory {
           this.sendError(res, 401, error.message, 'AUTHENTICATION_ERROR');
         }
       }
-    }();
+    })();
   }
 }
 
 module.exports = {
   BaseMiddleware,
-  MiddlewareFactory
+  MiddlewareFactory,
 };

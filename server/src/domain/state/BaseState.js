@@ -30,7 +30,7 @@ class BaseState {
     if (!this.canTransitionTo(targetState)) {
       throw new Error(
         `Invalid transition: ${this.currentState} -> ${targetState}. ` +
-        `Allowed: [${this.transitions[this.currentState]?.join(', ') || 'none'}]`
+          `Allowed: [${this.transitions[this.currentState]?.join(', ') || 'none'}]`
       );
     }
 
@@ -40,7 +40,7 @@ class BaseState {
       from: this.currentState,
       to: targetState,
       timestamp: new Date().toISOString(),
-      metadata
+      metadata,
     });
     newState.metadata = { ...newState.metadata, ...metadata };
 
@@ -109,7 +109,7 @@ class BaseState {
       currentState: this.currentState,
       availableTransitions: this.getAvailableTransitions(),
       history: this.history,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 }

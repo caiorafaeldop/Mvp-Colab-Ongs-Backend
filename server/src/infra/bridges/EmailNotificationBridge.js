@@ -31,7 +31,7 @@ class EmailNotificationBridge extends INotificationBridge {
         subject: notification.title || 'Notificação do Marketplace ONGs',
         html: this.buildEmailTemplate(notification, recipient, options),
         text: notification.message || notification.body,
-        from: options.from || process.env.EMAIL_FROM || 'noreply@marketplace-ongs.com'
+        from: options.from || process.env.EMAIL_FROM || 'noreply@marketplace-ongs.com',
       };
 
       // Adiciona anexos se fornecidos
@@ -49,9 +49,8 @@ class EmailNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         recipient: recipient.email,
         sentAt: new Date().toISOString(),
-        provider: this.adapter.getProviderName?.() || 'Unknown'
+        provider: this.adapter.getProviderName?.() || 'Unknown',
       };
-
     } catch (error) {
       console.error('[EmailNotificationBridge] Erro no envio:', error.message);
       throw new Error(`Email sending failed: ${error.message}`);
@@ -67,10 +66,12 @@ class EmailNotificationBridge extends INotificationBridge {
    */
   async sendBulkNotification(notification, recipients, options = {}) {
     try {
-      console.log(`[EmailNotificationBridge] Enviando email em lote para ${recipients.length} destinatários`);
+      console.log(
+        `[EmailNotificationBridge] Enviando email em lote para ${recipients.length} destinatários`
+      );
 
-      const validRecipients = recipients.filter(r => this.validateRecipient(r));
-      
+      const validRecipients = recipients.filter((r) => this.validateRecipient(r));
+
       if (validRecipients.length === 0) {
         throw new Error('Nenhum destinatário válido encontrado');
       }
@@ -81,7 +82,7 @@ class EmailNotificationBridge extends INotificationBridge {
       // Processa em lotes para evitar sobrecarga
       for (let i = 0; i < validRecipients.length; i += batchSize) {
         const batch = validRecipients.slice(i, i + batchSize);
-        
+
         const batchPromises = batch.map(async (recipient) => {
           try {
             const result = await this.sendNotification(notification, recipient, options);
@@ -96,14 +97,16 @@ class EmailNotificationBridge extends INotificationBridge {
 
         // Delay entre lotes se especificado
         if (options.delayBetweenBatches && i + batchSize < validRecipients.length) {
-          await new Promise(resolve => setTimeout(resolve, options.delayBetweenBatches));
+          await new Promise((resolve) => setTimeout(resolve, options.delayBetweenBatches));
         }
       }
 
-      const successful = results.filter(r => r.success);
-      const failed = results.filter(r => !r.success);
+      const successful = results.filter((r) => r.success);
+      const failed = results.filter((r) => !r.success);
 
-      console.log(`[EmailNotificationBridge] Lote concluído: ${successful.length}/${recipients.length} sucessos`);
+      console.log(
+        `[EmailNotificationBridge] Lote concluído: ${successful.length}/${recipients.length} sucessos`
+      );
 
       return {
         success: failed.length === 0,
@@ -113,9 +116,8 @@ class EmailNotificationBridge extends INotificationBridge {
         successful: successful.length,
         failed: failed.length,
         results: results,
-        sentAt: new Date().toISOString()
+        sentAt: new Date().toISOString(),
       };
-
     } catch (error) {
       console.error('[EmailNotificationBridge] Erro no envio em lote:', error.message);
       throw new Error(`Bulk email sending failed: ${error.message}`);
@@ -131,15 +133,14 @@ class EmailNotificationBridge extends INotificationBridge {
     try {
       // Implementação dependeria do provedor de email
       // Por exemplo, SendGrid, Mailgun, etc. têm APIs específicas
-      
+
       return {
         notificationId,
         channel: this.channelName,
         status: 'unknown',
         message: 'Status tracking not implemented for this email provider',
-        checkedAt: new Date().toISOString()
+        checkedAt: new Date().toISOString(),
       };
-
     } catch (error) {
       console.error('[EmailNotificationBridge] Erro ao verificar status:', error.message);
       return {
@@ -147,7 +148,7 @@ class EmailNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         status: 'error',
         error: error.message,
-        checkedAt: new Date().toISOString()
+        checkedAt: new Date().toISOString(),
       };
     }
   }
@@ -160,20 +161,14 @@ class EmailNotificationBridge extends INotificationBridge {
     return {
       name: this.channelName,
       type: 'email',
-      features: [
-        'html_content',
-        'attachments',
-        'bulk_sending',
-        'templates',
-        'personalization'
-      ],
+      features: ['html_content', 'attachments', 'bulk_sending', 'templates', 'personalization'],
       limitations: {
         maxRecipients: 1000,
         maxAttachmentSize: '25MB',
-        rateLimit: '100 emails/minute'
+        rateLimit: '100 emails/minute',
       },
       deliveryTime: '1-5 minutes',
-      reliability: 'high'
+      reliability: 'high',
     };
   }
 
@@ -394,7 +389,7 @@ class EmailNotificationBridge extends INotificationBridge {
         channel: this.channelName,
         accessible: true,
         configured: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
@@ -403,7 +398,7 @@ class EmailNotificationBridge extends INotificationBridge {
         accessible: false,
         configured: false,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

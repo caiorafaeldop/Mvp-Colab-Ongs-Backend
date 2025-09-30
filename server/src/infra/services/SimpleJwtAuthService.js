@@ -1,7 +1,7 @@
 // Interface removida na limpeza
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-const User = require("../../domain/entities/User");
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const User = require('../../domain/entities/User');
 
 /**
  * Interface do serviço de autenticação
@@ -26,7 +26,7 @@ class SimpleJwtAuthService {
       name: user.name,
       userType: user.userType,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (45 * 60), // 45 minutos
+      exp: Math.floor(Date.now() / 1000) + 45 * 60, // 45 minutos
     };
   }
 
@@ -36,7 +36,7 @@ class SimpleJwtAuthService {
   createSimpleToken(payload) {
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
     const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url');
-    
+
     const signature = crypto
       .createHmac('sha256', this.jwtSecret)
       .update(`${header}.${payloadStr}`)
@@ -55,7 +55,7 @@ class SimpleJwtAuthService {
     }
 
     const [header, payload, signature] = parts;
-    
+
     // Verificar assinatura
     const expectedSignature = crypto
       .createHmac('sha256', this.jwtSecret)
@@ -68,7 +68,7 @@ class SimpleJwtAuthService {
 
     // Parse payload
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64url').toString());
-    
+
     // Verificar expiração
     if (decodedPayload.exp && decodedPayload.exp < Math.floor(Date.now() / 1000)) {
       throw new Error('Token expired');
@@ -82,14 +82,14 @@ class SimpleJwtAuthService {
    */
   async generateTokens(user) {
     const now = Math.floor(Date.now() / 1000);
-    
+
     const accessPayload = {
       sub: user.id || user._id,
       email: user.email,
       name: user.name,
       userType: user.userType,
       iat: now,
-      exp: now + (45 * 60), // 45 minutos
+      exp: now + 45 * 60, // 45 minutos
     };
 
     const refreshPayload = {
@@ -98,7 +98,7 @@ class SimpleJwtAuthService {
       name: user.name,
       userType: user.userType,
       iat: now,
-      exp: now + (7 * 24 * 60 * 60), // 7 dias
+      exp: now + 7 * 24 * 60 * 60, // 7 dias
     };
 
     const accessToken = this.createSimpleToken(accessPayload);
@@ -115,18 +115,18 @@ class SimpleJwtAuthService {
    */
   async login(email, password) {
     try {
-      console.log("[SIMPLE JWT AUTH] Login iniciado:", { email });
-      
+      console.log('[SIMPLE JWT AUTH] Login iniciado:', { email });
+
       // Buscar usuário
       const user = await this.userRepository.findByEmail(email.toLowerCase().trim());
-      
+
       if (!user) {
         throw new Error('Invalid credentials');
       }
 
       // Verificar senha
       const isPasswordValid = await this.comparePassword(password, user.password);
-      
+
       if (!isPasswordValid) {
         throw new Error('Invalid credentials');
       }
@@ -135,7 +135,7 @@ class SimpleJwtAuthService {
       const tokens = await this.generateTokens(user);
 
       // Retornar dados limpos
-      return { 
+      return {
         message: 'Login successful',
         user: {
           id: user.id || user._id,
@@ -148,7 +148,7 @@ class SimpleJwtAuthService {
         refreshToken: tokens.refreshToken,
       };
     } catch (error) {
-      console.error("[SIMPLE JWT AUTH] Erro no login:", error.message);
+      console.error('[SIMPLE JWT AUTH] Erro no login:', error.message);
       throw new Error(`Login failed: ${error.message}`);
     }
   }
@@ -158,32 +158,35 @@ class SimpleJwtAuthService {
    */
   async register(userData) {
     try {
-      console.log("[SIMPLE JWT AUTH] Registro iniciado:", { email: userData?.email });
-      
+      console.log('[SIMPLE JWT AUTH] Registro iniciado:', { email: userData?.email });
+
       // Validação básica
       this.validateRegistrationData(userData);
-      
+
       // Verificar se usuário já existe
-      const existingUser = await this.userRepository.findByEmail(userData.email.toLowerCase().trim());
+      const existingUser = await this.userRepository.findByEmail(
+        userData.email.toLowerCase().trim()
+      );
       if (existingUser) {
         throw new Error('User already exists with this email');
       }
 
       // Criar usuário (usar fábricas para manter ordem correta dos campos)
       const lowerEmail = userData.email.toLowerCase().trim();
-      const user = (userData.userType === 'organization')
-        ? User.createOrganizationUser(
-            userData.name.trim(),
-            lowerEmail,
-            userData.password,
-            userData.phone?.trim()
-          )
-        : User.createCommonUser(
-            userData.name.trim(),
-            lowerEmail,
-            userData.password,
-            userData.phone?.trim()
-          );
+      const user =
+        userData.userType === 'organization'
+          ? User.createOrganizationUser(
+              userData.name.trim(),
+              lowerEmail,
+              userData.password,
+              userData.phone?.trim()
+            )
+          : User.createCommonUser(
+              userData.name.trim(),
+              lowerEmail,
+              userData.password,
+              userData.phone?.trim()
+            );
 
       // Hash da senha
       user.password = await this.hashPassword(user.password);
@@ -194,7 +197,7 @@ class SimpleJwtAuthService {
       // Gerar tokens
       const tokens = await this.generateTokens(savedUser);
 
-      return { 
+      return {
         message: 'User registered successfully',
         user: {
           id: savedUser.id || savedUser._id,
@@ -207,7 +210,7 @@ class SimpleJwtAuthService {
         refreshToken: tokens.refreshToken,
       };
     } catch (error) {
-      console.error("[SIMPLE JWT AUTH] Erro no registro:", error.message);
+      console.error('[SIMPLE JWT AUTH] Erro no registro:', error.message);
       throw new Error(`Registration failed: ${error.message}`);
     }
   }
@@ -218,7 +221,7 @@ class SimpleJwtAuthService {
   async refreshTokens(refreshToken) {
     try {
       const payload = this.verifySimpleToken(refreshToken);
-      
+
       const user = {
         id: payload.sub,
         email: payload.email,
@@ -238,7 +241,7 @@ class SimpleJwtAuthService {
   async verifyAccessToken(token) {
     try {
       const payload = this.verifySimpleToken(token);
-      
+
       // Buscar usuário para garantir que ainda existe
       const user = await this.userRepository.findById(payload.sub);
       if (!user) {

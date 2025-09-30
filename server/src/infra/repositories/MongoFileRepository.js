@@ -1,26 +1,29 @@
 // Interface removida na limpeza
-const File = require("../../domain/entities/File");
-const mongoose = require("mongoose");
+const File = require('../../domain/entities/File');
+const mongoose = require('mongoose');
 
 // Schema do File
-const FileSchema = new mongoose.Schema({
-  originalName: { type: String, required: true },
-  fileName: { type: String, required: true },
-  fileUrl: { type: String, required: true },
-  fileType: { type: String, required: true },
-  fileSize: { type: Number, required: true },
-  ownerId: { type: String, required: true },
-  ownerType: { type: String, enum: ['user', 'organization'], default: 'user' },
-  folder: { type: String, default: 'general' },
-  isPublic: { type: Boolean, default: false },
-  metadata: { type: Object, default: {} }
-}, {
-  timestamps: true
-});
+const FileSchema = new mongoose.Schema(
+  {
+    originalName: { type: String, required: true },
+    fileName: { type: String, required: true },
+    fileUrl: { type: String, required: true },
+    fileType: { type: String, required: true },
+    fileSize: { type: Number, required: true },
+    ownerId: { type: String, required: true },
+    ownerType: { type: String, enum: ['user', 'organization'], default: 'user' },
+    folder: { type: String, default: 'general' },
+    isPublic: { type: Boolean, default: false },
+    metadata: { type: Object, default: {} },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 const FileModel = mongoose.model('File', FileSchema);
 
-class MongoFileRepository  {
+class MongoFileRepository {
   async save(file) {
     try {
       const fileData = {
@@ -33,7 +36,7 @@ class MongoFileRepository  {
         ownerType: file.ownerType,
         folder: file.folder,
         isPublic: file.isPublic,
-        metadata: file.metadata
+        metadata: file.metadata,
       };
 
       const savedFile = await FileModel.create(fileData);
@@ -55,7 +58,7 @@ class MongoFileRepository  {
   async findByOwnerId(ownerId) {
     try {
       const files = await FileModel.find({ ownerId }).sort({ createdAt: -1 });
-      return files.map(file => this._mapToEntity(file));
+      return files.map((file) => this._mapToEntity(file));
     } catch (error) {
       throw new Error(`Error finding files by owner: ${error.message}`);
     }
@@ -64,7 +67,7 @@ class MongoFileRepository  {
   async findByType(fileType) {
     try {
       const files = await FileModel.find({ fileType }).sort({ createdAt: -1 });
-      return files.map(file => this._mapToEntity(file));
+      return files.map((file) => this._mapToEntity(file));
     } catch (error) {
       throw new Error(`Error finding files by type: ${error.message}`);
     }
@@ -73,7 +76,7 @@ class MongoFileRepository  {
   async findByFolder(folder) {
     try {
       const files = await FileModel.find({ folder }).sort({ createdAt: -1 });
-      return files.map(file => this._mapToEntity(file));
+      return files.map((file) => this._mapToEntity(file));
     } catch (error) {
       throw new Error(`Error finding files by folder: ${error.message}`);
     }
@@ -104,7 +107,7 @@ class MongoFileRepository  {
   async findAll() {
     try {
       const files = await FileModel.find().sort({ createdAt: -1 });
-      return files.map(file => this._mapToEntity(file));
+      return files.map((file) => this._mapToEntity(file));
     } catch (error) {
       throw new Error(`Error finding all files: ${error.message}`);
     }
@@ -115,10 +118,10 @@ class MongoFileRepository  {
       const files = await FileModel.find({
         createdAt: {
           $gte: startDate,
-          $lte: endDate
-        }
+          $lte: endDate,
+        },
       }).sort({ createdAt: -1 });
-      return files.map(file => this._mapToEntity(file));
+      return files.map((file) => this._mapToEntity(file));
     } catch (error) {
       throw new Error(`Error finding files by date range: ${error.message}`);
     }
@@ -127,7 +130,7 @@ class MongoFileRepository  {
   async findPublicFiles() {
     try {
       const files = await FileModel.find({ isPublic: true }).sort({ createdAt: -1 });
-      return files.map(file => this._mapToEntity(file));
+      return files.map((file) => this._mapToEntity(file));
     } catch (error) {
       throw new Error(`Error finding public files: ${error.message}`);
     }

@@ -1,8 +1,8 @@
 /**
  * LEAF (Composite Pattern)
- * 
+ *
  * OrganizationLeaf - Organização folha (sem filiais)
- * 
+ *
  * Representa organizações independentes ou filiais finais que não têm sub-organizações.
  */
 

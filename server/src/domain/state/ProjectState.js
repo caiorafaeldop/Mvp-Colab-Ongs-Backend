@@ -11,7 +11,7 @@ class ProjectState extends BaseState {
     ON_HOLD: 'on_hold',
     COMPLETED: 'completed',
     ARCHIVED: 'archived',
-    CANCELLED: 'cancelled'
+    CANCELLED: 'cancelled',
   };
 
   static TRANSITIONS = {
@@ -21,7 +21,7 @@ class ProjectState extends BaseState {
     on_hold: ['in_progress', 'cancelled'],
     completed: ['archived'],
     archived: ['published'], // Permite republicar
-    cancelled: ['draft'] // Permite recriar
+    cancelled: ['draft'], // Permite recriar
   };
 
   constructor(currentState = ProjectState.STATES.DRAFT) {
@@ -36,7 +36,7 @@ class ProjectState extends BaseState {
       action: 'publish',
       publishedBy,
       publishedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -48,7 +48,7 @@ class ProjectState extends BaseState {
       action: 'start',
       startedBy,
       startedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -60,7 +60,7 @@ class ProjectState extends BaseState {
       action: 'hold',
       reason,
       heldAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -72,7 +72,7 @@ class ProjectState extends BaseState {
       action: 'complete',
       completedBy,
       completedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -84,7 +84,7 @@ class ProjectState extends BaseState {
       action: 'archive',
       archivedBy,
       archivedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -97,7 +97,7 @@ class ProjectState extends BaseState {
       reason,
       cancelledBy,
       cancelledAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -112,30 +112,21 @@ class ProjectState extends BaseState {
    * Verifica se projeto pode receber contribuições
    */
   canReceiveDonations() {
-    return this.isOneOf([
-      ProjectState.STATES.PUBLISHED,
-      ProjectState.STATES.IN_PROGRESS
-    ]);
+    return this.isOneOf([ProjectState.STATES.PUBLISHED, ProjectState.STATES.IN_PROGRESS]);
   }
 
   /**
    * Verifica se pode ser editado
    */
   isEditable() {
-    return this.isOneOf([
-      ProjectState.STATES.DRAFT,
-      ProjectState.STATES.ON_HOLD
-    ]);
+    return this.isOneOf([ProjectState.STATES.DRAFT, ProjectState.STATES.ON_HOLD]);
   }
 
   /**
    * Verifica se está finalizado
    */
   isFinalized() {
-    return this.isOneOf([
-      ProjectState.STATES.COMPLETED,
-      ProjectState.STATES.ARCHIVED
-    ]);
+    return this.isOneOf([ProjectState.STATES.COMPLETED, ProjectState.STATES.ARCHIVED]);
   }
 
   /**

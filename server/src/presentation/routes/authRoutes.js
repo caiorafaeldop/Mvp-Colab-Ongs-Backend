@@ -1,6 +1,6 @@
-const express = require("express");
-const AuthController = require("../controllers/AuthController");
-const { authMiddleware } = require("../middleware/AuthMiddleware");
+const express = require('express');
+const AuthController = require('../controllers/AuthController');
+const { authMiddleware } = require('../middleware/AuthMiddleware');
 
 /**
  * @swagger
@@ -22,7 +22,7 @@ const { authMiddleware } = require("../middleware/AuthMiddleware");
  *           format: password
  *           description: Senha do usuário
  *           example: "minhasenha123"
- *     
+ *
  *     RegisterRequest:
  *       type: object
  *       required:
@@ -54,7 +54,7 @@ const { authMiddleware } = require("../middleware/AuthMiddleware");
  *           type: string
  *           description: Telefone de contato
  *           example: "11999999999"
- *     
+ *
  *     AuthResponse:
  *       type: object
  *       properties:
@@ -84,7 +84,7 @@ let cachedAuthService = null;
 
 const createAuthRoutes = (authService) => {
   const router = express.Router();
-  
+
   // Reutilizar controller se o service for o mesmo
   if (!cachedAuthController || cachedAuthService !== authService) {
     cachedAuthController = new AuthController(authService);
@@ -93,7 +93,7 @@ const createAuthRoutes = (authService) => {
   }
 
   // Public routes
-  
+
   /**
    * @swagger
    * /api/auth/register:
@@ -127,7 +127,7 @@ const createAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/register", cachedAuthController.register);
+  router.post('/register', cachedAuthController.register);
 
   /**
    * @swagger
@@ -167,7 +167,7 @@ const createAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/login", cachedAuthController.login);
+  router.post('/login', cachedAuthController.login);
 
   /**
    * @swagger
@@ -205,7 +205,7 @@ const createAuthRoutes = (authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/refresh", cachedAuthController.refreshToken);
+  router.post('/refresh', cachedAuthController.refreshToken);
 
   /**
    * @swagger
@@ -231,11 +231,11 @@ const createAuthRoutes = (authService) => {
    *                   type: string
    *                   example: "Logout realizado com sucesso"
    */
-  router.post("/logout", cachedAuthController.logout);
+  router.post('/logout', cachedAuthController.logout);
 
   // CHAIN OF RESPONSIBILITY PATTERN: Rota protegida com cadeia de middlewares
   // authMiddleware -> cachedAuthController.getProfile
-  
+
   /**
    * @swagger
    * /api/auth/profile:
@@ -269,7 +269,7 @@ const createAuthRoutes = (authService) => {
    *               $ref: '#/components/schemas/Error'
    */
   router.get(
-    "/profile",
+    '/profile',
     authMiddleware(authService), // CHAIN HANDLER 1: Validação de token
     cachedAuthController.getProfile // CHAIN HANDLER 2: Processamento final
   );

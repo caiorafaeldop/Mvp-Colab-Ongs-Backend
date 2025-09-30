@@ -1,8 +1,8 @@
-const EnhancedJwtAuthService = require("../../infra/services/EnhancedJwtAuthService");
-const SimpleJwtAuthService = require("../../infra/services/SimpleJwtAuthService");
-const ProductService = require("../../application/services/ProductService");
-const DonationService = require("../../application/services/DonationService");
-const AdapterFactory = require("./AdapterFactory");
+const EnhancedJwtAuthService = require('../../infra/services/EnhancedJwtAuthService');
+const SimpleJwtAuthService = require('../../infra/services/SimpleJwtAuthService');
+const ProductService = require('../../application/services/ProductService');
+const DonationService = require('../../application/services/DonationService');
+const AdapterFactory = require('./AdapterFactory');
 
 /**
  * Factory para criação de Services seguindo o Factory Pattern
@@ -32,7 +32,7 @@ class ServiceFactory {
   createAuthService() {
     if (!this.services.has('authService')) {
       console.log('[SERVICE FACTORY] Criando AuthService');
-      
+
       const userRepository = this.dependencies.get('userRepository');
       if (!userRepository) {
         throw new Error('UserRepository dependency not found');
@@ -45,11 +45,7 @@ class ServiceFactory {
         throw new Error('JWT secrets not configured in environment variables');
       }
 
-      const authService = new EnhancedJwtAuthService(
-        userRepository,
-        jwtSecret,
-        jwtRefreshSecret
-      );
+      const authService = new EnhancedJwtAuthService(userRepository, jwtSecret, jwtRefreshSecret);
 
       this.services.set('authService', authService);
       console.log('[SERVICE FACTORY] AuthService criado com sucesso');
@@ -66,7 +62,7 @@ class ServiceFactory {
   createSimpleAuthService() {
     if (!this.services.has('simpleAuthService')) {
       console.log('[SERVICE FACTORY] Criando SimpleAuthService');
-      
+
       const userRepository = this.dependencies.get('userRepository');
       if (!userRepository) {
         throw new Error('UserRepository dependency not found');
@@ -77,10 +73,7 @@ class ServiceFactory {
         throw new Error('JWT_SECRET not configured in environment variables');
       }
 
-      const authService = new SimpleJwtAuthService(
-        userRepository,
-        jwtSecret
-      );
+      const authService = new SimpleJwtAuthService(userRepository, jwtSecret);
 
       this.services.set('simpleAuthService', authService);
       console.log('[SERVICE FACTORY] SimpleAuthService criado com sucesso');
@@ -96,7 +89,7 @@ class ServiceFactory {
   createProductService() {
     if (!this.services.has('productService')) {
       console.log('[SERVICE FACTORY] Criando ProductService');
-      
+
       const productRepository = this.dependencies.get('productRepository');
       const userRepository = this.dependencies.get('userRepository');
 
@@ -104,10 +97,7 @@ class ServiceFactory {
         throw new Error('ProductRepository or UserRepository dependency not found');
       }
 
-      const productService = new ProductService(
-        productRepository,
-        userRepository
-      );
+      const productService = new ProductService(productRepository, userRepository);
 
       this.services.set('productService', productService);
       console.log('[SERVICE FACTORY] ProductService criado com sucesso');
@@ -123,7 +113,7 @@ class ServiceFactory {
   createDonationService() {
     if (!this.services.has('donationService')) {
       console.log('[SERVICE FACTORY] Criando DonationService');
-      
+
       const donationRepository = this.dependencies.get('donationRepository');
       const userRepository = this.dependencies.get('userRepository');
 
@@ -134,7 +124,9 @@ class ServiceFactory {
       // Criar adapter do Mercado Pago via AdapterFactory (injeção de config)
       const mercadoPagoAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
       if (!mercadoPagoAccessToken) {
-        console.warn('[SERVICE FACTORY] MERCADO_PAGO_ACCESS_TOKEN não configurado - usando token de teste');
+        console.warn(
+          '[SERVICE FACTORY] MERCADO_PAGO_ACCESS_TOKEN não configurado - usando token de teste'
+        );
       }
 
       const paymentAdapter = AdapterFactory.createPaymentAdapter('mercadopago', {
@@ -144,7 +136,11 @@ class ServiceFactory {
           failure: process.env.MP_BACK_FAILURE || undefined,
           pending: process.env.MP_BACK_PENDING || undefined,
         },
-        notificationUrl: process.env.MP_NOTIFICATION_URL || (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/donations/webhook` : undefined),
+        notificationUrl:
+          process.env.MP_NOTIFICATION_URL ||
+          (process.env.BACKEND_URL
+            ? `${process.env.BACKEND_URL}/api/donations/webhook`
+            : undefined),
       });
 
       const donationService = new DonationService(
@@ -168,7 +164,7 @@ class ServiceFactory {
    */
   createService(serviceName, dependencies = []) {
     const serviceKey = serviceName.toLowerCase();
-    
+
     if (this.services.has(serviceKey)) {
       return this.services.get(serviceKey);
     }
@@ -177,9 +173,9 @@ class ServiceFactory {
 
     // Mapeamento de services disponíveis
     const serviceMap = {
-      'authservice': () => this.createAuthService(),
-      'productservice': () => this.createProductService(),
-      'donationservice': () => this.createDonationService(),
+      authservice: () => this.createAuthService(),
+      productservice: () => this.createProductService(),
+      donationservice: () => this.createDonationService(),
     };
 
     const factory = serviceMap[serviceKey];
@@ -189,7 +185,7 @@ class ServiceFactory {
 
     const service = factory();
     this.services.set(serviceKey, service);
-    
+
     return service;
   }
 
@@ -224,7 +220,7 @@ class ServiceFactory {
    * @returns {boolean} True se todas estão disponíveis
    */
   validateDependencies(requiredDeps) {
-    return requiredDeps.every(dep => this.dependencies.has(dep));
+    return requiredDeps.every((dep) => this.dependencies.has(dep));
   }
 
   /**
@@ -236,7 +232,7 @@ class ServiceFactory {
       servicesCreated: this.getCreatedServices(),
       dependenciesRegistered: Array.from(this.dependencies.keys()),
       totalServices: this.services.size,
-      totalDependencies: this.dependencies.size
+      totalDependencies: this.dependencies.size,
     };
   }
 }

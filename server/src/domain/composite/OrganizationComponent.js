@@ -1,12 +1,12 @@
 /**
  * COMPOSITE PATTERN (Estrutural)
- * 
+ *
  * OrganizationComponent - Interface base para organizações
- * 
+ *
  * Define interface comum para:
  * - OrganizationLeaf (organizações simples sem filiais)
  * - OrganizationComposite (organizações com filiais)
- * 
+ *
  * Permite tratar objetos individuais e composições uniformemente.
  */
 
@@ -78,7 +78,7 @@ class OrganizationComponent {
       name: this.name,
       email: this.email,
       type: this.type,
-      parentId: this.parentId
+      parentId: this.parentId,
     };
   }
 

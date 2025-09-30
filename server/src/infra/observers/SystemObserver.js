@@ -16,7 +16,7 @@ class SystemObserver extends IObserver {
       'system.security.alert',
       'system.health.check',
       'system.startup',
-      'system.shutdown'
+      'system.shutdown',
     ];
     this.errorCount = 0;
     this.warningCount = 0;
@@ -26,11 +26,11 @@ class SystemObserver extends IObserver {
     try {
       // Para eventos do sistema, usamos logger apropriado
       const logLevel = this.getLogLevel(event.type);
-      
+
       logger[logLevel](`[${this.name}] Processando evento: ${event.type}`, {
         eventId: event.id,
         timestamp: event.timestamp,
-        data: event.data
+        data: event.data,
       });
 
       switch (event.type) {
@@ -62,7 +62,7 @@ class SystemObserver extends IObserver {
       logger.error(`[${this.name}] Erro ao processar evento do sistema`, {
         error: error.message,
         eventType: event.type,
-        eventId: event.id
+        eventId: event.id,
       });
     }
   }
@@ -80,21 +80,27 @@ class SystemObserver extends IObserver {
   }
 
   getLogLevel(eventType) {
-    if (eventType.includes('error')) return 'error';
-    if (eventType.includes('warning')) return 'warn';
-    if (eventType.includes('security')) return 'warn';
+    if (eventType.includes('error')) {
+      return 'error';
+    }
+    if (eventType.includes('warning')) {
+      return 'warn';
+    }
+    if (eventType.includes('security')) {
+      return 'warn';
+    }
     return 'info';
   }
 
   // Handlers específicos
   async handleSystemError(event, context) {
     this.errorCount++;
-    
+
     logger.error(`[${this.name}] Erro no sistema detectado`, {
       errorMessage: event.data.error,
       errorStack: event.data.stack,
       component: event.data.component,
-      errorCount: this.errorCount
+      errorCount: this.errorCount,
     });
 
     // Lógica adicional:
@@ -108,11 +114,11 @@ class SystemObserver extends IObserver {
 
   async handleSystemWarning(event, context) {
     this.warningCount++;
-    
+
     logger.warn(`[${this.name}] Aviso do sistema`, {
       warning: event.data.warning,
       component: event.data.component,
-      warningCount: this.warningCount
+      warningCount: this.warningCount,
     });
   }
 
@@ -121,7 +127,7 @@ class SystemObserver extends IObserver {
       operation: event.data.operation,
       duration: event.data.duration,
       threshold: event.data.threshold,
-      component: event.data.component
+      component: event.data.component,
     });
 
     // Lógica adicional:
@@ -135,7 +141,7 @@ class SystemObserver extends IObserver {
       severity: event.data.severity,
       details: event.data.details,
       ip: context.ip,
-      userAgent: context.userAgent
+      userAgent: context.userAgent,
     });
 
     // Lógica adicional:
@@ -147,7 +153,7 @@ class SystemObserver extends IObserver {
   async handleHealthCheck(event, context) {
     logger.info(`[${this.name}] Health check executado`, {
       status: event.data.status,
-      checks: event.data.checks
+      checks: event.data.checks,
     });
 
     // Lógica adicional:
@@ -159,7 +165,7 @@ class SystemObserver extends IObserver {
     logger.info(`[${this.name}] Sistema iniciado`, {
       version: event.data.version,
       environment: event.data.environment,
-      nodeVersion: process.version
+      nodeVersion: process.version,
     });
 
     // Resetar contadores
@@ -171,7 +177,7 @@ class SystemObserver extends IObserver {
     logger.info(`[${this.name}] Sistema encerrando`, {
       uptime: event.data.uptime,
       totalErrors: this.errorCount,
-      totalWarnings: this.warningCount
+      totalWarnings: this.warningCount,
     });
   }
 
@@ -180,7 +186,7 @@ class SystemObserver extends IObserver {
     return {
       errorCount: this.errorCount,
       warningCount: this.warningCount,
-      observerName: this.name
+      observerName: this.name,
     };
   }
 

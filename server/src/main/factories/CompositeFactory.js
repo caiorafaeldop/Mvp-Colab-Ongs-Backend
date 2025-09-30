@@ -24,19 +24,11 @@ class CompositeFactory {
 
     if (type === 'matrix' || type === 'branch') {
       logger.info(`[COMPOSITE FACTORY] Criando Composite: ${orgData.name}`);
-      return new OrganizationComposite(
-        orgData,
-        this.productRepository,
-        this.donationRepository
-      );
+      return new OrganizationComposite(orgData, this.productRepository, this.donationRepository);
     }
 
     logger.info(`[COMPOSITE FACTORY] Criando Leaf: ${orgData.name}`);
-    return new OrganizationLeaf(
-      orgData,
-      this.productRepository,
-      this.donationRepository
-    );
+    return new OrganizationLeaf(orgData, this.productRepository, this.donationRepository);
   }
 
   /**
@@ -48,7 +40,7 @@ class CompositeFactory {
     try {
       // Busca organização matriz
       const matrixData = await this.orgRepository.findById(matrixId);
-      
+
       if (!matrixData) {
         throw new Error(`Organização matriz ${matrixId} não encontrada`);
       }
@@ -60,7 +52,6 @@ class CompositeFactory {
 
       logger.info(`[COMPOSITE FACTORY] Árvore construída: ${matrix.name}`);
       return matrix;
-
     } catch (error) {
       logger.error('[COMPOSITE FACTORY] Erro ao construir árvore:', error);
       throw error;
@@ -92,7 +83,7 @@ class CompositeFactory {
   async getAllMatrixOrganizations() {
     try {
       const matrices = await this.orgRepository.findMatrixOrganizations();
-      
+
       const trees = [];
       for (const matrixData of matrices) {
         const tree = await this.buildOrganizationTree(matrixData._id.toString());
@@ -100,7 +91,6 @@ class CompositeFactory {
       }
 
       return trees;
-
     } catch (error) {
       logger.error('[COMPOSITE FACTORY] Erro ao buscar matrizes:', error);
       throw error;

@@ -1,13 +1,13 @@
 /**
  * PROXY PATTERN (Estrutural)
- * 
+ *
  * Proxy transparente para adicionar funcionalidades a Services sem modificá-los:
  * - Validação automática de parâmetros
  * - Logging de entrada/saída
  * - Cache de resultados
  * - Controle de acesso
  * - Medição de performance
- * 
+ *
  * Usa JavaScript Proxy nativo para interceptar chamadas de métodos
  */
 
@@ -27,7 +27,7 @@ class ServiceProxy {
       enableValidation = false,
       enablePerformance = true,
       cacheTTL = 300000, // 5 minutos
-      serviceName = target.constructor.name
+      serviceName = target.constructor.name,
     } = options;
 
     // Cache storage
@@ -52,7 +52,7 @@ class ServiceProxy {
             if (enableLogging) {
               logger.info(`[PROXY] ${serviceName}.${methodName}() chamado`, {
                 args: ServiceProxy._sanitizeArgs(args),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               });
             }
 
@@ -70,7 +70,7 @@ class ServiceProxy {
                 if (enableLogging) {
                   logger.info(`[PROXY] ${serviceName}.${methodName}() - Cache HIT`, {
                     cacheKey,
-                    age: Date.now() - cached.timestamp
+                    age: Date.now() - cached.timestamp,
                   });
                 }
                 return cached.data;
@@ -85,7 +85,7 @@ class ServiceProxy {
               const cacheKey = ServiceProxy._generateCacheKey(serviceName, methodName, args);
               cache.set(cacheKey, {
                 data: result,
-                timestamp: Date.now()
+                timestamp: Date.now(),
               });
             }
 
@@ -94,7 +94,7 @@ class ServiceProxy {
             if (enablePerformance && duration > 1000) {
               logger.warn(`[PROXY] ${serviceName}.${methodName}() SLOW`, {
                 duration: `${duration}ms`,
-                threshold: '1000ms'
+                threshold: '1000ms',
               });
             }
 
@@ -102,27 +102,26 @@ class ServiceProxy {
             if (enableLogging) {
               logger.info(`[PROXY] ${serviceName}.${methodName}() completado`, {
                 duration: `${duration}ms`,
-                hasResult: result !== undefined
+                hasResult: result !== undefined,
               });
             }
 
             return result;
-
           } catch (error) {
             // 8. ERROR HANDLING - Logging de erros
             const duration = Date.now() - startTime;
-            
+
             logger.error(`[PROXY] ${serviceName}.${methodName}() ERRO`, {
               error: error.message,
               stack: error.stack,
               duration: `${duration}ms`,
-              args: ServiceProxy._sanitizeArgs(args)
+              args: ServiceProxy._sanitizeArgs(args),
             });
 
             throw error;
           }
         };
-      }
+      },
     });
   }
 
@@ -130,18 +129,20 @@ class ServiceProxy {
    * Sanitiza argumentos removendo dados sensíveis
    */
   static _sanitizeArgs(args) {
-    return args.map(arg => {
-      if (typeof arg !== 'object' || arg === null) return arg;
-      
+    return args.map((arg) => {
+      if (typeof arg !== 'object' || arg === null) {
+        return arg;
+      }
+
       const sanitized = { ...arg };
       const sensitiveFields = ['password', 'token', 'secret', 'apiKey', 'accessToken'];
-      
-      sensitiveFields.forEach(field => {
+
+      sensitiveFields.forEach((field) => {
         if (field in sanitized) {
           sanitized[field] = '***REDACTED***';
         }
       });
-      
+
       return sanitized;
     });
   }

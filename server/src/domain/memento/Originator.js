@@ -1,6 +1,6 @@
 /**
  * ORIGINATOR (Memento Pattern)
- * 
+ *
  * Classe base para objetos que podem ter seu estado salvo/restaurado.
  * Implementa createMemento() e restore().
  */
@@ -36,7 +36,7 @@ class Originator {
   createMemento(metadata = {}) {
     return new Memento(this._state, {
       ...metadata,
-      originatorType: this.constructor.name
+      originatorType: this.constructor.name,
     });
   }
 

@@ -1,6 +1,6 @@
 /**
  * DECORATOR PATTERN - CacheDecorator
- * 
+ *
  * Adiciona cache automático a repositories sem modificar o código original.
  * Reduz queries ao banco de dados em 50-90%.
  */
@@ -18,13 +18,13 @@ class CacheDecorator {
     this.ttl = options.ttl || 300000; // 5 minutos padrão
     this.maxSize = options.maxSize || 1000; // Máximo 1000 items
     this.name = repository.constructor.name || 'Repository';
-    
+
     // Estatísticas
     this.stats = {
       hits: 0,
       misses: 0,
       sets: 0,
-      evictions: 0
+      evictions: 0,
     };
 
     logger.info(`[CACHE DECORATOR] ${this.name} decorado com cache (TTL: ${this.ttl}ms)`);
@@ -44,7 +44,9 @@ class CacheDecorator {
    * @private
    */
   _isValid(item) {
-    if (!item) return false;
+    if (!item) {
+      return false;
+    }
     const age = Date.now() - item.timestamp;
     return age < this.ttl;
   }
@@ -75,7 +77,9 @@ class CacheDecorator {
    * @private
    */
   _evictOldest() {
-    if (this.cache.size < this.maxSize) return;
+    if (this.cache.size < this.maxSize) {
+      return;
+    }
 
     let oldestKey = null;
     let oldestTime = Infinity;
@@ -100,9 +104,10 @@ class CacheDecorator {
    */
   async _getCached(method, args, operation) {
     const key = this._generateKey(method, args);
-    
+
     // Limpar expirados periodicamente
-    if (Math.random() < 0.1) { // 10% das vezes
+    if (Math.random() < 0.1) {
+      // 10% das vezes
       this._cleanExpired();
     }
 
@@ -117,14 +122,14 @@ class CacheDecorator {
     // Cache miss - executar operação
     this.stats.misses++;
     logger.debug(`[CACHE DECORATOR] ❌ Cache MISS: ${key}`);
-    
+
     const result = await operation();
-    
+
     // Armazenar no cache
     this._evictOldest();
     this.cache.set(key, {
       data: result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     this.stats.sets++;
 
@@ -137,11 +142,11 @@ class CacheDecorator {
   invalidate(method, args) {
     const key = this._generateKey(method, args);
     const deleted = this.cache.delete(key);
-    
+
     if (deleted) {
       logger.debug(`[CACHE DECORATOR] Cache invalidado: ${key}`);
     }
-    
+
     return deleted;
   }
 
@@ -165,7 +170,7 @@ class CacheDecorator {
       ...this.stats,
       cacheSize: this.cache.size,
       hitRate: `${hitRate}%`,
-      total
+      total,
     };
   }
 
@@ -177,34 +182,28 @@ class CacheDecorator {
    * findById com cache
    */
   async findById(id) {
-    return this._getCached('findById', [id], () => 
-      this.repository.findById(id)
-    );
+    return this._getCached('findById', [id], () => this.repository.findById(id));
   }
 
   /**
    * findByEmail com cache
    */
   async findByEmail(email) {
-    return this._getCached('findByEmail', [email], () => 
-      this.repository.findByEmail(email)
-    );
+    return this._getCached('findByEmail', [email], () => this.repository.findByEmail(email));
   }
 
   /**
    * findAll com cache
    */
   async findAll(options = {}) {
-    return this._getCached('findAll', [options], () => 
-      this.repository.findAll(options)
-    );
+    return this._getCached('findAll', [options], () => this.repository.findAll(options));
   }
 
   /**
    * findByOrganizationId com cache
    */
   async findByOrganizationId(orgId) {
-    return this._getCached('findByOrganizationId', [orgId], () => 
+    return this._getCached('findByOrganizationId', [orgId], () =>
       this.repository.findByOrganizationId(orgId)
     );
   }
@@ -214,13 +213,13 @@ class CacheDecorator {
    */
   async create(data) {
     const result = await this.repository.create(data);
-    
+
     // Invalidar caches relacionados
     this.invalidate('findAll', [{}]);
     if (data.organizationId) {
       this.invalidate('findByOrganizationId', [data.organizationId]);
     }
-    
+
     logger.debug(`[CACHE DECORATOR] Cache invalidado após create`);
     return result;
   }
@@ -230,14 +229,14 @@ class CacheDecorator {
    */
   async update(id, data) {
     const result = await this.repository.update(id, data);
-    
+
     // Invalidar caches relacionados
     this.invalidate('findById', [id]);
     this.invalidate('findAll', [{}]);
     if (data.organizationId) {
       this.invalidate('findByOrganizationId', [data.organizationId]);
     }
-    
+
     logger.debug(`[CACHE DECORATOR] Cache invalidado após update`);
     return result;
   }
@@ -248,16 +247,16 @@ class CacheDecorator {
   async delete(id) {
     // Obter dados antes de deletar para invalidar caches corretos
     const item = await this.findById(id);
-    
+
     const result = await this.repository.delete(id);
-    
+
     // Invalidar caches relacionados
     this.invalidate('findById', [id]);
     this.invalidate('findAll', [{}]);
     if (item?.organizationId) {
       this.invalidate('findByOrganizationId', [item.organizationId]);
     }
-    
+
     logger.debug(`[CACHE DECORATOR] Cache invalidado após delete`);
     return result;
   }
@@ -276,22 +275,22 @@ class CacheDecorator {
 // Proxy para capturar métodos não definidos explicitamente
 const createCachedRepository = (repository, options) => {
   const decorator = new CacheDecorator(repository, options);
-  
+
   return new Proxy(decorator, {
     get(target, prop) {
       // Se método existe no decorator, usar ele
       if (prop in target && typeof target[prop] === 'function') {
         return target[prop].bind(target);
       }
-      
+
       // Se método existe no repository original, proxiar
       if (prop in target.repository && typeof target.repository[prop] === 'function') {
         return (...args) => target.repository[prop](...args);
       }
-      
+
       // Propriedades normais
       return target[prop];
-    }
+    },
   });
 };
 

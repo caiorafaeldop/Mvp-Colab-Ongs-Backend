@@ -17,7 +17,7 @@ class DonationObserver extends IObserver {
       'donation.cancelled',
       'donation.recurring.created',
       'donation.recurring.renewed',
-      'donation.recurring.cancelled'
+      'donation.recurring.cancelled',
     ];
   }
 
@@ -26,7 +26,7 @@ class DonationObserver extends IObserver {
       logger.info(`[${this.name}] Processando evento: ${event.type}`, {
         eventId: event.id,
         donationId: event.data?.donationId,
-        timestamp: event.timestamp
+        timestamp: event.timestamp,
       });
 
       switch (event.type) {
@@ -61,7 +61,7 @@ class DonationObserver extends IObserver {
       logger.error(`[${this.name}] Erro ao processar evento`, {
         error: error.message,
         eventType: event.type,
-        eventId: event.id
+        eventId: event.id,
       });
     }
   }
@@ -84,7 +84,7 @@ class DonationObserver extends IObserver {
       donationId: event.data.donationId,
       amount: event.data.amount,
       organizationId: event.data.organizationId,
-      donorEmail: event.data.donorEmail
+      donorEmail: event.data.donorEmail,
     });
 
     // Lógica adicional:
@@ -97,7 +97,7 @@ class DonationObserver extends IObserver {
     logger.info(`[${this.name}] Pagamento aprovado`, {
       donationId: event.data.donationId,
       amount: event.data.amount,
-      mercadoPagoId: event.data.mercadoPagoId
+      mercadoPagoId: event.data.mercadoPagoId,
     });
 
     // Lógica adicional:
@@ -110,7 +110,7 @@ class DonationObserver extends IObserver {
   async handlePaymentRejected(event, context) {
     logger.warn(`[${this.name}] Pagamento rejeitado`, {
       donationId: event.data.donationId,
-      reason: event.data.reason
+      reason: event.data.reason,
     });
 
     // Lógica adicional:
@@ -122,7 +122,7 @@ class DonationObserver extends IObserver {
   async handlePaymentPending(event, context) {
     logger.info(`[${this.name}] Pagamento pendente`, {
       donationId: event.data.donationId,
-      paymentMethod: event.data.paymentMethod
+      paymentMethod: event.data.paymentMethod,
     });
 
     // Lógica adicional:
@@ -132,7 +132,7 @@ class DonationObserver extends IObserver {
 
   async handleDonationCancelled(event, context) {
     logger.info(`[${this.name}] Doação cancelada`, {
-      donationId: event.data.donationId
+      donationId: event.data.donationId,
     });
 
     // Lógica adicional:
@@ -144,7 +144,7 @@ class DonationObserver extends IObserver {
     logger.info(`[${this.name}] Doação recorrente criada`, {
       donationId: event.data.donationId,
       frequency: event.data.frequency,
-      amount: event.data.amount
+      amount: event.data.amount,
     });
 
     // Lógica adicional:
@@ -156,7 +156,7 @@ class DonationObserver extends IObserver {
   async handleRecurringRenewed(event, context) {
     logger.info(`[${this.name}] Doação recorrente renovada`, {
       subscriptionId: event.data.subscriptionId,
-      amount: event.data.amount
+      amount: event.data.amount,
     });
 
     // Lógica adicional:
@@ -166,7 +166,7 @@ class DonationObserver extends IObserver {
 
   async handleRecurringCancelled(event, context) {
     logger.info(`[${this.name}] Doação recorrente cancelada`, {
-      subscriptionId: event.data.subscriptionId
+      subscriptionId: event.data.subscriptionId,
     });
 
     // Lógica adicional:

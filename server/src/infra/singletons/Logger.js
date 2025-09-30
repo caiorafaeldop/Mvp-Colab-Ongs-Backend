@@ -14,20 +14,20 @@ class Logger extends ISingleton {
     this.logDir = process.env.LOG_DIR || 'logs';
     this.maxFileSize = parseInt(process.env.LOG_MAX_SIZE) || 10 * 1024 * 1024; // 10MB
     this.maxFiles = parseInt(process.env.LOG_MAX_FILES) || 5;
-    
+
     this.levels = {
       error: 0,
       warn: 1,
       info: 2,
-      debug: 3
+      debug: 3,
     };
 
     this.colors = {
       error: '\x1b[31m', // Red
-      warn: '\x1b[33m',  // Yellow
-      info: '\x1b[36m',  // Cyan
+      warn: '\x1b[33m', // Yellow
+      info: '\x1b[36m', // Cyan
       debug: '\x1b[37m', // White
-      reset: '\x1b[0m'
+      reset: '\x1b[0m',
     };
 
     this.setupLogDirectory();
@@ -44,13 +44,13 @@ class Logger extends ISingleton {
       // Double-checked locking para thread safety
       if (!Logger._creating) {
         Logger._creating = true;
-        
+
         // Second check (com lock)
         if (!Logger.instance) {
           Logger.instance = new Logger();
           console.log('[Logger] Nova instância criada');
         }
-        
+
         Logger._creating = false;
       }
     }
@@ -89,9 +89,9 @@ class Logger extends ISingleton {
   formatMessage(level, message, meta = {}) {
     const timestamp = new Date().toISOString();
     const levelUpper = level.toUpperCase().padEnd(5);
-    
+
     let formatted = `[${timestamp}] ${levelUpper} ${message}`;
-    
+
     if (Object.keys(meta).length > 0) {
       formatted += ` | ${JSON.stringify(meta)}`;
     }
@@ -106,7 +106,7 @@ class Logger extends ISingleton {
   writeToFile(message) {
     try {
       const logPath = path.join(this.logDir, this.logFile);
-      
+
       // Verifica tamanho do arquivo e faz rotação se necessário
       if (fs.existsSync(logPath)) {
         const stats = fs.statSync(logPath);
@@ -129,9 +129,9 @@ class Logger extends ISingleton {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const rotatedPath = logPath.replace('.log', `-${timestamp}.log`);
-      
+
       fs.renameSync(logPath, rotatedPath);
-      
+
       // Remove arquivos antigos se exceder o limite
       this.cleanOldLogFiles();
     } catch (error) {
@@ -144,18 +144,19 @@ class Logger extends ISingleton {
    */
   cleanOldLogFiles() {
     try {
-      const files = fs.readdirSync(this.logDir)
-        .filter(file => file.endsWith('.log') && file !== this.logFile)
-        .map(file => ({
+      const files = fs
+        .readdirSync(this.logDir)
+        .filter((file) => file.endsWith('.log') && file !== this.logFile)
+        .map((file) => ({
           name: file,
           path: path.join(this.logDir, file),
-          time: fs.statSync(path.join(this.logDir, file)).mtime
+          time: fs.statSync(path.join(this.logDir, file)).mtime,
         }))
         .sort((a, b) => b.time - a.time);
 
       if (files.length > this.maxFiles) {
         const toDelete = files.slice(this.maxFiles);
-        toDelete.forEach(file => {
+        toDelete.forEach((file) => {
           fs.unlinkSync(file.path);
         });
       }
@@ -170,13 +171,15 @@ class Logger extends ISingleton {
    * @param {Object} meta - Metadados
    */
   error(message, meta = {}) {
-    if (!this.shouldLog('error')) return;
+    if (!this.shouldLog('error')) {
+      return;
+    }
 
     const formatted = this.formatMessage('error', message, meta);
-    
+
     // Console com cor
     console.error(`${this.colors.error}${formatted}${this.colors.reset}`);
-    
+
     // Arquivo
     this.writeToFile(formatted);
   }
@@ -187,10 +190,12 @@ class Logger extends ISingleton {
    * @param {Object} meta - Metadados
    */
   warn(message, meta = {}) {
-    if (!this.shouldLog('warn')) return;
+    if (!this.shouldLog('warn')) {
+      return;
+    }
 
     const formatted = this.formatMessage('warn', message, meta);
-    
+
     console.warn(`${this.colors.warn}${formatted}${this.colors.reset}`);
     this.writeToFile(formatted);
   }
@@ -201,10 +206,12 @@ class Logger extends ISingleton {
    * @param {Object} meta - Metadados
    */
   info(message, meta = {}) {
-    if (!this.shouldLog('info')) return;
+    if (!this.shouldLog('info')) {
+      return;
+    }
 
     const formatted = this.formatMessage('info', message, meta);
-    
+
     console.log(`${this.colors.info}${formatted}${this.colors.reset}`);
     this.writeToFile(formatted);
   }
@@ -215,10 +222,12 @@ class Logger extends ISingleton {
    * @param {Object} meta - Metadados
    */
   debug(message, meta = {}) {
-    if (!this.shouldLog('debug')) return;
+    if (!this.shouldLog('debug')) {
+      return;
+    }
 
     const formatted = this.formatMessage('debug', message, meta);
-    
+
     console.log(`${this.colors.debug}${formatted}${this.colors.reset}`);
     this.writeToFile(formatted);
   }
@@ -236,12 +245,12 @@ class Logger extends ISingleton {
       status: res.statusCode,
       duration: `${duration}ms`,
       userAgent: req.get('User-Agent'),
-      ip: req.ip || req.connection.remoteAddress
+      ip: req.ip || req.connection.remoteAddress,
     };
 
     const level = res.statusCode >= 400 ? 'error' : 'info';
     const message = `${req.method} ${req.url} ${res.statusCode}`;
-    
+
     this[level](message, meta);
   }
 
@@ -278,7 +287,7 @@ class Logger extends ISingleton {
         logDir: this.logDir,
         fileExists: fs.existsSync(logPath),
         fileSize: 0,
-        totalFiles: 0
+        totalFiles: 0,
       };
 
       if (stats.fileExists) {
@@ -286,8 +295,9 @@ class Logger extends ISingleton {
       }
 
       if (fs.existsSync(this.logDir)) {
-        stats.totalFiles = fs.readdirSync(this.logDir)
-          .filter(file => file.endsWith('.log')).length;
+        stats.totalFiles = fs
+          .readdirSync(this.logDir)
+          .filter((file) => file.endsWith('.log')).length;
       }
 
       return stats;

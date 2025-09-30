@@ -1,12 +1,12 @@
 // Interface removida na limpeza
-const UserModel = require("../database/models/UserModel");
-const User = require("../../domain/entities/User");
+const UserModel = require('../database/models/UserModel');
+const User = require('../../domain/entities/User');
 
 /**
  * Implementação MongoDB do Repository Pattern para Usuários
  * Segue os princípios SOLID e Clean Architecture
  */
-class MongoUserRepository  {
+class MongoUserRepository {
   /**
    * Salva um usuário no banco de dados
    * @param {User} user - Entidade de usuário do domínio
@@ -14,8 +14,11 @@ class MongoUserRepository  {
    */
   async save(user) {
     try {
-      console.log("[MONGO USER REPO] Salvando usuário:", { email: user.email, userType: user.userType });
-      
+      console.log('[MONGO USER REPO] Salvando usuário:', {
+        email: user.email,
+        userType: user.userType,
+      });
+
       const userData = {
         name: user.name,
         email: user.email.toLowerCase(), // Normalizar email
@@ -25,11 +28,11 @@ class MongoUserRepository  {
       };
 
       const savedUser = await UserModel.create(userData);
-      console.log("[MONGO USER REPO] Usuário salvo com sucesso:", savedUser._id);
-      
+      console.log('[MONGO USER REPO] Usuário salvo com sucesso:', savedUser._id);
+
       return this._mapToEntity(savedUser);
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao salvar usuário:", error.message);
+      console.error('[MONGO USER REPO] Erro ao salvar usuário:', error.message);
       throw new Error(`Error saving user: ${error.message}`);
     }
   }
@@ -41,14 +44,14 @@ class MongoUserRepository  {
    */
   async findById(id) {
     try {
-      console.log("[MONGO USER REPO] Buscando usuário por ID:", id);
-      
+      console.log('[MONGO USER REPO] Buscando usuário por ID:', id);
+
       const user = await UserModel.findById(id);
-      console.log("[MONGO USER REPO] Usuário encontrado:", !!user);
-      
+      console.log('[MONGO USER REPO] Usuário encontrado:', !!user);
+
       return user ? this._mapToEntity(user) : null;
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao buscar usuário por ID:", error.message);
+      console.error('[MONGO USER REPO] Erro ao buscar usuário por ID:', error.message);
       throw new Error(`Error finding user by id: ${error.message}`);
     }
   }
@@ -61,16 +64,16 @@ class MongoUserRepository  {
    */
   async findByEmail(email) {
     try {
-      console.log("[MONGO USER REPO] Buscando usuário por email:", email);
-      
+      console.log('[MONGO USER REPO] Buscando usuário por email:', email);
+
       const user = await UserModel.findOne({
         email: email.toLowerCase(),
-      }).select("+password");
-      
-      console.log("[MONGO USER REPO] Usuário encontrado por email:", !!user);
+      }).select('+password');
+
+      console.log('[MONGO USER REPO] Usuário encontrado por email:', !!user);
       return user;
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao buscar usuário por email:", error.message);
+      console.error('[MONGO USER REPO] Erro ao buscar usuário por email:', error.message);
       throw new Error(`Error finding user by email: ${error.message}`);
     }
   }
@@ -82,14 +85,14 @@ class MongoUserRepository  {
    */
   async findByUserType(userType) {
     try {
-      console.log("[MONGO USER REPO] Buscando usuários por tipo:", userType);
-      
+      console.log('[MONGO USER REPO] Buscando usuários por tipo:', userType);
+
       const users = await UserModel.find({ userType });
-      console.log("[MONGO USER REPO] Usuários encontrados:", users.length);
-      
+      console.log('[MONGO USER REPO] Usuários encontrados:', users.length);
+
       return users.map((user) => this._mapToEntity(user));
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao buscar usuários por tipo:", error.message);
+      console.error('[MONGO USER REPO] Erro ao buscar usuários por tipo:', error.message);
       throw new Error(`Error finding users by type: ${error.message}`);
     }
   }
@@ -102,18 +105,18 @@ class MongoUserRepository  {
    */
   async update(id, userData) {
     try {
-      console.log("[MONGO USER REPO] Atualizando usuário:", id);
-      
+      console.log('[MONGO USER REPO] Atualizando usuário:', id);
+
       const updatedUser = await UserModel.findByIdAndUpdate(
         id,
         { ...userData, updatedAt: new Date() },
         { new: true }
       );
-      
-      console.log("[MONGO USER REPO] Usuário atualizado:", !!updatedUser);
+
+      console.log('[MONGO USER REPO] Usuário atualizado:', !!updatedUser);
       return updatedUser ? this._mapToEntity(updatedUser) : null;
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao atualizar usuário:", error.message);
+      console.error('[MONGO USER REPO] Erro ao atualizar usuário:', error.message);
       throw new Error(`Error updating user: ${error.message}`);
     }
   }
@@ -125,14 +128,14 @@ class MongoUserRepository  {
    */
   async delete(id) {
     try {
-      console.log("[MONGO USER REPO] Removendo usuário:", id);
-      
+      console.log('[MONGO USER REPO] Removendo usuário:', id);
+
       const deletedUser = await UserModel.findByIdAndDelete(id);
-      console.log("[MONGO USER REPO] Usuário removido:", !!deletedUser);
-      
+      console.log('[MONGO USER REPO] Usuário removido:', !!deletedUser);
+
       return deletedUser ? this._mapToEntity(deletedUser) : null;
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao remover usuário:", error.message);
+      console.error('[MONGO USER REPO] Erro ao remover usuário:', error.message);
       throw new Error(`Error deleting user: ${error.message}`);
     }
   }
@@ -143,14 +146,14 @@ class MongoUserRepository  {
    */
   async findAll() {
     try {
-      console.log("[MONGO USER REPO] Buscando todos os usuários");
-      
+      console.log('[MONGO USER REPO] Buscando todos os usuários');
+
       const users = await UserModel.find();
-      console.log("[MONGO USER REPO] Total de usuários encontrados:", users.length);
-      
+      console.log('[MONGO USER REPO] Total de usuários encontrados:', users.length);
+
       return users.map((user) => this._mapToEntity(user));
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao buscar todos os usuários:", error.message);
+      console.error('[MONGO USER REPO] Erro ao buscar todos os usuários:', error.message);
       throw new Error(`Error finding all users: ${error.message}`);
     }
   }
@@ -162,14 +165,14 @@ class MongoUserRepository  {
    */
   async existsByEmail(email) {
     try {
-      console.log("[MONGO USER REPO] Verificando existência por email:", email);
-      
+      console.log('[MONGO USER REPO] Verificando existência por email:', email);
+
       const exists = await UserModel.exists({ email: email.toLowerCase() });
-      console.log("[MONGO USER REPO] Usuário existe:", !!exists);
-      
+      console.log('[MONGO USER REPO] Usuário existe:', !!exists);
+
       return !!exists;
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao verificar existência:", error.message);
+      console.error('[MONGO USER REPO] Erro ao verificar existência:', error.message);
       throw new Error(`Error checking user existence: ${error.message}`);
     }
   }
@@ -180,14 +183,14 @@ class MongoUserRepository  {
    */
   async count() {
     try {
-      console.log("[MONGO USER REPO] Contando usuários");
-      
+      console.log('[MONGO USER REPO] Contando usuários');
+
       const count = await UserModel.countDocuments();
-      console.log("[MONGO USER REPO] Total de usuários:", count);
-      
+      console.log('[MONGO USER REPO] Total de usuários:', count);
+
       return count;
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro ao contar usuários:", error.message);
+      console.error('[MONGO USER REPO] Erro ao contar usuários:', error.message);
       throw new Error(`Error counting users: ${error.message}`);
     }
   }
@@ -200,31 +203,31 @@ class MongoUserRepository  {
    */
   async findWithPagination(page = 1, limit = 10) {
     try {
-      console.log("[MONGO USER REPO] Buscando usuários com paginação:", { page, limit });
-      
+      console.log('[MONGO USER REPO] Buscando usuários com paginação:', { page, limit });
+
       const skip = (page - 1) * limit;
       const [users, total] = await Promise.all([
         UserModel.find().skip(skip).limit(limit),
-        UserModel.countDocuments()
+        UserModel.countDocuments(),
       ]);
-      
+
       const totalPages = Math.ceil(total / limit);
-      
-      console.log("[MONGO USER REPO] Paginação:", { 
-        usersFound: users.length, 
-        total, 
-        page, 
-        totalPages 
-      });
-      
-      return {
-        users: users.map(user => this._mapToEntity(user)),
+
+      console.log('[MONGO USER REPO] Paginação:', {
+        usersFound: users.length,
         total,
         page,
-        totalPages
+        totalPages,
+      });
+
+      return {
+        users: users.map((user) => this._mapToEntity(user)),
+        total,
+        page,
+        totalPages,
       };
     } catch (error) {
-      console.error("[MONGO USER REPO] Erro na paginação:", error.message);
+      console.error('[MONGO USER REPO] Erro na paginação:', error.message);
       throw new Error(`Error finding users with pagination: ${error.message}`);
     }
   }
@@ -236,8 +239,8 @@ class MongoUserRepository  {
    * @private
    */
   _mapToEntity(userDoc) {
-    console.log("[MONGO USER REPO] Mapeando documento para entidade:", userDoc._id);
-    
+    console.log('[MONGO USER REPO] Mapeando documento para entidade:', userDoc._id);
+
     const user = new User(
       userDoc._id.toString(),
       userDoc.name,
@@ -248,14 +251,14 @@ class MongoUserRepository  {
       userDoc.createdAt,
       userDoc.updatedAt
     );
-    
-    console.log("[MONGO USER REPO] Entidade criada:", {
+
+    console.log('[MONGO USER REPO] Entidade criada:', {
       id: user.id,
       name: user.name,
       email: user.email,
-      userType: user.userType
+      userType: user.userType,
     });
-    
+
     return user;
   }
 }

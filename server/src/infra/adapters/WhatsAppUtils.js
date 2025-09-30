@@ -12,12 +12,12 @@ class WhatsAppUtils {
    */
   static generateProductLink(phone, productName, organizationName, price) {
     // Remove caracteres não numéricos do telefone
-    const cleanPhone = phone.replace(/\D/g, "");
+    const cleanPhone = phone.replace(/\D/g, '');
 
     // Formata o preço
-    const formattedPrice = new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    const formattedPrice = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
     }).format(price);
 
     // Cria a mensagem personalizada
@@ -39,11 +39,10 @@ class WhatsAppUtils {
    * @returns {string} Link do WhatsApp
    */
   static generateContactLink(phone, organizationName) {
-    const cleanPhone = phone.replace(/\D/g, "");
+    const cleanPhone = phone.replace(/\D/g, '');
 
     const message =
-      `Olá! Gostaria de entrar em contato com a ${organizationName}.\n\n` +
-      `Poderia me ajudar?`;
+      `Olá! Gostaria de entrar em contato com a ${organizationName}.\n\n` + `Poderia me ajudar?`;
 
     const encodedMessage = encodeURIComponent(message);
 
@@ -56,7 +55,7 @@ class WhatsAppUtils {
    * @returns {boolean} True se válido
    */
   static isValidPhone(phone) {
-    const cleanPhone = phone.replace(/\D/g, "");
+    const cleanPhone = phone.replace(/\D/g, '');
     // Verifica se tem entre 10 e 15 dígitos (formato brasileiro)
     return cleanPhone.length >= 10 && cleanPhone.length <= 15;
   }
@@ -67,7 +66,7 @@ class WhatsAppUtils {
    * @returns {string} Telefone formatado
    */
   static formatPhone(phone) {
-    const cleanPhone = phone.replace(/\D/g, "");
+    const cleanPhone = phone.replace(/\D/g, '');
 
     if (cleanPhone.length === 11) {
       // Formato: (11) 99999-9999
@@ -82,4 +81,3 @@ class WhatsAppUtils {
 }
 
 module.exports = WhatsAppUtils;
-

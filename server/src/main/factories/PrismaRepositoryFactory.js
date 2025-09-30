@@ -1,18 +1,18 @@
 // Prisma Repositories
-const PrismaUserRepository = require("../../infra/repositories/PrismaUserRepository");
-const PrismaProductRepository = require("../../infra/repositories/PrismaProductRepository");
-const PrismaCollaborationRepository = require("../../infra/repositories/PrismaCollaborationRepository");
+const PrismaUserRepository = require('../../infra/repositories/PrismaUserRepository');
+const PrismaProductRepository = require('../../infra/repositories/PrismaProductRepository');
+const PrismaCollaborationRepository = require('../../infra/repositories/PrismaCollaborationRepository');
 
 // MongoDB Repositories (fallback)
-const MongoUserRepository = require("../../infra/repositories/MongoUserRepository");
-const MongoProductRepository = require("../../infra/repositories/MongoProductRepository");
-const MongoCollaborationRepository = require("../../infra/repositories/MongoCollaborationRepository");
-const MongoFileRepository = require("../../infra/repositories/MongoFileRepository");
-const MongoNotificationRepository = require("../../infra/repositories/MongoNotificationRepository");
+const MongoUserRepository = require('../../infra/repositories/MongoUserRepository');
+const MongoProductRepository = require('../../infra/repositories/MongoProductRepository');
+const MongoCollaborationRepository = require('../../infra/repositories/MongoCollaborationRepository');
+const MongoFileRepository = require('../../infra/repositories/MongoFileRepository');
+const MongoNotificationRepository = require('../../infra/repositories/MongoNotificationRepository');
 
 // Prisma Service
-const PrismaService = require("../../infra/singletons/PrismaService");
-const PrismaDonationRepository = require("../../infra/repositories/PrismaDonationRepository");
+const PrismaService = require('../../infra/singletons/PrismaService');
+const PrismaDonationRepository = require('../../infra/repositories/PrismaDonationRepository');
 
 /**
  * Factory para criação de Repositories com suporte a Prisma e MongoDB
@@ -77,9 +77,7 @@ class PrismaRepositoryFactory {
    * @private
    */
   _shouldUsePrisma() {
-    return this.databaseStrategy === 'prisma' && 
-           this.prismaService && 
-           this.prismaService.isReady();
+    return this.databaseStrategy === 'prisma' && this.prismaService && this.prismaService.isReady();
   }
 
   /**
@@ -89,9 +87,9 @@ class PrismaRepositoryFactory {
   async createUserRepository() {
     if (!this.repositories.has('userRepository')) {
       console.log('[PRISMA REPOSITORY FACTORY] Criando UserRepository');
-      
+
       await this.initializePrisma();
-      
+
       let repository;
       if (this._shouldUsePrisma()) {
         console.log('[PRISMA REPOSITORY FACTORY] Usando PrismaUserRepository');
@@ -100,7 +98,7 @@ class PrismaRepositoryFactory {
         console.log('[PRISMA REPOSITORY FACTORY] Fallback para MongoUserRepository');
         repository = new MongoUserRepository();
       }
-      
+
       this.repositories.set('userRepository', repository);
       console.log('[PRISMA REPOSITORY FACTORY] UserRepository criado com sucesso');
     }
@@ -115,9 +113,9 @@ class PrismaRepositoryFactory {
   async createProductRepository() {
     if (!this.repositories.has('productRepository')) {
       console.log('[PRISMA REPOSITORY FACTORY] Criando ProductRepository');
-      
+
       await this.initializePrisma();
-      
+
       let repository;
       if (this._shouldUsePrisma()) {
         console.log('[PRISMA REPOSITORY FACTORY] Usando PrismaProductRepository');
@@ -126,7 +124,7 @@ class PrismaRepositoryFactory {
         console.log('[PRISMA REPOSITORY FACTORY] Fallback para MongoProductRepository');
         repository = new MongoProductRepository();
       }
-      
+
       this.repositories.set('productRepository', repository);
       console.log('[PRISMA REPOSITORY FACTORY] ProductRepository criado com sucesso');
     }
@@ -141,9 +139,9 @@ class PrismaRepositoryFactory {
   async createCollaborationRepository() {
     if (!this.repositories.has('collaborationRepository')) {
       console.log('[PRISMA REPOSITORY FACTORY] Criando CollaborationRepository');
-      
+
       await this.initializePrisma();
-      
+
       let repository;
       if (this._shouldUsePrisma()) {
         console.log('[PRISMA REPOSITORY FACTORY] Usando PrismaCollaborationRepository');
@@ -152,7 +150,7 @@ class PrismaRepositoryFactory {
         console.log('[PRISMA REPOSITORY FACTORY] Fallback para MongoCollaborationRepository');
         repository = new MongoCollaborationRepository();
       }
-      
+
       this.repositories.set('collaborationRepository', repository);
       console.log('[PRISMA REPOSITORY FACTORY] CollaborationRepository criado com sucesso');
     }
@@ -168,10 +166,10 @@ class PrismaRepositoryFactory {
   async createFileRepository() {
     if (!this.repositories.has('fileRepository')) {
       console.log('[PRISMA REPOSITORY FACTORY] Criando FileRepository (MongoDB)');
-      
+
       const repository = new MongoFileRepository();
       this.repositories.set('fileRepository', repository);
-      
+
       console.log('[PRISMA REPOSITORY FACTORY] FileRepository criado com sucesso');
     }
 
@@ -186,10 +184,10 @@ class PrismaRepositoryFactory {
   async createNotificationRepository() {
     if (!this.repositories.has('notificationRepository')) {
       console.log('[PRISMA REPOSITORY FACTORY] Criando NotificationRepository (MongoDB)');
-      
+
       const repository = new MongoNotificationRepository();
       this.repositories.set('notificationRepository', repository);
-      
+
       console.log('[PRISMA REPOSITORY FACTORY] NotificationRepository criado com sucesso');
     }
 
@@ -203,7 +201,7 @@ class PrismaRepositoryFactory {
    */
   async createRepository(repositoryName) {
     const repoKey = repositoryName.toLowerCase();
-    
+
     if (this.repositories.has(repoKey)) {
       return this.repositories.get(repoKey);
     }
@@ -212,11 +210,11 @@ class PrismaRepositoryFactory {
 
     // Mapeamento de repositories disponíveis
     const repositoryMap = {
-      'userrepository': () => this.createUserRepository(),
-      'productrepository': () => this.createProductRepository(),
-      'collaborationrepository': () => this.createCollaborationRepository(),
-      'filerepository': () => this.createFileRepository(),
-      'notificationrepository': () => this.createNotificationRepository(),
+      userrepository: () => this.createUserRepository(),
+      productrepository: () => this.createProductRepository(),
+      collaborationrepository: () => this.createCollaborationRepository(),
+      filerepository: () => this.createFileRepository(),
+      notificationrepository: () => this.createNotificationRepository(),
     };
 
     const factory = repositoryMap[repoKey];
@@ -233,14 +231,14 @@ class PrismaRepositoryFactory {
    */
   async createAllRepositories() {
     console.log('[PRISMA REPOSITORY FACTORY] Criando todos os repositories');
-    
+
     return {
       userRepository: await this.createUserRepository(),
       productRepository: await this.createProductRepository(),
       collaborationRepository: await this.createCollaborationRepository(),
       fileRepository: await this.createFileRepository(),
       notificationRepository: await this.createNotificationRepository(),
-      donationRepository: await this.createDonationRepository()
+      donationRepository: await this.createDonationRepository(),
     };
   }
 
@@ -254,7 +252,7 @@ class PrismaRepositoryFactory {
     }
 
     console.log(`[PRISMA REPOSITORY FACTORY] Alternando estratégia para: ${strategy}`);
-    
+
     // Limpar repositories existentes para forçar recriação
     this.repositories.clear();
     this.databaseStrategy = strategy;
@@ -276,7 +274,7 @@ class PrismaRepositoryFactory {
       totalRepositories: this.repositories.size,
       databaseStrategy: this.databaseStrategy,
       prismaReady: this.prismaService ? this.prismaService.isReady() : false,
-      configuration: Object.fromEntries(this.config)
+      configuration: Object.fromEntries(this.config),
     };
   }
 
@@ -323,14 +321,14 @@ class PrismaRepositoryFactory {
    */
   async destroy() {
     console.log('[PRISMA REPOSITORY FACTORY] Destruindo factory...');
-    
+
     this.repositories.clear();
-    
+
     if (this.prismaService) {
       await this.prismaService.disconnect();
       this.prismaService = null;
     }
-    
+
     console.log('[PRISMA REPOSITORY FACTORY] Factory destruído');
   }
 

@@ -63,11 +63,7 @@ class MongoOrganizationRepository {
 
   async update(id, data) {
     try {
-      return await OrganizationModel.findByIdAndUpdate(
-        id,
-        { $set: data },
-        { new: true }
-      );
+      return await OrganizationModel.findByIdAndUpdate(id, { $set: data }, { new: true });
     } catch (error) {
       logger.error('[MongoOrganizationRepository] Erro em update:', error);
       throw error;

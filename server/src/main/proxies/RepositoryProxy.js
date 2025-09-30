@@ -1,6 +1,6 @@
 /**
  * PROXY PATTERN para Repositories
- * 
+ *
  * Proxy especializado para repositories com:
  * - Cache inteligente de queries
  * - Logging de operações DB
@@ -22,7 +22,7 @@ class RepositoryProxy {
       enableCache = true,
       cacheTTL = 600000, // 10 minutos
       enableLogging = true,
-      repositoryName = repository.constructor.name
+      repositoryName = repository.constructor.name,
     } = options;
 
     const cache = new Map();
@@ -30,7 +30,7 @@ class RepositoryProxy {
       hits: 0,
       misses: 0,
       queries: 0,
-      totalTime: 0
+      totalTime: 0,
     };
 
     return new Proxy(repository, {
@@ -47,8 +47,8 @@ class RepositoryProxy {
 
           try {
             // CACHE para métodos de leitura
-            const isReadOperation = ['find', 'get', 'list', 'search'].some(
-              op => prop.toLowerCase().includes(op)
+            const isReadOperation = ['find', 'get', 'list', 'search'].some((op) =>
+              prop.toLowerCase().includes(op)
             );
 
             if (enableCache && isReadOperation) {
@@ -57,14 +57,14 @@ class RepositoryProxy {
 
               if (cached && Date.now() - cached.timestamp < cacheTTL) {
                 stats.hits++;
-                
+
                 if (enableLogging) {
                   logger.debug(`[REPO PROXY] ${repositoryName}.${prop}() - Cache HIT`, {
                     cacheKey: cacheKey.substring(0, 50),
-                    hitRate: `${((stats.hits / stats.queries) * 100).toFixed(1)}%`
+                    hitRate: `${((stats.hits / stats.queries) * 100).toFixed(1)}%`,
                   });
                 }
-                
+
                 return cached.data;
               }
 
@@ -84,7 +84,7 @@ class RepositoryProxy {
               const cacheKey = RepositoryProxy._generateCacheKey(repositoryName, prop, args);
               cache.set(cacheKey, {
                 data: result,
-                timestamp: Date.now()
+                timestamp: Date.now(),
               });
             }
 
@@ -99,33 +99,32 @@ class RepositoryProxy {
 
             if (enableLogging) {
               const avgTime = stats.totalTime / stats.queries;
-              
+
               logger.info(`[REPO PROXY] ${repositoryName}.${prop}()`, {
                 duration: `${duration}ms`,
                 avgQueryTime: `${avgTime.toFixed(0)}ms`,
                 cached: isReadOperation,
-                hitRate: `${((stats.hits / stats.queries) * 100).toFixed(1)}%`
+                hitRate: `${((stats.hits / stats.queries) * 100).toFixed(1)}%`,
               });
             }
 
             if (duration > 2000) {
               logger.warn(`[REPO PROXY] SLOW QUERY: ${repositoryName}.${prop}()`, {
                 duration: `${duration}ms`,
-                args: args.length > 0 ? 'present' : 'none'
+                args: args.length > 0 ? 'present' : 'none',
               });
             }
 
             return result;
-
           } catch (error) {
             logger.error(`[REPO PROXY] ${repositoryName}.${prop}() ERRO`, {
               error: error.message,
-              duration: `${Date.now() - startTime}ms`
+              duration: `${Date.now() - startTime}ms`,
             });
             throw error;
           }
         };
-      }
+      },
     });
   }
 
@@ -169,10 +168,10 @@ class RepositoryProxy {
         cleared++;
       }
     }
-    
+
     if (cleared > 0) {
       logger.debug(`[REPO PROXY] Cache invalidado: ${cleared} entradas`, {
-        repository: repositoryName
+        repository: repositoryName,
       });
     }
   }

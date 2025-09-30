@@ -13,7 +13,7 @@ class DonationService {
     this.userRepository = userRepository;
     this.paymentAdapter = paymentAdapter;
     this.eventManager = getEventManager();
-    
+
     console.log('[DONATION SERVICE] Inicializado com sucesso');
   }
 
@@ -36,9 +36,9 @@ class DonationService {
           name: donationData.donorName,
           email: donationData.donorEmail,
           phone: donationData.donorPhone,
-          document: donationData.donorDocument
+          document: donationData.donorDocument,
         },
-        externalReference: `donation-${Date.now()}`
+        externalReference: `donation-${Date.now()}`,
       });
 
       // 3. Idempotency: se já existir uma doação com este MP ID, retorna existente
@@ -46,11 +46,13 @@ class DonationService {
         if (this.donationRepository.existsByMercadoPagoId) {
           const exists = await this.donationRepository.existsByMercadoPagoId(paymentPreference.id);
           if (exists) {
-            const existing = await this.donationRepository.findByMercadoPagoId(paymentPreference.id);
+            const existing = await this.donationRepository.findByMercadoPagoId(
+              paymentPreference.id
+            );
             return {
               donation: existing,
               paymentUrl: paymentPreference.paymentUrl,
-              mercadoPagoId: paymentPreference.id
+              mercadoPagoId: paymentPreference.id,
             };
           }
         }
@@ -77,27 +79,30 @@ class DonationService {
         mercadoPagoId: paymentPreference.id,
         paymentStatus: new PaymentState('pending').toDomain(),
         metadata: {
-          externalReference: paymentPreference.externalReference
-        }
+          externalReference: paymentPreference.externalReference,
+        },
       });
 
       console.log('[DONATION SERVICE] Doação única criada:', donation.id);
 
       // Emit event
-      await this.eventManager.emit('donation.created', {
-        donationId: donation.id,
-        amount: donation.amount,
-        organizationId: donation.organizationId,
-        organizationName: donation.organizationName,
-        donorEmail: donation.donorEmail
-      }, { source: 'DonationService' });
+      await this.eventManager.emit(
+        'donation.created',
+        {
+          donationId: donation.id,
+          amount: donation.amount,
+          organizationId: donation.organizationId,
+          organizationName: donation.organizationName,
+          donorEmail: donation.donorEmail,
+        },
+        { source: 'DonationService' }
+      );
 
       return {
         donation,
         paymentUrl: paymentPreference.paymentUrl,
-        mercadoPagoId: paymentPreference.id
+        mercadoPagoId: paymentPreference.id,
       };
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao criar doação única:', error);
       throw error;
@@ -125,9 +130,9 @@ class DonationService {
           name: donationData.donorName,
           email: donationData.donorEmail,
           phone: donationData.donorPhone,
-          document: donationData.donorDocument
+          document: donationData.donorDocument,
         },
-        externalReference: `recurring-donation-${Date.now()}`
+        externalReference: `recurring-donation-${Date.now()}`,
       });
 
       // 3. Idempotency: se já existir uma doação com esta assinatura, retorna existente
@@ -139,7 +144,7 @@ class DonationService {
             return {
               donation: existing,
               subscriptionUrl: subscription.subscriptionUrl,
-              subscriptionId: subscription.id
+              subscriptionId: subscription.id,
             };
           }
         }
@@ -167,26 +172,29 @@ class DonationService {
         subscriptionId: subscription.id,
         paymentStatus: new PaymentState('pending').toDomain(),
         metadata: {
-          externalReference: subscription.externalReference
-        }
+          externalReference: subscription.externalReference,
+        },
       });
 
       console.log('[DONATION SERVICE] Doação recorrente criada:', donation.id);
 
       // Emit event
-      await this.eventManager.emit('donation.recurring.created', {
-        donationId: donation.id,
-        frequency: donation.frequency,
-        amount: donation.amount,
-        organizationId: donation.organizationId
-      }, { source: 'DonationService' });
+      await this.eventManager.emit(
+        'donation.recurring.created',
+        {
+          donationId: donation.id,
+          frequency: donation.frequency,
+          amount: donation.amount,
+          organizationId: donation.organizationId,
+        },
+        { source: 'DonationService' }
+      );
 
       return {
         donation,
         subscriptionUrl: subscription.subscriptionUrl,
-        subscriptionId: subscription.id
+        subscriptionId: subscription.id,
       };
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao criar doação recorrente:', error);
       throw error;
@@ -201,18 +209,16 @@ class DonationService {
       console.log('[DONATION SERVICE] Processando webhook:', webhookData);
 
       const processedData = await this.paymentAdapter.processWebhook(webhookData);
-      
+
       if (processedData.type === 'payment') {
         // Atualizar status de doação única
         await this.updateDonationStatus(processedData.paymentId, processedData.status);
-        
       } else if (processedData.type === 'subscription') {
         // Atualizar status de doação recorrente
         await this.updateSubscriptionStatus(processedData.subscriptionId, processedData.status);
       }
 
       return processedData;
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao processar webhook:', error);
       throw error;
@@ -225,42 +231,51 @@ class DonationService {
   async updateDonationStatus(mercadoPagoId, status) {
     try {
       const donation = await this.donationRepository.findByMercadoPagoId(mercadoPagoId);
-      
+
       if (donation) {
         await this.donationRepository.update(donation.id, {
           paymentStatus: PaymentState.fromMercadoPago(status).toDomain(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
-        
+
         console.log('[DONATION SERVICE] Status da doação atualizado:', donation.id, status);
 
         // Emit status events
         const mappedStatus = PaymentState.fromMercadoPago(status).toDomain();
         if (mappedStatus === 'approved') {
-          await this.eventManager.emit('donation.payment.approved', {
-            donationId: donation.id,
-            amount: donation.amount,
-            mercadoPagoId
-          }, { source: 'DonationService' });
+          await this.eventManager.emit(
+            'donation.payment.approved',
+            {
+              donationId: donation.id,
+              amount: donation.amount,
+              mercadoPagoId,
+            },
+            { source: 'DonationService' }
+          );
         } else if (mappedStatus === 'rejected') {
-          await this.eventManager.emit('donation.payment.rejected', {
-            donationId: donation.id,
-            reason: status
-          }, { source: 'DonationService' });
+          await this.eventManager.emit(
+            'donation.payment.rejected',
+            {
+              donationId: donation.id,
+              reason: status,
+            },
+            { source: 'DonationService' }
+          );
         } else if (mappedStatus === 'pending') {
-          await this.eventManager.emit('donation.payment.pending', {
-            donationId: donation.id,
-            paymentMethod: donation.paymentMethod
-          }, { source: 'DonationService' });
+          await this.eventManager.emit(
+            'donation.payment.pending',
+            {
+              donationId: donation.id,
+              paymentMethod: donation.paymentMethod,
+            },
+            { source: 'DonationService' }
+          );
         }
       }
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao atualizar status da doação:', error);
     }
   }
-
-  
 
   /**
    * Lista doações de uma organização
@@ -290,7 +305,7 @@ class DonationService {
         if (donation) {
           await this.donationRepository.update(donation.id, {
             paymentStatus: 'cancelled',
-            updatedAt: new Date()
+            updatedAt: new Date(),
           });
         }
       } catch (dbError) {
@@ -300,7 +315,6 @@ class DonationService {
       console.log('[DONATION SERVICE] Assinatura cancelada:', subscriptionId);
 
       return result;
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao cancelar assinatura:', error);
       throw error;
@@ -317,7 +331,6 @@ class DonationService {
       const result = await this.paymentAdapter.getSubscriptionStatus(subscriptionId);
 
       return result;
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao consultar status da assinatura:', error);
       throw error;
@@ -330,7 +343,7 @@ class DonationService {
   async cancelRecurringDonation(donationId, organizationId) {
     try {
       const donation = await this.donationRepository.findById(donationId);
-      
+
       if (!donation) {
         throw new Error('Doação não encontrada');
       }
@@ -349,13 +362,12 @@ class DonationService {
       // Atualizar no banco
       await this.donationRepository.update(donationId, {
         paymentStatus: 'cancelled',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       console.log('[DONATION SERVICE] Doação recorrente cancelada:', donationId);
 
       return { success: true, message: 'Doação recorrente cancelada com sucesso' };
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao cancelar doação recorrente:', error);
       throw error;
@@ -386,7 +398,7 @@ class DonationService {
   }
   validateRecurringData(data) {
     const validFrequencies = ['monthly', 'weekly', 'yearly'];
-    
+
     if (data.frequency && !validFrequencies.includes(data.frequency)) {
       throw new Error('Frequência inválida. Use: monthly, weekly ou yearly');
     }
@@ -395,16 +407,15 @@ class DonationService {
   async updateSubscriptionStatus(subscriptionId, status) {
     try {
       const donation = await this.donationRepository.findBySubscriptionId(subscriptionId);
-      
+
       if (donation) {
         await this.donationRepository.update(donation.id, {
           paymentStatus: PaymentState.fromMercadoPago(status).toDomain(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
-        
+
         console.log('[DONATION SERVICE] Status da assinatura atualizado:', donation.id, status);
       }
-
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao atualizar status da assinatura:', error);
     }
@@ -427,22 +438,18 @@ class DonationService {
       logger.info('[DONATION SERVICE] Criando doação única com Template Method', {
         organizationId: donationData.organizationId,
         amount: donationData.amount,
-        method: 'template'
+        method: 'template',
       });
-      
+
       // Usar template para processar doação
-      const result = await TemplateExamples.processDonation(
-        donationData,
-        'single',
-        {
-          donationRepository: this.donationRepository,
-          userRepository: this.userRepository,
-          paymentAdapter: this.paymentAdapter,
-          logger: options.logger || logger,
-          ...options
-        }
-      );
-      
+      const result = await TemplateExamples.processDonation(donationData, 'single', {
+        donationRepository: this.donationRepository,
+        userRepository: this.userRepository,
+        paymentAdapter: this.paymentAdapter,
+        logger: options.logger || logger,
+        ...options,
+      });
+
       // Adaptar resultado para interface compatível com método original
       return {
         donation: result.data.donation,
@@ -450,15 +457,14 @@ class DonationService {
         mercadoPagoId: result.data.payment.id,
         amount: result.data.donation.amount,
         organizationName: result.data.donation.organizationName,
-        templateUsed: true // Flag para identificar que usou template
+        templateUsed: true, // Flag para identificar que usou template
       };
-      
     } catch (error) {
       logger.error('[DONATION SERVICE] Erro ao criar doação única com template', {
         error: error.message,
         organizationId: donationData.organizationId,
         amount: donationData.amount,
-        method: 'template'
+        method: 'template',
       });
       throw error;
     }
@@ -474,22 +480,18 @@ class DonationService {
         organizationId: donationData.organizationId,
         amount: donationData.amount,
         frequency: donationData.frequency,
-        method: 'template'
+        method: 'template',
       });
-      
+
       // Usar template para processar doação recorrente
-      const result = await TemplateExamples.processDonation(
-        donationData,
-        'recurring',
-        {
-          donationRepository: this.donationRepository,
-          userRepository: this.userRepository,
-          paymentAdapter: this.paymentAdapter,
-          logger: options.logger || logger,
-          ...options
-        }
-      );
-      
+      const result = await TemplateExamples.processDonation(donationData, 'recurring', {
+        donationRepository: this.donationRepository,
+        userRepository: this.userRepository,
+        paymentAdapter: this.paymentAdapter,
+        logger: options.logger || logger,
+        ...options,
+      });
+
       // Adaptar resultado para interface compatível com método original
       return {
         donation: result.data.donation,
@@ -498,16 +500,15 @@ class DonationService {
         amount: result.data.donation.amount,
         frequency: result.data.donation.frequency,
         organizationName: result.data.donation.organizationName,
-        templateUsed: true // Flag para identificar que usou template
+        templateUsed: true, // Flag para identificar que usou template
       };
-      
     } catch (error) {
       logger.error('[DONATION SERVICE] Erro ao criar doação recorrente com template', {
         error: error.message,
         organizationId: donationData.organizationId,
         amount: donationData.amount,
         frequency: donationData.frequency,
-        method: 'template'
+        method: 'template',
       });
       throw error;
     }
@@ -523,33 +524,28 @@ class DonationService {
         organizationId: reportParams.organizationId,
         startDate: reportParams.startDate,
         endDate: reportParams.endDate,
-        method: 'template'
+        method: 'template',
       });
-      
+
       // Usar template para gerar relatório
-      const result = await TemplateExamples.generateReport(
-        reportParams,
-        'donations',
-        {
-          donationRepository: this.donationRepository,
-          userRepository: this.userRepository,
-          format: options.format || 'json',
-          logger: options.logger || logger,
-          ...options
-        }
-      );
-      
+      const result = await TemplateExamples.generateReport(reportParams, 'donations', {
+        donationRepository: this.donationRepository,
+        userRepository: this.userRepository,
+        format: options.format || 'json',
+        logger: options.logger || logger,
+        ...options,
+      });
+
       return {
         report: result.data.report,
         metadata: result.metadata,
-        templateUsed: true
+        templateUsed: true,
       };
-      
     } catch (error) {
       logger.error('[DONATION SERVICE] Erro ao gerar relatório com template', {
         error: error.message,
         organizationId: reportParams.organizationId,
-        method: 'template'
+        method: 'template',
       });
       throw error;
     }

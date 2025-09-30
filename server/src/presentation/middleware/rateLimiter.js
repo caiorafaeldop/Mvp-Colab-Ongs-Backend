@@ -15,23 +15,23 @@ const generalLimiter = rateLimit({
     success: false,
     message: 'Muitas requisições. Tente novamente em 1 minuto.',
     error: 'RATE_LIMIT_EXCEEDED',
-    retryAfter: 60
+    retryAfter: 60,
   },
   standardHeaders: true, // Retorna rate limit info nos headers `RateLimit-*`
   legacyHeaders: false, // Desabilita headers `X-RateLimit-*`
-  
+
   // Função customizada para pular rate limiting em certas condições
   skip: (req) => {
     // Pular para health checks
     if (req.path === '/health' || req.path === '/api/health') {
       return true;
     }
-    
+
     // Pular para IPs whitelistados (se configurado)
     const whitelistedIPs = process.env.RATE_LIMIT_WHITELIST?.split(',') || [];
     return whitelistedIPs.includes(req.ip);
   },
-  
+
   // Handler customizado para quando limite é excedido
   handler: (req, res) => {
     logger.warn('Rate limit excedido', {
@@ -39,16 +39,16 @@ const generalLimiter = rateLimit({
       userAgent: req.get('User-Agent'),
       path: req.path,
       method: req.method,
-      rateLimiter: 'general'
+      rateLimiter: 'general',
     });
-    
+
     res.status(429).json({
       success: false,
       message: 'Muitas requisições. Tente novamente em 1 minuto.',
       error: 'RATE_LIMIT_EXCEEDED',
-      retryAfter: 60
+      retryAfter: 60,
     });
-  }
+  },
 });
 
 // Rate limiter específico para autenticação (mais restritivo)
@@ -59,30 +59,30 @@ const authLimiter = rateLimit({
     success: false,
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
     error: 'AUTH_RATE_LIMIT_EXCEEDED',
-    retryAfter: 900
+    retryAfter: 900,
   },
   standardHeaders: true,
   legacyHeaders: false,
-  
+
   // Aplicar apenas para endpoints de autenticação
   skipSuccessfulRequests: true, // Não contar requests bem-sucedidos
-  
+
   handler: (req, res) => {
     logger.warn('Rate limit de autenticação excedido', {
       ip: req.ip,
       userAgent: req.get('User-Agent'),
       path: req.path,
       method: req.method,
-      rateLimiter: 'auth'
+      rateLimiter: 'auth',
     });
-    
+
     res.status(429).json({
       success: false,
       message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
       error: 'AUTH_RATE_LIMIT_EXCEEDED',
-      retryAfter: 900
+      retryAfter: 900,
     });
-  }
+  },
 });
 
 // Rate limiter para criação de doações (moderadamente restritivo)
@@ -93,11 +93,11 @@ const donationLimiter = rateLimit({
     success: false,
     message: 'Muitas tentativas de doação. Tente novamente em 5 minutos.',
     error: 'DONATION_RATE_LIMIT_EXCEEDED',
-    retryAfter: 300
+    retryAfter: 300,
   },
   standardHeaders: true,
   legacyHeaders: false,
-  
+
   handler: (req, res) => {
     logger.warn('Rate limit de doação excedido', {
       ip: req.ip,
@@ -105,16 +105,16 @@ const donationLimiter = rateLimit({
       path: req.path,
       method: req.method,
       rateLimiter: 'donation',
-      userId: req.user?.id
+      userId: req.user?.id,
     });
-    
+
     res.status(429).json({
       success: false,
       message: 'Muitas tentativas de doação. Tente novamente em 5 minutos.',
       error: 'DONATION_RATE_LIMIT_EXCEEDED',
-      retryAfter: 300
+      retryAfter: 300,
     });
-  }
+  },
 });
 
 // Rate limiter para webhooks (mais permissivo)
@@ -124,26 +124,26 @@ const webhookLimiter = rateLimit({
   message: {
     success: false,
     message: 'Webhook rate limit exceeded',
-    error: 'WEBHOOK_RATE_LIMIT_EXCEEDED'
+    error: 'WEBHOOK_RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
   legacyHeaders: false,
-  
+
   handler: (req, res) => {
     logger.warn('Rate limit de webhook excedido', {
       ip: req.ip,
       userAgent: req.get('User-Agent'),
       path: req.path,
       method: req.method,
-      rateLimiter: 'webhook'
+      rateLimiter: 'webhook',
     });
-    
+
     res.status(429).json({
       success: false,
       message: 'Webhook rate limit exceeded',
-      error: 'WEBHOOK_RATE_LIMIT_EXCEEDED'
+      error: 'WEBHOOK_RATE_LIMIT_EXCEEDED',
     });
-  }
+  },
 });
 
 // Slow down middleware para degradar performance gradualmente
@@ -153,7 +153,7 @@ const speedLimiter = slowDown({
   delayMs: () => 500, // Função que retorna delay fixo (nova sintaxe)
   maxDelayMs: 5000, // Máximo de 5 segundos de delay
   validate: { delayMs: false }, // Desabilita warning sobre delayMs
-  
+
   // Usar skip ao invés de onLimitReached (deprecated)
   skip: (req, res) => {
     // Log quando limite é atingido
@@ -164,11 +164,11 @@ const speedLimiter = slowDown({
         path: req.path,
         method: req.method,
         used: req.slowDown.used,
-        limit: req.slowDown.limit
+        limit: req.slowDown.limit,
       });
     }
     return false; // Não pular, aplicar o delay
-  }
+  },
 });
 
 // Rate limiter baseado em usuário autenticado (mais permissivo)
@@ -183,11 +183,11 @@ const createUserBasedLimiter = (windowMs, max) => {
     message: {
       success: false,
       message: 'Limite de requisições por usuário excedido',
-      error: 'USER_RATE_LIMIT_EXCEEDED'
+      error: 'USER_RATE_LIMIT_EXCEEDED',
     },
     standardHeaders: true,
     legacyHeaders: false,
-    
+
     handler: (req, res) => {
       logger.warn('Rate limit por usuário excedido', {
         ip: req.ip,
@@ -195,15 +195,15 @@ const createUserBasedLimiter = (windowMs, max) => {
         userAgent: req.get('User-Agent'),
         path: req.path,
         method: req.method,
-        rateLimiter: 'user-based'
+        rateLimiter: 'user-based',
       });
-      
+
       res.status(429).json({
         success: false,
         message: 'Limite de requisições por usuário excedido',
-        error: 'USER_RATE_LIMIT_EXCEEDED'
+        error: 'USER_RATE_LIMIT_EXCEEDED',
       });
-    }
+    },
   });
 };
 
@@ -220,17 +220,17 @@ const createCustomLimiter = (options) => {
         userAgent: req.get('User-Agent'),
         path: req.path,
         method: req.method,
-        rateLimiter: 'custom'
+        rateLimiter: 'custom',
       });
-      
+
       res.status(429).json({
         success: false,
         message: 'Rate limit excedido',
-        error: 'CUSTOM_RATE_LIMIT_EXCEEDED'
+        error: 'CUSTOM_RATE_LIMIT_EXCEEDED',
       });
-    }
+    },
   };
-  
+
   return rateLimit({ ...defaultOptions, ...options });
 };
 
@@ -241,5 +241,5 @@ module.exports = {
   webhookLimiter,
   speedLimiter,
   createUserBasedLimiter,
-  createCustomLimiter
+  createCustomLimiter,
 };

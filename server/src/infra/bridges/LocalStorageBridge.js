@@ -38,14 +38,14 @@ class LocalStorageBridge extends IStorageBridge {
       const fileId = this.generateFileId(file.originalname);
       const folder = options.folder || 'general';
       const folderPath = path.join(this.basePath, folder);
-      
+
       // Cria pasta se não existir
       if (!fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath, { recursive: true });
       }
 
       const filePath = path.join(folderPath, fileId);
-      
+
       // Salva arquivo
       fs.writeFileSync(filePath, file.buffer);
 
@@ -66,10 +66,9 @@ class LocalStorageBridge extends IStorageBridge {
           path: filePath,
           folder: folder,
           createdAt: stats.birthtime,
-          modifiedAt: stats.mtime
-        }
+          modifiedAt: stats.mtime,
+        },
       };
-
     } catch (error) {
       console.error('[LocalStorageBridge] Erro no upload:', error.message);
       throw new Error(`Local upload failed: ${error.message}`);
@@ -86,7 +85,7 @@ class LocalStorageBridge extends IStorageBridge {
       console.log(`[LocalStorageBridge] Removendo arquivo: ${fileId}`);
 
       const filePath = this.findFilePath(fileId);
-      
+
       if (!filePath || !fs.existsSync(filePath)) {
         throw new Error('Arquivo não encontrado');
       }
@@ -98,9 +97,8 @@ class LocalStorageBridge extends IStorageBridge {
       return {
         success: true,
         fileId: fileId,
-        provider: this.providerName
+        provider: this.providerName,
       };
-
     } catch (error) {
       console.error('[LocalStorageBridge] Erro na remoção:', error.message);
       throw new Error(`Local delete failed: ${error.message}`);
@@ -116,7 +114,7 @@ class LocalStorageBridge extends IStorageBridge {
   async getFileUrl(fileId, options = {}) {
     try {
       const filePath = this.findFilePath(fileId);
-      
+
       if (!filePath) {
         throw new Error('Arquivo não encontrado');
       }
@@ -124,7 +122,6 @@ class LocalStorageBridge extends IStorageBridge {
       // Para storage local, retorna caminho relativo
       const relativePath = path.relative(this.basePath, filePath);
       return `/uploads/${relativePath.replace(/\\/g, '/')}`;
-
     } catch (error) {
       console.error('[LocalStorageBridge] Erro ao gerar URL:', error.message);
       throw new Error(`Failed to generate URL: ${error.message}`);
@@ -141,9 +138,7 @@ class LocalStorageBridge extends IStorageBridge {
       console.log('[LocalStorageBridge] Listando arquivos...');
 
       const files = [];
-      const searchPath = filters.folder ? 
-        path.join(this.basePath, filters.folder) : 
-        this.basePath;
+      const searchPath = filters.folder ? path.join(this.basePath, filters.folder) : this.basePath;
 
       if (!fs.existsSync(searchPath)) {
         return files;
@@ -158,7 +153,7 @@ class LocalStorageBridge extends IStorageBridge {
 
           if (stats.isFile()) {
             const fileInfo = this.getFileInfo(itemPath, relativePath);
-            
+
             // Aplica filtros
             if (this.matchesFilters(fileInfo, filters)) {
               files.push(fileInfo);
@@ -179,7 +174,6 @@ class LocalStorageBridge extends IStorageBridge {
       console.log(`[LocalStorageBridge] ${limitedFiles.length} arquivos encontrados`);
 
       return limitedFiles;
-
     } catch (error) {
       console.error('[LocalStorageBridge] Erro ao listar arquivos:', error.message);
       throw new Error(`Failed to list files: ${error.message}`);
@@ -209,8 +203,8 @@ class LocalStorageBridge extends IStorageBridge {
       provider: this.providerName,
       metadata: {
         path: filePath,
-        folder: folder === '.' ? '' : folder
-      }
+        folder: folder === '.' ? '' : folder,
+      },
     };
   }
 
@@ -250,7 +244,7 @@ class LocalStorageBridge extends IStorageBridge {
     const random = crypto.randomBytes(8).toString('hex');
     const ext = path.extname(originalName);
     const baseName = path.basename(originalName, ext);
-    
+
     return `${baseName}-${timestamp}-${random}${ext}`;
   }
 
@@ -261,7 +255,9 @@ class LocalStorageBridge extends IStorageBridge {
    */
   findFilePath(fileId) {
     const searchInDirectory = (dirPath) => {
-      if (!fs.existsSync(dirPath)) return null;
+      if (!fs.existsSync(dirPath)) {
+        return null;
+      }
 
       const items = fs.readdirSync(dirPath);
 
@@ -273,7 +269,9 @@ class LocalStorageBridge extends IStorageBridge {
           return itemPath;
         } else if (stats.isDirectory()) {
           const found = searchInDirectory(itemPath);
-          if (found) return found;
+          if (found) {
+            return found;
+          }
         }
       }
 
@@ -291,16 +289,12 @@ class LocalStorageBridge extends IStorageBridge {
     return {
       name: this.providerName,
       type: 'local',
-      features: [
-        'file_storage',
-        'folder_organization',
-        'direct_access'
-      ],
+      features: ['file_storage', 'folder_organization', 'direct_access'],
       supportedFormats: ['*'],
       maxFileSize: 'Unlimited (disk space)',
       transformations: false,
       cdn: false,
-      basePath: this.basePath
+      basePath: this.basePath,
     };
   }
 
@@ -314,7 +308,9 @@ class LocalStorageBridge extends IStorageBridge {
       let totalSize = 0;
 
       const scanDirectory = (dirPath) => {
-        if (!fs.existsSync(dirPath)) return;
+        if (!fs.existsSync(dirPath)) {
+          return;
+        }
 
         const items = fs.readdirSync(dirPath);
 
@@ -338,9 +334,8 @@ class LocalStorageBridge extends IStorageBridge {
         totalFiles,
         totalStorage: `${(totalSize / (1024 * 1024)).toFixed(2)} MB`,
         basePath: this.basePath,
-        diskSpace: this.getDiskSpace()
+        diskSpace: this.getDiskSpace(),
       };
-
     } catch (error) {
       return { error: error.message };
     }
@@ -355,7 +350,7 @@ class LocalStorageBridge extends IStorageBridge {
       const stats = fs.statSync(this.basePath);
       return {
         available: 'N/A - Requires system call',
-        used: 'N/A - Requires system call'
+        used: 'N/A - Requires system call',
       };
     } catch (error) {
       return { error: error.message };
@@ -370,7 +365,7 @@ class LocalStorageBridge extends IStorageBridge {
     try {
       // Verifica se diretório existe e tem permissão de escrita
       this.ensureDirectoryExists();
-      
+
       // Tenta criar arquivo de teste
       const testFile = path.join(this.basePath, '.health-check');
       fs.writeFileSync(testFile, 'health check');
@@ -384,7 +379,7 @@ class LocalStorageBridge extends IStorageBridge {
         accessible: true,
         writable: true,
         totalFiles: stats.totalFiles,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
@@ -393,7 +388,7 @@ class LocalStorageBridge extends IStorageBridge {
         accessible: false,
         writable: false,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

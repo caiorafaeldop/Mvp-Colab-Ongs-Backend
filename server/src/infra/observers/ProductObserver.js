@@ -14,7 +14,7 @@ class ProductObserver extends IObserver {
       'product.updated',
       'product.deleted',
       'product.stock.low',
-      'product.availability.changed'
+      'product.availability.changed',
     ];
   }
 
@@ -26,7 +26,7 @@ class ProductObserver extends IObserver {
       logger.info(`[${this.name}] Processando evento: ${event.type}`, {
         eventId: event.id,
         productId: event.data?.productId,
-        timestamp: event.timestamp
+        timestamp: event.timestamp,
       });
 
       switch (event.type) {
@@ -52,7 +52,7 @@ class ProductObserver extends IObserver {
       logger.error(`[${this.name}] Erro ao processar evento`, {
         error: error.message,
         eventType: event.type,
-        eventId: event.id
+        eventId: event.id,
       });
     }
   }
@@ -78,7 +78,7 @@ class ProductObserver extends IObserver {
       productId: event.data.productId,
       productName: event.data.productName,
       organizationId: event.data.organizationId,
-      price: event.data.price
+      price: event.data.price,
     });
 
     // Aqui pode adicionar lógica adicional como:
@@ -91,7 +91,7 @@ class ProductObserver extends IObserver {
   async handleProductUpdated(event, context) {
     logger.info(`[${this.name}] Produto atualizado`, {
       productId: event.data.productId,
-      changes: event.data.changes
+      changes: event.data.changes,
     });
 
     // Lógica adicional para produto atualizado
@@ -102,7 +102,7 @@ class ProductObserver extends IObserver {
   async handleProductDeleted(event, context) {
     logger.info(`[${this.name}] Produto deletado`, {
       productId: event.data.productId,
-      organizationId: event.data.organizationId
+      organizationId: event.data.organizationId,
     });
 
     // Lógica adicional para produto deletado
@@ -115,7 +115,7 @@ class ProductObserver extends IObserver {
       productId: event.data.productId,
       productName: event.data.productName,
       currentStock: event.data.currentStock,
-      threshold: event.data.threshold
+      threshold: event.data.threshold,
     });
 
     // Lógica para estoque baixo
@@ -126,7 +126,7 @@ class ProductObserver extends IObserver {
   async handleAvailabilityChanged(event, context) {
     logger.info(`[${this.name}] Disponibilidade alterada`, {
       productId: event.data.productId,
-      isAvailable: event.data.isAvailable
+      isAvailable: event.data.isAvailable,
     });
 
     // Lógica para mudança de disponibilidade

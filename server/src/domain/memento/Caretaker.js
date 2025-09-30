@@ -1,6 +1,6 @@
 /**
  * CARETAKER (Memento Pattern)
- * 
+ *
  * Gerencia histórico de mementos.
  * Responsável por armazenar e recuperar snapshots.
  * Implementa undo/redo com limite de histórico.
@@ -38,7 +38,7 @@ class Caretaker {
     logger.debug('[CARETAKER] Memento salvo', {
       mementoId: memento.getId(),
       historySize: this._history.length,
-      currentIndex: this._currentIndex
+      currentIndex: this._currentIndex,
     });
   }
 
@@ -57,7 +57,7 @@ class Caretaker {
 
     logger.info('[CARETAKER] Undo executado', {
       mementoId: memento.getId(),
-      newIndex: this._currentIndex
+      newIndex: this._currentIndex,
     });
 
     return memento;
@@ -78,7 +78,7 @@ class Caretaker {
 
     logger.info('[CARETAKER] Redo executado', {
       mementoId: memento.getId(),
-      newIndex: this._currentIndex
+      newIndex: this._currentIndex,
     });
 
     return memento;
@@ -128,7 +128,7 @@ class Caretaker {
       id: memento.getId(),
       timestamp: memento.getTimestamp(),
       metadata: memento.getMetadata(),
-      isCurrent: index === this._currentIndex
+      isCurrent: index === this._currentIndex,
     }));
   }
 
@@ -153,7 +153,7 @@ class Caretaker {
       canUndo: this.canUndo(),
       canRedo: this.canRedo(),
       undoAvailable: this._currentIndex,
-      redoAvailable: this._history.length - this._currentIndex - 1
+      redoAvailable: this._history.length - this._currentIndex - 1,
     };
   }
 
@@ -163,7 +163,7 @@ class Caretaker {
    * @returns {Memento|null} Memento encontrado ou null
    */
   getById(mementoId) {
-    return this._history.find(m => m.getId() === mementoId) || null;
+    return this._history.find((m) => m.getId() === mementoId) || null;
   }
 
   /**
@@ -172,8 +172,8 @@ class Caretaker {
    * @returns {Memento|null} Memento restaurado ou null
    */
   restoreById(mementoId) {
-    const index = this._history.findIndex(m => m.getId() === mementoId);
-    
+    const index = this._history.findIndex((m) => m.getId() === mementoId);
+
     if (index === -1) {
       logger.warn('[CARETAKER] Memento não encontrado', { mementoId });
       return null;
@@ -184,7 +184,7 @@ class Caretaker {
 
     logger.info('[CARETAKER] Restaurado para memento específico', {
       mementoId,
-      newIndex: this._currentIndex
+      newIndex: this._currentIndex,
     });
 
     return memento;

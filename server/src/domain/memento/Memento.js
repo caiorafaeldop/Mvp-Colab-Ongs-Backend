@@ -1,9 +1,9 @@
 /**
  * MEMENTO PATTERN (Comportamental)
- * 
+ *
  * Memento: Armazena o estado interno de um objeto sem violar encapsulamento.
  * Permite restaurar o objeto a um estado anterior (undo/redo).
- * 
+ *
  * Componentes:
  * - Memento: Armazena snapshot do estado
  * - Originator: Objeto cujo estado é salvo

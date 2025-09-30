@@ -1,6 +1,6 @@
 /**
  * UserProfileHistory - Memento Pattern para perfis de usuário
- * 
+ *
  * Rastreia mudanças no perfil do usuário com undo/redo.
  * Útil para recuperar dados apagados acidentalmente.
  */
@@ -14,7 +14,7 @@ class UserProfileHistory extends Originator {
     super();
     this._state = userData;
     this._caretaker = new Caretaker(30); // Máximo 30 versões
-    
+
     if (Object.keys(userData).length > 0) {
       this.saveSnapshot('profile_created');
     }
@@ -27,24 +27,24 @@ class UserProfileHistory extends Originator {
    */
   updateProfile(changes, action = 'profile_updated') {
     const previousState = { ...this._state };
-    
+
     // Não salva password no histórico
     const sanitizedChanges = { ...changes };
     if ('password' in sanitizedChanges) {
       sanitizedChanges.password = '***HIDDEN***';
     }
-    
+
     this._state = { ...this._state, ...changes, updatedAt: new Date() };
-    
-    this.saveSnapshot(action, { 
-      previousState: this._sanitizeState(previousState), 
-      changes: sanitizedChanges 
+
+    this.saveSnapshot(action, {
+      previousState: this._sanitizeState(previousState),
+      changes: sanitizedChanges,
     });
-    
+
     logger.info('[USER PROFILE HISTORY] Perfil atualizado', {
       userId: this._state.id,
       action,
-      fields: Object.keys(changes)
+      fields: Object.keys(changes),
     });
   }
 
@@ -55,14 +55,14 @@ class UserProfileHistory extends Originator {
    */
   saveSnapshot(action, metadata = {}) {
     const sanitizedState = this._sanitizeState(this._state);
-    
+
     const memento = new (require('../../domain/memento/Memento'))(sanitizedState, {
       action,
       userId: this._state.id,
       email: this._state.email,
-      ...metadata
+      ...metadata,
     });
-    
+
     this._caretaker.save(memento);
   }
 
@@ -90,15 +90,15 @@ class UserProfileHistory extends Originator {
    */
   undo() {
     const memento = this._caretaker.undo();
-    
+
     if (memento) {
       this.restore(memento);
       logger.info('[USER PROFILE HISTORY] Undo executado', {
-        userId: this._state.id
+        userId: this._state.id,
       });
       return this._state;
     }
-    
+
     return null;
   }
 
@@ -108,15 +108,15 @@ class UserProfileHistory extends Originator {
    */
   redo() {
     const memento = this._caretaker.redo();
-    
+
     if (memento) {
       this.restore(memento);
       logger.info('[USER PROFILE HISTORY] Redo executado', {
-        userId: this._state.id
+        userId: this._state.id,
       });
       return this._state;
     }
-    
+
     return null;
   }
 
@@ -134,12 +134,12 @@ class UserProfileHistory extends Originator {
    */
   getAudit() {
     const history = this.getHistory();
-    
-    return history.map(entry => ({
+
+    return history.map((entry) => ({
       timestamp: entry.timestamp,
       action: entry.metadata.action,
       changes: entry.metadata.changes ? Object.keys(entry.metadata.changes) : [],
-      isCurrent: entry.isCurrent
+      isCurrent: entry.isCurrent,
     }));
   }
 
@@ -170,7 +170,7 @@ class UserProfileHistory extends Originator {
   clearHistory() {
     this._caretaker.clear();
     logger.info('[USER PROFILE HISTORY] Histórico limpo', {
-      userId: this._state.id
+      userId: this._state.id,
     });
   }
 }

@@ -6,7 +6,7 @@
 class DonationController {
   constructor(donationService) {
     this.donationService = donationService;
-    
+
     // Bind methods para manter contexto
     this.createSingleDonation = this.createSingleDonation.bind(this);
     this.createRecurringDonation = this.createRecurringDonation.bind(this);
@@ -15,12 +15,12 @@ class DonationController {
     this.getDonationById = this.getDonationById.bind(this);
     this.cancelRecurringDonation = this.cancelRecurringDonation.bind(this);
     this.getDonationStatistics = this.getDonationStatistics.bind(this);
-    
+
     // Novos métodos com Template Method
     this.createSingleDonationWithTemplate = this.createSingleDonationWithTemplate.bind(this);
     this.createRecurringDonationWithTemplate = this.createRecurringDonationWithTemplate.bind(this);
     this.generateDonationReport = this.generateDonationReport.bind(this);
-    
+
     console.log('[DONATION CONTROLLER] Inicializado com sucesso');
   }
 
@@ -46,14 +46,15 @@ class DonationController {
         donorZipCode,
         message,
         isAnonymous,
-        showInPublicList
+        showInPublicList,
       } = req.body;
 
       // Validações básicas
       if (!amount || !donorEmail || !donorName || !organizationId || !organizationName) {
         return res.status(400).json({
           success: false,
-          message: 'Dados obrigatórios: amount, donorEmail, donorName, organizationId, organizationName'
+          message:
+            'Dados obrigatórios: amount, donorEmail, donorName, organizationId, organizationName',
         });
       }
 
@@ -71,7 +72,7 @@ class DonationController {
         donorZipCode,
         message,
         isAnonymous,
-        showInPublicList
+        showInPublicList,
       });
 
       return res.status(201).json({
@@ -81,16 +82,15 @@ class DonationController {
           donationId: result.donation.id,
           paymentUrl: result.paymentUrl,
           mercadoPagoId: result.mercadoPagoId,
-          amount: result.donation.amount
-        }
+          amount: result.donation.amount,
+        },
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao criar doação única:', error);
-      
+
       return res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao criar doação única'
+        message: error.message || 'Erro ao criar doação única',
       });
     }
   }
@@ -118,14 +118,15 @@ class DonationController {
         donorZipCode,
         message,
         isAnonymous,
-        showInPublicList
+        showInPublicList,
       } = req.body;
 
       // Validações básicas
       if (!amount || !donorEmail || !donorName || !organizationId || !organizationName) {
         return res.status(400).json({
           success: false,
-          message: 'Dados obrigatórios: amount, donorEmail, donorName, organizationId, organizationName'
+          message:
+            'Dados obrigatórios: amount, donorEmail, donorName, organizationId, organizationName',
         });
       }
 
@@ -144,7 +145,7 @@ class DonationController {
         donorZipCode,
         message,
         isAnonymous,
-        showInPublicList
+        showInPublicList,
       });
 
       return res.status(201).json({
@@ -156,16 +157,15 @@ class DonationController {
           subscriptionId: result.subscriptionId,
           amount: result.donation.amount,
           frequency: result.donation.frequency,
-          organizationName: result.donation.organizationName
-        }
+          organizationName: result.donation.organizationName,
+        },
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao criar doação recorrente:', error);
-      
+
       return res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao criar doação recorrente'
+        message: error.message || 'Erro ao criar doação recorrente',
       });
     }
   }
@@ -183,7 +183,7 @@ class DonationController {
       if (!subscriptionId) {
         return res.status(400).json({
           success: false,
-          message: 'ID da assinatura é obrigatório'
+          message: 'ID da assinatura é obrigatório',
         });
       }
 
@@ -192,15 +192,14 @@ class DonationController {
       return res.status(200).json({
         success: true,
         message: 'Doação recorrente cancelada com sucesso',
-        data: result
+        data: result,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao cancelar doação recorrente:', error);
-      
+
       return res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao cancelar doação recorrente'
+        message: error.message || 'Erro ao cancelar doação recorrente',
       });
     }
   }
@@ -218,7 +217,7 @@ class DonationController {
       if (!subscriptionId) {
         return res.status(400).json({
           success: false,
-          message: 'ID da assinatura é obrigatório'
+          message: 'ID da assinatura é obrigatório',
         });
       }
 
@@ -227,15 +226,14 @@ class DonationController {
       return res.status(200).json({
         success: true,
         message: 'Status da assinatura consultado com sucesso',
-        data: result
+        data: result,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao consultar status da assinatura:', error);
-      
+
       return res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao consultar status da assinatura'
+        message: error.message || 'Erro ao consultar status da assinatura',
       });
     }
   }
@@ -249,25 +247,24 @@ class DonationController {
       console.log('[DONATION CONTROLLER] Processando webhook:', req.body);
 
       const webhookData = req.body;
-      
+
       const result = await this.donationService.processPaymentWebhook(webhookData);
-      
+
       console.log('[DONATION CONTROLLER] Webhook processado:', result);
 
       return res.status(200).json({
         success: true,
         message: 'Webhook processado com sucesso',
-        data: result
+        data: result,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao processar webhook:', error);
-      
+
       // Retornar 200 mesmo com erro para não reenviar webhook
       return res.status(200).json({
         success: false,
         message: 'Erro ao processar webhook',
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -279,20 +276,13 @@ class DonationController {
   async getDonations(req, res) {
     try {
       const { organizationId } = req.params;
-      const {
-        status,
-        type,
-        startDate,
-        endDate,
-        page = 1,
-        limit = 20
-      } = req.query;
+      const { status, type, startDate, endDate, page = 1, limit = 20 } = req.query;
 
       // Verificar se o usuário tem permissão (deve ser da mesma organização)
       if (req.user && req.user.id !== organizationId && req.user.userType !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Não autorizado a visualizar essas doações'
+          message: 'Não autorizado a visualizar essas doações',
         });
       }
 
@@ -302,7 +292,7 @@ class DonationController {
         startDate,
         endDate,
         limit: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
+        skip: (parseInt(page) - 1) * parseInt(limit),
       };
 
       const donations = await this.donationService.getDonationsByOrganization(
@@ -316,16 +306,15 @@ class DonationController {
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total: donations.length
-        }
+          total: donations.length,
+        },
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao buscar doações:', error);
-      
+
       return res.status(500).json({
         success: false,
-        message: 'Erro ao buscar doações'
+        message: 'Erro ao buscar doações',
       });
     }
   }
@@ -343,7 +332,7 @@ class DonationController {
       if (!donation) {
         return res.status(404).json({
           success: false,
-          message: 'Doação não encontrada'
+          message: 'Doação não encontrada',
         });
       }
 
@@ -351,21 +340,20 @@ class DonationController {
       if (req.user && req.user.id !== donation.organizationId && req.user.userType !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Não autorizado a visualizar esta doação'
+          message: 'Não autorizado a visualizar esta doação',
         });
       }
 
       return res.status(200).json({
         success: true,
-        data: donation
+        data: donation,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao buscar doação:', error);
-      
+
       return res.status(500).json({
         success: false,
-        message: 'Erro ao buscar doação'
+        message: 'Erro ao buscar doação',
       });
     }
   }
@@ -382,7 +370,7 @@ class DonationController {
       if (!organizationId) {
         return res.status(401).json({
           success: false,
-          message: 'Usuário não autenticado'
+          message: 'Usuário não autenticado',
         });
       }
 
@@ -390,15 +378,14 @@ class DonationController {
 
       return res.status(200).json({
         success: true,
-        message: result.message
+        message: result.message,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao cancelar doação recorrente:', error);
-      
+
       return res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao cancelar doação recorrente'
+        message: error.message || 'Erro ao cancelar doação recorrente',
       });
     }
   }
@@ -416,13 +403,17 @@ class DonationController {
       if (req.user && req.user.id !== organizationId && req.user.userType !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Não autorizado a visualizar essas estatísticas'
+          message: 'Não autorizado a visualizar essas estatísticas',
         });
       }
 
       const dateRange = {};
-      if (startDate) dateRange.startDate = startDate;
-      if (endDate) dateRange.endDate = endDate;
+      if (startDate) {
+        dateRange.startDate = startDate;
+      }
+      if (endDate) {
+        dateRange.endDate = endDate;
+      }
 
       const statistics = await this.donationService.donationRepository.getStatistics(
         organizationId,
@@ -431,15 +422,14 @@ class DonationController {
 
       return res.status(200).json({
         success: true,
-        data: statistics
+        data: statistics,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao obter estatísticas:', error);
-      
+
       return res.status(500).json({
         success: false,
-        message: 'Erro ao obter estatísticas'
+        message: 'Erro ao obter estatísticas',
       });
     }
   }
@@ -458,16 +448,19 @@ class DonationController {
 
       // Usar dados do middleware de validação ou body direto
       const donationData = req.donationData || req.validatedBody || req.body;
-      
+
       // Adicionar contexto da requisição
       const options = {
         logger: req.logger,
         ip: req.ip,
         userAgent: req.get('User-Agent'),
-        requestId: req.requestId
+        requestId: req.requestId,
       };
 
-      const result = await this.donationService.createSingleDonationWithTemplate(donationData, options);
+      const result = await this.donationService.createSingleDonationWithTemplate(
+        donationData,
+        options
+      );
 
       return res.status(201).json({
         success: true,
@@ -478,18 +471,17 @@ class DonationController {
           mercadoPagoId: result.mercadoPagoId,
           amount: result.amount,
           organizationName: result.organizationName,
-          templateUsed: result.templateUsed
-        }
+          templateUsed: result.templateUsed,
+        },
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao criar doação única com template:', error);
-      
+
       return res.status(500).json({
         success: false,
         message: error.message || 'Erro interno do servidor',
         error: 'DONATION_TEMPLATE_ERROR',
-        requestId: req.requestId
+        requestId: req.requestId,
       });
     }
   }
@@ -504,16 +496,19 @@ class DonationController {
 
       // Usar dados do middleware de validação ou body direto
       const donationData = req.donationData || req.validatedBody || req.body;
-      
+
       // Adicionar contexto da requisição
       const options = {
         logger: req.logger,
         ip: req.ip,
         userAgent: req.get('User-Agent'),
-        requestId: req.requestId
+        requestId: req.requestId,
       };
 
-      const result = await this.donationService.createRecurringDonationWithTemplate(donationData, options);
+      const result = await this.donationService.createRecurringDonationWithTemplate(
+        donationData,
+        options
+      );
 
       return res.status(201).json({
         success: true,
@@ -525,18 +520,17 @@ class DonationController {
           amount: result.amount,
           frequency: result.frequency,
           organizationName: result.organizationName,
-          templateUsed: result.templateUsed
-        }
+          templateUsed: result.templateUsed,
+        },
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao criar doação recorrente com template:', error);
-      
+
       return res.status(500).json({
         success: false,
         message: error.message || 'Erro interno do servidor',
         error: 'RECURRING_DONATION_TEMPLATE_ERROR',
-        requestId: req.requestId
+        requestId: req.requestId,
       });
     }
   }
@@ -547,7 +541,11 @@ class DonationController {
    */
   async generateDonationReport(req, res) {
     try {
-      console.log('[DONATION CONTROLLER] Gerando relatório com Template Method:', req.params, req.query);
+      console.log(
+        '[DONATION CONTROLLER] Gerando relatório com Template Method:',
+        req.params,
+        req.query
+      );
 
       const { organizationId } = req.params;
       const { startDate, endDate, format = 'json', groupBy = 'day' } = req.query;
@@ -561,34 +559,36 @@ class DonationController {
           status: req.query.status,
           type: req.query.type,
           minAmount: req.query.minAmount ? parseFloat(req.query.minAmount) : undefined,
-          maxAmount: req.query.maxAmount ? parseFloat(req.query.maxAmount) : undefined
-        }
+          maxAmount: req.query.maxAmount ? parseFloat(req.query.maxAmount) : undefined,
+        },
       };
 
       const options = {
         format,
         logger: req.logger,
-        requestId: req.requestId
+        requestId: req.requestId,
       };
 
-      const result = await this.donationService.generateDonationReportWithTemplate(reportParams, options);
+      const result = await this.donationService.generateDonationReportWithTemplate(
+        reportParams,
+        options
+      );
 
       return res.status(200).json({
         success: true,
         message: 'Relatório gerado com sucesso usando Template Method',
         data: result.report,
         metadata: result.metadata,
-        templateUsed: result.templateUsed
+        templateUsed: result.templateUsed,
       });
-
     } catch (error) {
       console.error('[DONATION CONTROLLER] Erro ao gerar relatório com template:', error);
-      
+
       return res.status(500).json({
         success: false,
         message: error.message || 'Erro interno do servidor',
         error: 'REPORT_TEMPLATE_ERROR',
-        requestId: req.requestId
+        requestId: req.requestId,
       });
     }
   }

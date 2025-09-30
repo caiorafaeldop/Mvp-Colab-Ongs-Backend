@@ -27,10 +27,10 @@ class CloudinaryStorageBridge extends IStorageBridge {
           width: 800,
           height: 600,
           crop: 'fill',
-          quality: 'auto:good'
+          quality: 'auto:good',
         },
         resource_type: 'auto',
-        ...options.cloudinaryOptions
+        ...options.cloudinaryOptions,
       };
 
       const result = await this.adapter.uploadFile(file, cloudinaryOptions);
@@ -57,10 +57,9 @@ class CloudinaryStorageBridge extends IStorageBridge {
           bytes: d.size,
           folder: d.folder,
           requestId: result.metadata?.requestId,
-          timestamp: result.metadata?.timestamp
-        }
+          timestamp: result.metadata?.timestamp,
+        },
       };
-
     } catch (error) {
       console.error('[CloudinaryStorageBridge] Erro no upload:', error.message);
       throw new Error(`Cloudinary upload failed: ${error.message}`);
@@ -89,9 +88,8 @@ class CloudinaryStorageBridge extends IStorageBridge {
         success: true,
         fileId: fileId,
         provider: this.providerName,
-        result: result.data?.deleted === true ? 'ok' : 'not_found'
+        result: result.data?.deleted === true ? 'ok' : 'not_found',
       };
-
     } catch (error) {
       console.error('[CloudinaryStorageBridge] Erro na remoção:', error.message);
       throw new Error(`Cloudinary delete failed: ${error.message}`);
@@ -108,7 +106,6 @@ class CloudinaryStorageBridge extends IStorageBridge {
     try {
       const url = await this.adapter.getFileUrl(fileId, options);
       return url;
-
     } catch (error) {
       console.error('[CloudinaryStorageBridge] Erro ao gerar URL:', error.message);
       throw new Error(`Failed to generate URL: ${error.message}`);
@@ -128,7 +125,7 @@ class CloudinaryStorageBridge extends IStorageBridge {
         resourceType: filters.resourceType,
         maxResults: filters.limit,
         cloudinaryFilters: {},
-        folder: filters.folder
+        folder: filters.folder,
       });
 
       if (!result || result.success === false) {
@@ -136,7 +133,7 @@ class CloudinaryStorageBridge extends IStorageBridge {
         throw new Error(msg);
       }
 
-      const files = result.data.files.map(resource => ({
+      const files = result.data.files.map((resource) => ({
         fileId: resource.id,
         url: resource.url,
         format: resource.format,
@@ -145,13 +142,12 @@ class CloudinaryStorageBridge extends IStorageBridge {
         size: resource.size,
         createdAt: resource.createdAt,
         provider: this.providerName,
-        folder: resource.folder
+        folder: resource.folder,
       }));
 
       console.log(`[CloudinaryStorageBridge] ${files.length} arquivos encontrados`);
 
       return files;
-
     } catch (error) {
       console.error('[CloudinaryStorageBridge] Erro ao listar arquivos:', error.message);
       throw new Error(`Failed to list files: ${error.message}`);
@@ -203,12 +199,12 @@ class CloudinaryStorageBridge extends IStorageBridge {
         'auto_optimization',
         'cdn_delivery',
         'face_detection',
-        'auto_tagging'
+        'auto_tagging',
       ],
       supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp4', 'mov'],
       maxFileSize: '100MB',
       transformations: true,
-      cdn: true
+      cdn: true,
     };
   }
 
@@ -224,7 +220,7 @@ class CloudinaryStorageBridge extends IStorageBridge {
         totalFiles: 'N/A - Requires Admin API',
         totalStorage: 'N/A - Requires Admin API',
         bandwidth: 'N/A - Requires Admin API',
-        transformations: 'N/A - Requires Admin API'
+        transformations: 'N/A - Requires Admin API',
       };
     } catch (error) {
       return { error: error.message };
@@ -239,13 +235,13 @@ class CloudinaryStorageBridge extends IStorageBridge {
     try {
       // Tenta listar arquivos para verificar conectividade
       const result = await this.listFiles({ limit: 1 });
-      
+
       return {
         status: 'healthy',
         provider: this.providerName,
         accessible: true,
         apiConnected: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
@@ -254,7 +250,7 @@ class CloudinaryStorageBridge extends IStorageBridge {
         accessible: false,
         apiConnected: false,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

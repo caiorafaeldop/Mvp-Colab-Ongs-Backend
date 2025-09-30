@@ -11,7 +11,7 @@ class CollaborationState extends BaseState {
     PAUSED: 'paused',
     COMPLETED: 'completed',
     CANCELLED: 'cancelled',
-    REJECTED: 'rejected'
+    REJECTED: 'rejected',
   };
 
   static TRANSITIONS = {
@@ -21,7 +21,7 @@ class CollaborationState extends BaseState {
     paused: ['active', 'cancelled'],
     completed: [], // Estado final
     cancelled: [], // Estado final
-    rejected: ['pending'] // Permite reenvio após ajustes
+    rejected: ['pending'], // Permite reenvio após ajustes
   };
 
   constructor(currentState = CollaborationState.STATES.DRAFT) {
@@ -35,7 +35,7 @@ class CollaborationState extends BaseState {
     return this.transitionTo(CollaborationState.STATES.PENDING, {
       action: 'submit',
       submittedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -47,7 +47,7 @@ class CollaborationState extends BaseState {
       action: 'approve',
       approvedBy,
       approvedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -60,7 +60,7 @@ class CollaborationState extends BaseState {
       reason,
       rejectedBy,
       rejectedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -72,7 +72,7 @@ class CollaborationState extends BaseState {
       action: 'pause',
       reason,
       pausedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -83,7 +83,7 @@ class CollaborationState extends BaseState {
     return this.transitionTo(CollaborationState.STATES.ACTIVE, {
       action: 'resume',
       resumedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -94,7 +94,7 @@ class CollaborationState extends BaseState {
     return this.transitionTo(CollaborationState.STATES.COMPLETED, {
       action: 'complete',
       completedAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -106,7 +106,7 @@ class CollaborationState extends BaseState {
       action: 'cancel',
       reason,
       cancelledAt: new Date().toISOString(),
-      ...metadata
+      ...metadata,
     });
   }
 
@@ -121,20 +121,14 @@ class CollaborationState extends BaseState {
    * Verifica se pode ser editada
    */
   isEditable() {
-    return this.isOneOf([
-      CollaborationState.STATES.DRAFT,
-      CollaborationState.STATES.REJECTED
-    ]);
+    return this.isOneOf([CollaborationState.STATES.DRAFT, CollaborationState.STATES.REJECTED]);
   }
 
   /**
    * Verifica se está em estado final
    */
   isFinal() {
-    return this.isOneOf([
-      CollaborationState.STATES.COMPLETED,
-      CollaborationState.STATES.CANCELLED
-    ]);
+    return this.isOneOf([CollaborationState.STATES.COMPLETED, CollaborationState.STATES.CANCELLED]);
   }
 
   /**

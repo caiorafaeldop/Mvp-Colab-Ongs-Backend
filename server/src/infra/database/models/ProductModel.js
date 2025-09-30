@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
   {
@@ -22,15 +22,13 @@ const productSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: (v) =>
-          Array.isArray(v) &&
-          v.length > 0 &&
-          v.every((url) => url.trim().length > 0),
-        message: "At least one non-empty image URL is required",
+          Array.isArray(v) && v.length > 0 && v.every((url) => url.trim().length > 0),
+        message: 'At least one non-empty image URL is required',
       },
     },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     organizationName: {
@@ -59,8 +57,8 @@ const productSchema = new mongoose.Schema(
 );
 
 // Index for better search performance
-productSchema.index({ name: "text", description: "text" });
+productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ organizationId: 1 });
 productSchema.index({ isAvailable: 1 });
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model('Product', productSchema);

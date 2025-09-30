@@ -1,10 +1,7 @@
-const express = require("express");
-const ProductController = require("../controllers/ProductController");
-const {
-  authMiddleware,
-  organizationMiddleware,
-} = require("../middleware/AuthMiddleware");
-const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddleware");
+const express = require('express');
+const ProductController = require('../controllers/ProductController');
+const { authMiddleware, organizationMiddleware } = require('../middleware/AuthMiddleware');
+const { createSimpleAuthMiddleware } = require('../middleware/SimpleAuthMiddleware');
 
 /**
  * @swagger
@@ -64,7 +61,7 @@ const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddlewa
  *           type: string
  *           format: date-time
  *           description: Data de última atualização
- *     
+ *
  *     ProductCreateRequest:
  *       type: object
  *       required:
@@ -102,7 +99,7 @@ const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddlewa
  *             type: string
  *           description: URLs das imagens do produto
  *           example: ["https://example.com/image1.jpg"]
- *     
+ *
  *     ProductUpdateRequest:
  *       type: object
  *       properties:
@@ -136,7 +133,7 @@ const createProductRoutes = (productService, authService) => {
   const productController = new ProductController(productService);
 
   // Public routes
-  
+
   /**
    * @swagger
    * /api/products:
@@ -160,7 +157,7 @@ const createProductRoutes = (productService, authService) => {
    *                   items:
    *                     $ref: '#/components/schemas/Product'
    */
-  router.get("/products", productController.getAllAvailableProducts);
+  router.get('/products', productController.getAllAvailableProducts);
 
   /**
    * @swagger
@@ -208,7 +205,7 @@ const createProductRoutes = (productService, authService) => {
    *                   items:
    *                     $ref: '#/components/schemas/Product'
    */
-  router.get("/products/search", productController.searchProducts);
+  router.get('/products/search', productController.searchProducts);
 
   /**
    * @swagger
@@ -245,7 +242,7 @@ const createProductRoutes = (productService, authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.get("/products/:id", productController.getProduct);
+  router.get('/products/:id', productController.getProduct);
 
   /**
    * @swagger
@@ -280,17 +277,17 @@ const createProductRoutes = (productService, authService) => {
    *                       type: string
    *                       example: "https://wa.me/5511999999999?text=Olá..."
    */
-  router.get("/products/:id/whatsapp", productController.getWhatsAppLink);
+  router.get('/products/:id/whatsapp', productController.getWhatsAppLink);
 
   // Protected routes (authentication required)
   // Usar o novo sistema simplificado se disponível
-  const auth = authService.verifyAccessToken ? 
-    createSimpleAuthMiddleware(authService) : 
-    authMiddleware(authService);
+  const auth = authService.verifyAccessToken
+    ? createSimpleAuthMiddleware(authService)
+    : authMiddleware(authService);
   const organization = organizationMiddleware();
 
   // Organization-only routes
-  
+
   /**
    * @swagger
    * /api/products:
@@ -335,37 +332,17 @@ const createProductRoutes = (productService, authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/products", auth, organization, productController.createProduct);
-  router.put(
-    "/products/:id",
-    auth,
-    organization,
-    productController.updateProduct
-  );
-  router.delete(
-    "/products/:id",
-    auth,
-    organization,
-    productController.deleteProduct
-  );
+  router.post('/products', auth, organization, productController.createProduct);
+  router.put('/products/:id', auth, organization, productController.updateProduct);
+  router.delete('/products/:id', auth, organization, productController.deleteProduct);
   router.patch(
-    "/products/:id/toggle",
+    '/products/:id/toggle',
     auth,
     organization,
     productController.toggleProductAvailability
   );
-  router.patch(
-    "/products/:id/stock",
-    auth,
-    organization,
-    productController.updateProductStock
-  );
-  router.get(
-    "/my-products",
-    auth,
-    organization,
-    productController.getProductsByOrganization
-  );
+  router.patch('/products/:id/stock', auth, organization, productController.updateProductStock);
+  router.get('/my-products', auth, organization, productController.getProductsByOrganization);
 
   return router;
 };

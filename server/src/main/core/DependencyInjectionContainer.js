@@ -1,9 +1,9 @@
 /**
  * DEPENDENCY INJECTION PATTERN (Criacional)
- * 
+ *
  * Container centralizado para gerenciar todas as dependências da aplicação.
  * Facilita testes, desacoplamento e manutenção.
- * 
+ *
  * Implementa:
  * - Constructor Injection
  * - Setter Injection
@@ -16,7 +16,7 @@ class DependencyInjectionContainer {
     this.dependencies = new Map();
     this.singletons = new Map();
     this.factories = new Map();
-    
+
     console.log('[DI CONTAINER] Dependency Injection Container inicializado');
   }
 
@@ -81,9 +81,7 @@ class DependencyInjectionContainer {
    * @returns {boolean}
    */
   has(name) {
-    return this.singletons.has(name) || 
-           this.factories.has(name) || 
-           this.dependencies.has(name);
+    return this.singletons.has(name) || this.factories.has(name) || this.dependencies.has(name);
   }
 
   /**
@@ -93,7 +91,7 @@ class DependencyInjectionContainer {
    * @returns {Object} Instância com dependências injetadas
    */
   createWithDependencies(Class, dependencyNames = []) {
-    const dependencies = dependencyNames.map(name => this.resolve(name));
+    const dependencies = dependencyNames.map((name) => this.resolve(name));
     return new Class(...dependencies);
   }
 
@@ -118,7 +116,7 @@ class DependencyInjectionContainer {
       totalDependencies: this.dependencies.size + this.singletons.size + this.factories.size,
       singletons: Array.from(this.singletons.keys()),
       factories: Array.from(this.factories.keys()),
-      dependencies: Array.from(this.dependencies.keys())
+      dependencies: Array.from(this.dependencies.keys()),
     };
   }
 
@@ -138,16 +136,16 @@ class DependencyInjectionContainer {
    */
   createScope() {
     const scope = new DependencyInjectionContainer();
-    
+
     // Copia singletons e factories do pai
     this.singletons.forEach((value, key) => {
       scope.singletons.set(key, value);
     });
-    
+
     this.factories.forEach((value, key) => {
       scope.factories.set(key, value);
     });
-    
+
     return scope;
   }
 }

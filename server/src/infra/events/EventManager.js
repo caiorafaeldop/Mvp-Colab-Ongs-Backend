@@ -3,7 +3,7 @@ const ISubject = require('../../domain/observers/ISubject');
 /**
  * Gerenciador central de eventos e observers
  * Implementa os padrões Observer (como Subject) e Mediator (coordenação centralizada)
- * 
+ *
  * MEDIATOR PATTERN:
  * - Coordena comunicação entre componentes sem que eles se conheçam
  * - Services emitem eventos sem conhecer observers
@@ -23,7 +23,7 @@ class EventManager extends ISubject {
    * @param {IObserver} observer - Observer a ser adicionado
    */
   addObserver(observer) {
-    if (!this.observers.find(obs => obs.getName() === observer.getName())) {
+    if (!this.observers.find((obs) => obs.getName() === observer.getName())) {
       this.observers.push(observer);
       console.log(`[EventManager] Observer adicionado: ${observer.getName()}`);
     }
@@ -34,7 +34,7 @@ class EventManager extends ISubject {
    * @param {IObserver} observer - Observer a ser removido
    */
   removeObserver(observer) {
-    const index = this.observers.findIndex(obs => obs.getName() === observer.getName());
+    const index = this.observers.findIndex((obs) => obs.getName() === observer.getName());
     if (index > -1) {
       this.observers.splice(index, 1);
       console.log(`[EventManager] Observer removido: ${observer.getName()}`);
@@ -46,7 +46,7 @@ class EventManager extends ISubject {
    * @param {string} observerName - Nome do observer
    */
   removeObserverByName(observerName) {
-    const index = this.observers.findIndex(obs => obs.getName() === observerName);
+    const index = this.observers.findIndex((obs) => obs.getName() === observerName);
     if (index > -1) {
       this.observers.splice(index, 1);
       console.log(`[EventManager] Observer removido: ${observerName}`);
@@ -65,7 +65,7 @@ class EventManager extends ISubject {
         ...event,
         id: this.generateEventId(),
         timestamp: new Date(),
-        context
+        context,
       };
 
       // Adiciona ao histórico
@@ -75,11 +75,13 @@ class EventManager extends ISubject {
 
       // Notifica observers relevantes em paralelo
       const notifications = this.observers
-        .filter(observer => observer.shouldHandle(enrichedEvent))
-        .map(async observer => {
+        .filter((observer) => observer.shouldHandle(enrichedEvent))
+        .map(async (observer) => {
           try {
             await observer.update(enrichedEvent, context);
-            console.log(`[EventManager] Observer ${observer.getName()} processou evento ${event.type}`);
+            console.log(
+              `[EventManager] Observer ${observer.getName()} processou evento ${event.type}`
+            );
           } catch (error) {
             console.error(`[EventManager] Erro no observer ${observer.getName()}:`, error.message);
           }
@@ -101,7 +103,7 @@ class EventManager extends ISubject {
     const event = {
       type: eventType,
       data,
-      source: context.source || 'system'
+      source: context.source || 'system',
     };
 
     await this.notifyObservers(event, context);
@@ -121,9 +123,7 @@ class EventManager extends ISubject {
    * @returns {Array<IObserver>} Lista de observers que escutam este evento
    */
   getObserversByEventType(eventType) {
-    return this.observers.filter(observer => 
-      observer.getEventTypes().includes(eventType)
-    );
+    return this.observers.filter((observer) => observer.getEventTypes().includes(eventType));
   }
 
   /**
@@ -144,11 +144,11 @@ class EventManager extends ISubject {
       totalEvents: this.eventHistory.length,
       observersCount: this.observers.length,
       eventTypes: {},
-      recentEvents: this.eventHistory.slice(-10)
+      recentEvents: this.eventHistory.slice(-10),
     };
 
     // Conta eventos por tipo
-    this.eventHistory.forEach(event => {
+    this.eventHistory.forEach((event) => {
       stats.eventTypes[event.type] = (stats.eventTypes[event.type] || 0) + 1;
     });
 
@@ -169,7 +169,7 @@ class EventManager extends ISubject {
    */
   addToHistory(event) {
     this.eventHistory.push(event);
-    
+
     // Mantém o tamanho do histórico limitado
     if (this.eventHistory.length > this.maxHistorySize) {
       this.eventHistory = this.eventHistory.slice(-this.maxHistorySize);
@@ -190,7 +190,7 @@ class EventManager extends ISubject {
    * @returns {boolean} True se estiver registrado
    */
   hasObserver(observerName) {
-    return this.observers.some(obs => obs.getName() === observerName);
+    return this.observers.some((obs) => obs.getName() === observerName);
   }
 }
 

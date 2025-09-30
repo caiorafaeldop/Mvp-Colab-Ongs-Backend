@@ -20,7 +20,7 @@ class ProxyFactory {
    */
   createServiceProxy(service, options = {}) {
     const serviceName = service.constructor.name;
-    
+
     if (this.proxiedObjects.has(serviceName)) {
       logger.debug(`[PROXY FACTORY] Reutilizando proxy: ${serviceName}`);
       return this.proxiedObjects.get(serviceName);
@@ -30,12 +30,12 @@ class ProxyFactory {
       enableLogging: process.env.NODE_ENV !== 'test',
       enableCache: false, // Cache desabilitado por padrão em services
       enableValidation: true,
-      enablePerformance: true
+      enablePerformance: true,
     };
 
     const proxy = ServiceProxy.create(service, { ...defaultOptions, ...options });
     this.proxiedObjects.set(serviceName, proxy);
-    
+
     logger.info(`[PROXY FACTORY] Service proxy criado: ${serviceName}`);
     return proxy;
   }
@@ -48,7 +48,7 @@ class ProxyFactory {
    */
   createRepositoryProxy(repository, options = {}) {
     const repoName = repository.constructor.name;
-    
+
     if (this.proxiedObjects.has(repoName)) {
       logger.debug(`[PROXY FACTORY] Reutilizando proxy: ${repoName}`);
       return this.proxiedObjects.get(repoName);
@@ -57,12 +57,12 @@ class ProxyFactory {
     const defaultOptions = {
       enableCache: true, // Cache habilitado por padrão em repositories
       cacheTTL: 600000, // 10 minutos
-      enableLogging: process.env.NODE_ENV !== 'test'
+      enableLogging: process.env.NODE_ENV !== 'test',
     };
 
     const proxy = RepositoryProxy.create(repository, { ...defaultOptions, ...options });
     this.proxiedObjects.set(repoName, proxy);
-    
+
     logger.info(`[PROXY FACTORY] Repository proxy criado: ${repoName}`);
     return proxy;
   }
@@ -91,7 +91,7 @@ class ProxyFactory {
   getStats() {
     return {
       totalProxies: this.proxiedObjects.size,
-      proxiedObjects: Array.from(this.proxiedObjects.keys())
+      proxiedObjects: Array.from(this.proxiedObjects.keys()),
     };
   }
 

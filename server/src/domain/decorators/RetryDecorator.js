@@ -1,6 +1,6 @@
 /**
  * DECORATOR PATTERN - RetryDecorator
- * 
+ *
  * Adiciona retry automático a serviços sem modificar o código original.
  * Perfeito para Mercado Pago e outras APIs externas que podem falhar temporariamente.
  */
@@ -24,7 +24,7 @@ class RetryDecorator {
       'ECONNREFUSED',
       'Network',
       '5', // Status codes 5xx
-      'timeout'
+      'timeout',
     ];
     this.name = service.constructor.name || 'Service';
 
@@ -34,7 +34,7 @@ class RetryDecorator {
       successOnFirstTry: 0,
       successAfterRetry: 0,
       totalFailures: 0,
-      retriesByMethod: {}
+      retriesByMethod: {},
     };
 
     logger.info(`[RETRY DECORATOR] ${this.name} decorado com retry (max: ${this.maxRetries})`);
@@ -45,7 +45,9 @@ class RetryDecorator {
    * @private
    */
   _isRetryableError(error) {
-    if (!error) return false;
+    if (!error) {
+      return false;
+    }
 
     const errorString = error.toString();
     const errorCode = error.code || '';
@@ -73,10 +75,10 @@ class RetryDecorator {
   _calculateDelay(attempt) {
     const baseDelay = this.retryDelay;
     const delay = baseDelay * Math.pow(this.backoffMultiplier, attempt - 1);
-    
+
     // Adicionar jitter (variação aleatória de ±25%)
     const jitter = delay * 0.25 * (Math.random() * 2 - 1);
-    
+
     return Math.floor(delay + jitter);
   }
 
@@ -85,7 +87,7 @@ class RetryDecorator {
    * @private
    */
   _sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -94,13 +96,13 @@ class RetryDecorator {
    */
   async _executeWithRetry(method, args, operation) {
     this.stats.totalCalls++;
-    
+
     // Inicializar estatísticas do método se não existir
     if (!this.stats.retriesByMethod[method]) {
       this.stats.retriesByMethod[method] = {
         calls: 0,
         retries: 0,
-        failures: 0
+        failures: 0,
       };
     }
     this.stats.retriesByMethod[method].calls++;
@@ -111,7 +113,7 @@ class RetryDecorator {
     while (attempt <= this.maxRetries) {
       try {
         const result = await operation();
-        
+
         // Sucesso!
         if (attempt === 0) {
           this.stats.successOnFirstTry++;
@@ -121,9 +123,8 @@ class RetryDecorator {
           this.stats.retriesByMethod[method].retries += attempt;
           logger.info(`[RETRY DECORATOR] ✅ ${method} sucesso após ${attempt} tentativas`);
         }
-        
-        return result;
 
+        return result;
       } catch (error) {
         lastError = error;
         attempt++;
@@ -132,23 +133,26 @@ class RetryDecorator {
         if (!this._isRetryableError(error) || attempt > this.maxRetries) {
           this.stats.totalFailures++;
           this.stats.retriesByMethod[method].failures++;
-          
+
           logger.error(`[RETRY DECORATOR] ❌ ${method} falhou após ${attempt - 1} tentativas`, {
             error: error.message,
-            retryable: this._isRetryableError(error)
+            retryable: this._isRetryableError(error),
           });
-          
+
           throw error;
         }
 
         // Calcular delay e aguardar
         const delay = this._calculateDelay(attempt);
-        
-        logger.warn(`[RETRY DECORATOR] ⚠️  ${method} falhou (tentativa ${attempt}/${this.maxRetries}), tentando novamente em ${delay}ms`, {
-          error: error.message,
-          errorCode: error.code,
-          statusCode: error.statusCode || error.status
-        });
+
+        logger.warn(
+          `[RETRY DECORATOR] ⚠️  ${method} falhou (tentativa ${attempt}/${this.maxRetries}), tentando novamente em ${delay}ms`,
+          {
+            error: error.message,
+            errorCode: error.code,
+            statusCode: error.statusCode || error.status,
+          }
+        );
 
         await this._sleep(delay);
       }
@@ -161,18 +165,24 @@ class RetryDecorator {
    * Retorna estatísticas de retry
    */
   getStats() {
-    const successRate = this.stats.totalCalls > 0 
-      ? (((this.stats.successOnFirstTry + this.stats.successAfterRetry) / this.stats.totalCalls) * 100).toFixed(2)
-      : 0;
+    const successRate =
+      this.stats.totalCalls > 0
+        ? (
+            ((this.stats.successOnFirstTry + this.stats.successAfterRetry) /
+              this.stats.totalCalls) *
+            100
+          ).toFixed(2)
+        : 0;
 
-    const retryRate = this.stats.totalCalls > 0
-      ? ((this.stats.successAfterRetry / this.stats.totalCalls) * 100).toFixed(2)
-      : 0;
+    const retryRate =
+      this.stats.totalCalls > 0
+        ? ((this.stats.successAfterRetry / this.stats.totalCalls) * 100).toFixed(2)
+        : 0;
 
     return {
       ...this.stats,
       successRate: `${successRate}%`,
-      retryRate: `${retryRate}%`
+      retryRate: `${retryRate}%`,
     };
   }
 
@@ -184,9 +194,7 @@ class RetryDecorator {
    * createPayment com retry
    */
   async createPayment(...args) {
-    return this._executeWithRetry('createPayment', args, () =>
-      this.service.createPayment(...args)
-    );
+    return this._executeWithRetry('createPayment', args, () => this.service.createPayment(...args));
   }
 
   /**
@@ -229,9 +237,7 @@ class RetryDecorator {
    * refundPayment com retry
    */
   async refundPayment(...args) {
-    return this._executeWithRetry('refundPayment', args, () =>
-      this.service.refundPayment(...args)
-    );
+    return this._executeWithRetry('refundPayment', args, () => this.service.refundPayment(...args));
   }
 }
 
@@ -251,21 +257,19 @@ const createRetryService = (service, options) => {
         return (...args) => {
           // Métodos que NÃO devem ter retry (apenas leitura, sem efeitos colaterais)
           const noRetryMethods = ['getConfig', 'getStats', 'validateWebhook'];
-          
+
           if (noRetryMethods.includes(prop)) {
             return target.service[prop](...args);
           }
 
           // Aplicar retry para outros métodos
-          return target._executeWithRetry(prop, args, () => 
-            target.service[prop](...args)
-          );
+          return target._executeWithRetry(prop, args, () => target.service[prop](...args));
         };
       }
 
       // Propriedades normais
       return target[prop];
-    }
+    },
   });
 };
 

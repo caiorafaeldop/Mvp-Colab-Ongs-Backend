@@ -1,34 +1,37 @@
 // Interface removida na limpeza
-const Notification = require("../../domain/entities/Notification");
-const mongoose = require("mongoose");
+const Notification = require('../../domain/entities/Notification');
+const mongoose = require('mongoose');
 
 // Schema do Notification
-const NotificationSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  title: { type: String, required: true },
-  message: { type: String, required: true },
-  type: { 
-    type: String, 
-    enum: ['info', 'success', 'warning', 'error', 'collaboration', 'system'],
-    default: 'info'
+const NotificationSchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ['info', 'success', 'warning', 'error', 'collaboration', 'system'],
+      default: 'info',
+    },
+    isRead: { type: Boolean, default: false },
+    readAt: { type: Date, default: null },
+    relatedEntityId: { type: String, default: null },
+    relatedEntityType: {
+      type: String,
+      enum: ['collaboration', 'user', 'product', 'file'],
+      default: null,
+    },
+    actionUrl: { type: String, default: null },
+    metadata: { type: Object, default: {} },
   },
-  isRead: { type: Boolean, default: false },
-  readAt: { type: Date, default: null },
-  relatedEntityId: { type: String, default: null },
-  relatedEntityType: { 
-    type: String, 
-    enum: ['collaboration', 'user', 'product', 'file'],
-    default: null
-  },
-  actionUrl: { type: String, default: null },
-  metadata: { type: Object, default: {} }
-}, {
-  timestamps: true
-});
+  {
+    timestamps: true,
+  }
+);
 
 const NotificationModel = mongoose.model('Notification', NotificationSchema);
 
-class MongoNotificationRepository  {
+class MongoNotificationRepository {
   async save(notification) {
     try {
       const notificationData = {
@@ -41,7 +44,7 @@ class MongoNotificationRepository  {
         relatedEntityId: notification.relatedEntityId,
         relatedEntityType: notification.relatedEntityType,
         actionUrl: notification.actionUrl,
-        metadata: notification.metadata
+        metadata: notification.metadata,
       };
 
       const savedNotification = await NotificationModel.create(notificationData);
@@ -63,7 +66,7 @@ class MongoNotificationRepository  {
   async findByUserId(userId) {
     try {
       const notifications = await NotificationModel.find({ userId }).sort({ createdAt: -1 });
-      return notifications.map(notif => this._mapToEntity(notif));
+      return notifications.map((notif) => this._mapToEntity(notif));
     } catch (error) {
       throw new Error(`Error finding notifications by user: ${error.message}`);
     }
@@ -72,7 +75,7 @@ class MongoNotificationRepository  {
   async findByType(type) {
     try {
       const notifications = await NotificationModel.find({ type }).sort({ createdAt: -1 });
-      return notifications.map(notif => this._mapToEntity(notif));
+      return notifications.map((notif) => this._mapToEntity(notif));
     } catch (error) {
       throw new Error(`Error finding notifications by type: ${error.message}`);
     }
@@ -80,11 +83,11 @@ class MongoNotificationRepository  {
 
   async findUnreadByUserId(userId) {
     try {
-      const notifications = await NotificationModel.find({ 
-        userId, 
-        isRead: false 
+      const notifications = await NotificationModel.find({
+        userId,
+        isRead: false,
       }).sort({ createdAt: -1 });
-      return notifications.map(notif => this._mapToEntity(notif));
+      return notifications.map((notif) => this._mapToEntity(notif));
     } catch (error) {
       throw new Error(`Error finding unread notifications: ${error.message}`);
     }
@@ -94,9 +97,9 @@ class MongoNotificationRepository  {
     try {
       const updatedNotification = await NotificationModel.findByIdAndUpdate(
         id,
-        { 
-          isRead: true, 
-          readAt: new Date() 
+        {
+          isRead: true,
+          readAt: new Date(),
         },
         { new: true }
       );
@@ -110,9 +113,9 @@ class MongoNotificationRepository  {
     try {
       const result = await NotificationModel.updateMany(
         { userId, isRead: false },
-        { 
-          isRead: true, 
-          readAt: new Date() 
+        {
+          isRead: true,
+          readAt: new Date(),
         }
       );
       return result.modifiedCount;
@@ -146,7 +149,7 @@ class MongoNotificationRepository  {
   async findAll() {
     try {
       const notifications = await NotificationModel.find().sort({ createdAt: -1 });
-      return notifications.map(notif => this._mapToEntity(notif));
+      return notifications.map((notif) => this._mapToEntity(notif));
     } catch (error) {
       throw new Error(`Error finding all notifications: ${error.message}`);
     }
@@ -157,10 +160,10 @@ class MongoNotificationRepository  {
       const notifications = await NotificationModel.find({
         createdAt: {
           $gte: startDate,
-          $lte: endDate
-        }
+          $lte: endDate,
+        },
       }).sort({ createdAt: -1 });
-      return notifications.map(notif => this._mapToEntity(notif));
+      return notifications.map((notif) => this._mapToEntity(notif));
     } catch (error) {
       throw new Error(`Error finding notifications by date range: ${error.message}`);
     }

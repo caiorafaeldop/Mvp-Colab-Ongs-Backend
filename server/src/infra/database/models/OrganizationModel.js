@@ -4,43 +4,46 @@
 
 const mongoose = require('mongoose');
 
-const organizationSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
+const organizationSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    description: {
+      type: String,
+    },
+    type: {
+      type: String,
+      enum: ['matrix', 'branch', 'independent'],
+      default: 'independent',
+    },
+    // Composite Pattern - Hierarchy
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Organization',
+      default: null,
+    },
+    // Metadata
+    adminUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  description: {
-    type: String
-  },
-  type: {
-    type: String,
-    enum: ['matrix', 'branch', 'independent'],
-    default: 'independent'
-  },
-  // Composite Pattern - Hierarchy
-  parentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Organization',
-    default: null
-  },
-  // Metadata
-  adminUserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  metadata: {
-    type: mongoose.Schema.Types.Mixed,
-    default: {}
+  {
+    timestamps: true,
+    collection: 'organizations',
   }
-}, {
-  timestamps: true,
-  collection: 'organizations'
-});
+);
 
 // Indexes para performance
 organizationSchema.index({ parentId: 1 });
