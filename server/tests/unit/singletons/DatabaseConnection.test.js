@@ -11,6 +11,11 @@ describe('DatabaseConnection Singleton', () => {
     await DatabaseConnection.destroyInstance();
   });
 
+  afterAll(async () => {
+    // Limpeza final
+    await DatabaseConnection.destroyInstance();
+  });
+
   describe('Singleton Pattern', () => {
     it('deve criar apenas uma instância', () => {
       const instance1 = DatabaseConnection.getInstance();

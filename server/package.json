@@ -6,8 +6,15 @@
   "scripts": {
     "start": "node src/main/server.js",
     "dev": "node src/main/server.js",
-    "test": "node tests/test-api.js",
-    "test:singletons": "node scripts/verify-singleton-usage.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:singletons": "jest tests/unit/singletons",
+    "test:singletons:watch": "jest tests/unit/singletons --watch",
+    "test:api": "node tests/test-api.js",
+    "verify:singletons": "node scripts/verify-singleton-usage.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -59,6 +66,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
     "prettier": "^3.6.2",
     "supertest": "^7.1.4"
   }

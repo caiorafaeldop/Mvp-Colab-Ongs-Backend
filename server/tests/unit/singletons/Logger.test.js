@@ -3,9 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 describe('Logger Singleton', () => {
-  const testLogDir = 'logs-test';
-  
   beforeEach(() => {
+    // Limpar instância antes de cada teste
     Logger.destroyInstance();
     
     // Configurar ambiente de teste
@@ -15,6 +14,7 @@ describe('Logger Singleton', () => {
   });
 
   afterEach(() => {
+    // Limpar instância após cada teste
     Logger.destroyInstance();
     
     // Limpar logs de teste
@@ -26,6 +26,14 @@ describe('Logger Singleton', () => {
     delete process.env.LOG_DIR;
     delete process.env.LOG_FILE;
     delete process.env.LOG_LEVEL;
+  });
+
+  afterAll(() => {
+    // Limpeza final
+    Logger.destroyInstance();
+    if (fs.existsSync(testLogDir)) {
+      fs.rmSync(testLogDir, { recursive: true, force: true });
+    }
   });
 
   describe('Singleton Pattern', () => {

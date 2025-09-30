@@ -2,10 +2,17 @@ const PrismaService = require('../../../src/infra/singletons/PrismaService');
 
 describe('PrismaService Singleton', () => {
   beforeEach(async () => {
+    // Limpar instância antes de cada teste
     await PrismaService.destroyInstance();
   });
 
   afterEach(async () => {
+    // Limpar instância após cada teste
+    await PrismaService.destroyInstance();
+  });
+
+  afterAll(async () => {
+    // Limpeza final
     await PrismaService.destroyInstance();
   });
 

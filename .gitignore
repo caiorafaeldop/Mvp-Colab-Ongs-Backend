@@ -1,5 +1,9 @@
 client 
 
+Jest - Arquivos de teste e cobertura
+coverage/
+*.log
+.jest-cache/
 
 tcc caio escrito/03_resumo.txt
 tcc caio escrito/04_capitulo1_introducao.txt

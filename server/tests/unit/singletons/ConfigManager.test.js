@@ -4,13 +4,20 @@ describe('ConfigManager Singleton', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
+    // Limpar instância antes de cada teste
     ConfigManager.destroyInstance();
     process.env = { ...originalEnv };
   });
 
   afterEach(() => {
+    // Limpar instância após cada teste
     ConfigManager.destroyInstance();
     process.env = { ...originalEnv };
+  });
+
+  afterAll(() => {
+    // Limpeza final
+    ConfigManager.destroyInstance();
   });
 
   describe('Singleton Pattern', () => {
