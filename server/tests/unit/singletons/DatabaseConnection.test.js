@@ -78,7 +78,7 @@ describe('DatabaseConnection Singleton', () => {
         // Ignorar erro de conexão em ambiente de teste
       }
     });
-
+// testando husky
     it('deve manter independência entre instâncias destruídas', async () => {
       const instance1 = DatabaseConnection.getInstance();
       instance1.connectionString = 'test-string-1';
