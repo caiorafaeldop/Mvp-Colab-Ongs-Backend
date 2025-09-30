@@ -1,6 +1,10 @@
 client 
 
-Jest - Arquivos de teste e cobertura
+# Node
+node_modules/
+package-lock.json
+
+# Jest - Arquivos de teste e cobertura
 coverage/
 *.log
 .jest-cache/

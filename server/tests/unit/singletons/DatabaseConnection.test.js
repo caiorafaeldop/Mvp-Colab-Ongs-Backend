@@ -20,14 +20,14 @@ describe('DatabaseConnection Singleton', () => {
     it('deve criar apenas uma instância', () => {
       const instance1 = DatabaseConnection.getInstance();
       const instance2 = DatabaseConnection.getInstance();
-      
+
       expect(instance1).toBe(instance2);
       expect(instance1).toBeInstanceOf(DatabaseConnection);
     });
 
     it('deve verificar se instância existe', () => {
       expect(DatabaseConnection.hasInstance()).toBe(false);
-      
+
       DatabaseConnection.getInstance();
       expect(DatabaseConnection.hasInstance()).toBe(true);
     });
@@ -35,7 +35,7 @@ describe('DatabaseConnection Singleton', () => {
     it('deve destruir instância corretamente', async () => {
       const instance = DatabaseConnection.getInstance();
       expect(DatabaseConnection.hasInstance()).toBe(true);
-      
+
       await DatabaseConnection.destroyInstance();
       expect(DatabaseConnection.hasInstance()).toBe(false);
     });
@@ -45,12 +45,12 @@ describe('DatabaseConnection Singleton', () => {
     it('deve criar nova instância após destruição', async () => {
       const instance1 = DatabaseConnection.getInstance();
       const id1 = instance1.constructor.name;
-      
+
       await DatabaseConnection.destroyInstance();
-      
+
       const instance2 = DatabaseConnection.getInstance();
       const id2 = instance2.constructor.name;
-      
+
       expect(id1).toBe(id2);
       expect(instance1).not.toBe(instance2);
       expect(DatabaseConnection.hasInstance()).toBe(true);
@@ -58,19 +58,19 @@ describe('DatabaseConnection Singleton', () => {
 
     it('deve reconectar após desconexão', async () => {
       const instance = DatabaseConnection.getInstance();
-      
+
       // Simular conexão
       const mockUri = 'mongodb://localhost:27017/test-db';
-      
+
       try {
         await instance.connect(mockUri);
       } catch (error) {
         // Ignorar erro de conexão em ambiente de teste
       }
-      
+
       await instance.disconnect();
       expect(instance.isConnected).toBe(false);
-      
+
       // Verificar que pode reconectar
       try {
         await instance.connect(mockUri);
@@ -78,13 +78,13 @@ describe('DatabaseConnection Singleton', () => {
         // Ignorar erro de conexão em ambiente de teste
       }
     });
-// testando husky
+    // testando husky 2
     it('deve manter independência entre instâncias destruídas', async () => {
       const instance1 = DatabaseConnection.getInstance();
       instance1.connectionString = 'test-string-1';
-      
+
       await DatabaseConnection.destroyInstance();
-      
+
       const instance2 = DatabaseConnection.getInstance();
       expect(instance2.connectionString).toBeNull();
       expect(instance2.connectionString).not.toBe('test-string-1');
@@ -93,25 +93,25 @@ describe('DatabaseConnection Singleton', () => {
 
   describe('Thread Safety e Concorrência', () => {
     it('deve manter instância única em chamadas concorrentes', async () => {
-      const promises = Array(10).fill(null).map(() => 
-        Promise.resolve(DatabaseConnection.getInstance())
-      );
-      
+      const promises = Array(10)
+        .fill(null)
+        .map(() => Promise.resolve(DatabaseConnection.getInstance()));
+
       const instances = await Promise.all(promises);
       const firstInstance = instances[0];
-      
-      instances.forEach(instance => {
+
+      instances.forEach((instance) => {
         expect(instance).toBe(firstInstance);
       });
     });
 
     it('deve gerenciar múltiplas destruições concorrentes', async () => {
       DatabaseConnection.getInstance();
-      
-      const destroyPromises = Array(5).fill(null).map(() => 
-        DatabaseConnection.destroyInstance()
-      );
-      
+
+      const destroyPromises = Array(5)
+        .fill(null)
+        .map(() => DatabaseConnection.destroyInstance());
+
       await Promise.all(destroyPromises);
       expect(DatabaseConnection.hasInstance()).toBe(false);
     });
@@ -121,7 +121,7 @@ describe('DatabaseConnection Singleton', () => {
     it('deve retornar status correto da conexão', () => {
       const instance = DatabaseConnection.getInstance();
       const status = instance.getStatus();
-      
+
       expect(status).toHaveProperty('isConnected');
       expect(status).toHaveProperty('readyState');
       expect(typeof status.isConnected).toBe('boolean');
@@ -130,14 +130,14 @@ describe('DatabaseConnection Singleton', () => {
     it('deve fazer ping quando desconectado', async () => {
       const instance = DatabaseConnection.getInstance();
       const result = await instance.ping();
-      
+
       expect(typeof result).toBe('boolean');
     });
 
     it('deve retornar estatísticas quando desconectado', async () => {
       const instance = DatabaseConnection.getInstance();
       const stats = await instance.getStats();
-      
+
       expect(stats).toBeDefined();
       expect(stats.error || stats.database).toBeDefined();
     });
@@ -146,7 +146,7 @@ describe('DatabaseConnection Singleton', () => {
   describe('Configurações e Options', () => {
     it('deve usar opções padrão', () => {
       const instance = DatabaseConnection.getInstance();
-      
+
       expect(instance.options).toBeDefined();
       expect(instance.options.maxPoolSize).toBe(10);
       expect(instance.options.useNewUrlParser).toBe(true);
@@ -155,7 +155,7 @@ describe('DatabaseConnection Singleton', () => {
     it('deve aceitar opções customizadas', async () => {
       const instance = DatabaseConnection.getInstance();
       const customOptions = { maxPoolSize: 20 };
-      
+
       try {
         await instance.connect('mongodb://localhost:27017/test', customOptions);
       } catch (error) {
@@ -167,13 +167,13 @@ describe('DatabaseConnection Singleton', () => {
   describe('Event Listeners', () => {
     it('deve configurar event listeners após conexão', async () => {
       const instance = DatabaseConnection.getInstance();
-      
+
       try {
         await instance.connect('mongodb://localhost:27017/test');
       } catch (error) {
         // Ignorar erro de conexão
       }
-      
+
       // Verificar que setupEventListeners foi chamado
       expect(instance.setupEventListeners).toBeDefined();
     });
@@ -183,9 +183,9 @@ describe('DatabaseConnection Singleton', () => {
     it('deve limpar recursos ao destruir', async () => {
       const instance = DatabaseConnection.getInstance();
       instance.connectionString = 'test-string';
-      
+
       await DatabaseConnection.destroyInstance();
-      
+
       // Verificar que não há referência à instância antiga
       const newInstance = DatabaseConnection.getInstance();
       expect(newInstance.connectionString).toBeNull();
@@ -195,7 +195,7 @@ describe('DatabaseConnection Singleton', () => {
       for (let i = 0; i < 5; i++) {
         const instance = DatabaseConnection.getInstance();
         expect(instance).toBeInstanceOf(DatabaseConnection);
-        
+
         await DatabaseConnection.destroyInstance();
         expect(DatabaseConnection.hasInstance()).toBe(false);
       }

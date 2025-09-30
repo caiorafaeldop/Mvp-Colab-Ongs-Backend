@@ -1,0 +1,20 @@
+{
+  "name": "mvp-colab-ongs-backend",
+  "version": "1.0.0",
+  "description": "Backend para colaboração entre ONGs",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "server": "cd server && npm start",
+    "server:dev": "cd server && npm run dev",
+    "server:test": "cd server && npm test",
+    "server:lint": "cd server && npm run lint",
+    "server:lint:fix": "cd server && npm run lint:fix"
+  },
+  "devDependencies": {
+    "husky": "^9.0.0"
+  },
+  "keywords": ["ongs", "backend", "nodejs", "mongodb", "collaboration"],
+  "author": "Caio Rafael",
+  "license": "MIT"
+}

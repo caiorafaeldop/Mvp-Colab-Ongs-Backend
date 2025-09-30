@@ -2,6 +2,8 @@
  * Interface para Notification Bridges
  * Define operações que um bridge de notificação deve expor
  */
+
+// teste do husky
 class INotificationBridge {
   /**
    * Envia notificação

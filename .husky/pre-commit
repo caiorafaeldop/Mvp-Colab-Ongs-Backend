@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🐕 Husky: Validando código antes do commit..."
+echo ""
+
+# Verificar se há mudanças no diretório server
+if git diff --cached --name-only | grep -q "^server/"; then
+  echo "📁 Mudanças detectadas em /server"
+  echo ""
+  
+  cd server
+  
+  # 1. Lint-staged (Prettier + ESLint nos arquivos staged)
+  echo "📝 Rodando formatação e lint..."
+  npx lint-staged
+  
+  # 2. Verificar uso correto de Singletons
+  echo ""
+  echo "🔍 Verificando padrões de Singleton..."
+  npm run verify:singletons
+  
+  # 3. Rodar testes rápidos (apenas Singletons)
+  echo ""
+  echo "🧪 Rodando testes dos Singletons..."
+  npm run test:singletons -- --bail --maxWorkers=2
+  
+  cd ..
+  
+  echo ""
+  echo "✅ Todas as validações do /server passaram!"
+else
+  echo "ℹ️  Nenhuma mudança em /server detectada"
+fi
+
+echo ""
+echo "✅ Commit autorizado!"
