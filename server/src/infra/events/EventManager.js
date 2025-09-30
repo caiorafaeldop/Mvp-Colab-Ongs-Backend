@@ -2,7 +2,13 @@ const ISubject = require('../../domain/observers/ISubject');
 
 /**
  * Gerenciador central de eventos e observers
- * Implementa o padrão Observer como Subject principal
+ * Implementa os padrões Observer (como Subject) e Mediator (coordenação centralizada)
+ * 
+ * MEDIATOR PATTERN:
+ * - Coordena comunicação entre componentes sem que eles se conheçam
+ * - Services emitem eventos sem conhecer observers
+ * - Observers processam eventos sem conhecer emissores
+ * - Reduz acoplamento many-to-many para one-to-mediator
  */
 class EventManager extends ISubject {
   constructor() {

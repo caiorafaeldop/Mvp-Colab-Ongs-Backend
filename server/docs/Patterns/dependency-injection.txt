@@ -1,0 +1,115 @@
+RESUMO ATUAL (2025-09-30) • Nota: 10/10
+Como está sendo usado:
+- DependencyInjectionContainer em src/main/core/ para gerenciar todas as dependências.
+- Constructor Injection em todos os Services (ProductService, DonationService, AuthService).
+- ServiceFactory e AppFactory injetam dependencies automaticamente via registerDependencies().
+- Repositories recebem dependências via constructor (UserRepository, ProductRepository, etc).
+- Facilita testes unitários com mock injection.
+- Desacopla criação de uso de objetos.
+
+Implementações realizadas:
+✅ DependencyInjectionContainer centralizado com singleton global
+✅ Constructor Injection em Services (recebem repositories via construtor)
+✅ Factory Injection via ServiceFactory.registerDependencies()
+✅ Singleton Management para componentes únicos (EventManager, PrismaService)
+✅ Method Injection via setter methods quando necessário
+✅ Scope management para testes isolados
+✅ Auto-wiring de dependências via AppFactory
+
+Evidências no código:
+- src/main/core/DependencyInjectionContainer.js - Container principal com métodos register/resolve
+- src/main/factories/ServiceFactory.js - registerDependencies(), injeção via constructor
+- src/main/factories/AppFactory.js - Orquestra todas as dependências do sistema
+- src/application/services/ProductService.js - constructor(productRepository, userRepository)
+- src/application/services/DonationService.js - constructor(donationRepository, userRepository, paymentAdapter)
+- src/infra/services/EnhancedJwtAuthService.js - constructor(userRepository, jwtSecret, jwtRefreshSecret)
+- src/infra/observers/* - Observers recebem dependências via constructor se necessário
+
+Tipos de Injeção implementados:
+1. Constructor Injection (mais comum):
+   - Services recebem repositories no construtor
+   - Dependências obrigatórias e imutáveis
+   - Exemplo: new ProductService(productRepo, userRepo)
+
+2. Factory Injection:
+   - ServiceFactory cria services com dependências corretas
+   - AppFactory coordena toda a injeção
+   - Exemplo: serviceFactory.createProductService()
+
+3. Singleton Injection:
+   - EventManager, PrismaService como singletons
+   - Container gerencia lifecycle
+   - Exemplo: getInstance() retorna sempre mesma instância
+
+4. Method/Setter Injection:
+   - ObserverFactory.setEventManager()
+   - Dependências opcionais ou mutáveis
+   - Exemplo: observerFactory.setEventManager(eventManager)
+
+Benefícios alcançados:
+✅ Desacoplamento total entre criação e uso
+✅ Facilita testes unitários (mock injection)
+✅ Configuração centralizada de dependências
+✅ Lifecycle management automático
+✅ Código mais limpo e manutenível
+✅ Facilita substituição de implementações
+✅ Reduz acoplamento entre camadas
+
+Integração com outros patterns:
+- Factory Pattern: Factories usam DI para criar componentes
+- Singleton Pattern: Singletons gerenciados pelo container
+- Repository Pattern: Repositories injetados em Services
+- Observer Pattern: EventManager injetado via DI
+- Adapter Pattern: Adapters injetados em Services
+
+Exemplo de uso:
+```javascript
+// Registro de dependências
+const container = getContainer();
+container.registerSingleton('eventManager', eventManager);
+container.registerFactory('productService', (c) => {
+  return new ProductService(
+    c.resolve('productRepository'),
+    c.resolve('userRepository')
+  );
+});
+
+// Resolução automática
+const productService = container.resolve('productService');
+
+// Constructor Injection
+class ProductService {
+  constructor(productRepository, userRepository) {
+    this.productRepository = productRepository; // Injetado
+    this.userRepository = userRepository;       // Injetado
+  }
+}
+```
+
+Fluxo de DI no projeto:
+1. AppFactory.initialize() registra todas as dependências
+2. RepositoryFactory cria repositories (UserRepo, ProductRepo, etc)
+3. ServiceFactory recebe repositories via registerDependencies()
+4. Services são criados com dependências injetadas
+5. Controllers recebem services já configurados
+6. Middlewares recebem services necessários
+
+PADRÃO DEPENDENCY INJECTION (Criacional) - IMPLEMENTADO COMPLETO ✅✅✅
+
+CONTEXTO NO PROJETO:
+Sistema de marketplace de ONGs com Clean Architecture onde todas as camadas são desacopladas via DI.
+Services, Repositories, Adapters, Observers - todos recebem dependências via injeção.
+
+APLICAÇÕES PRÁTICAS:
+1. Services recebem repositories
+2. Controllers recebem services
+3. Observers recebem EventManager
+4. Adapters recebem configurações
+5. Testes recebem mocks
+
+IMPACTO NO TCC:
+- Demonstra arquitetura profissional
+- Clean Architecture real
+- Testabilidade alta
+- SOLID principles aplicados
+- Inversão de dependências (SOLID - D)
