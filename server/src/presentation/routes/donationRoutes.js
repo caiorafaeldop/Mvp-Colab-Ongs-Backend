@@ -238,6 +238,60 @@ const createDonationRoutes = (donationService, authService) => {
     donationController.createSingleDonation
   );
 
+  // ==========================================
+  // NOVAS ROTAS COM TEMPLATE METHOD PATTERN
+  // ==========================================
+
+  /**
+   * @swagger
+   * /api/donations/single-template:
+   *   post:
+   *     tags: [Donations - Template Method]
+   *     summary: Criar doação única usando Template Method
+   *     description: Versão mais robusta com logs estruturados e validações padronizadas
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SingleDonationRequest'
+   *     responses:
+   *       201:
+   *         description: Doação criada com sucesso usando Template Method
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Doação única criada com sucesso usando Template Method"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     templateUsed:
+   *                       type: boolean
+   *                       example: true
+   *                     donationId:
+   *                       type: string
+   *                     paymentUrl:
+   *                       type: string
+   *                     mercadoPagoId:
+   *                       type: string
+   *                     amount:
+   *                       type: number
+   *                     organizationName:
+   *                       type: string
+   */
+  router.post("/single-template", 
+    validateBody(singleDonationSchema),
+    ...DonationChainFactory.createDonationChain(),
+    donationController.createSingleDonationWithTemplate
+  );
+
   /**
    * @swagger
    * /api/donations/recurring:
@@ -298,6 +352,58 @@ const createDonationRoutes = (donationService, authService) => {
     validateBody(recurringDonationSchema),
     ...DonationChainFactory.createRecurringDonationChain(),
     donationController.createRecurringDonation
+  );
+
+  /**
+   * @swagger
+   * /api/donations/recurring-template:
+   *   post:
+   *     tags: [Donations - Template Method]
+   *     summary: Criar doação recorrente usando Template Method
+   *     description: Versão mais robusta com logs estruturados e validações padronizadas
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/RecurringDonationRequest'
+   *     responses:
+   *       201:
+   *         description: Doação recorrente criada com sucesso usando Template Method
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Doação recorrente criada com sucesso usando Template Method"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     templateUsed:
+   *                       type: boolean
+   *                       example: true
+   *                     donationId:
+   *                       type: string
+   *                     subscriptionUrl:
+   *                       type: string
+   *                     subscriptionId:
+   *                       type: string
+   *                     amount:
+   *                       type: number
+   *                     frequency:
+   *                       type: string
+   *                     organizationName:
+   *                       type: string
+   */
+  router.post("/recurring-template", 
+    validateBody(recurringDonationSchema),
+    ...DonationChainFactory.createRecurringDonationChain(),
+    donationController.createRecurringDonationWithTemplate
   );
 
   /**
@@ -652,6 +758,99 @@ const createDonationRoutes = (donationService, authService) => {
      *                       example: 10
      */
     router.get("/organization/:organizationId/statistics", auth, donationController.getDonationStatistics);
+
+    /**
+     * @swagger
+     * /api/donations/organization/{organizationId}/report:
+     *   get:
+     *     tags: [Donations - Template Method]
+     *     summary: Gerar relatório de doações usando Template Method
+     *     description: Gera relatório detalhado com estatísticas e agrupamentos (requer autenticação)
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: organizationId
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: ID da organização
+     *       - in: query
+     *         name: startDate
+     *         schema:
+     *           type: string
+     *           format: date
+     *         description: Data inicial (YYYY-MM-DD)
+     *       - in: query
+     *         name: endDate
+     *         schema:
+     *           type: string
+     *           format: date
+     *         description: Data final (YYYY-MM-DD)
+     *       - in: query
+     *         name: groupBy
+     *         schema:
+     *           type: string
+     *           enum: [day, week, month]
+     *           default: day
+     *         description: Agrupamento temporal
+     *       - in: query
+     *         name: format
+     *         schema:
+     *           type: string
+     *           enum: [json, detailed]
+     *           default: json
+     *         description: Formato do relatório
+     *       - in: query
+     *         name: status
+     *         schema:
+     *           type: string
+     *           enum: [pending, approved, rejected]
+     *         description: Filtrar por status
+     *       - in: query
+     *         name: type
+     *         schema:
+     *           type: string
+     *           enum: [single, recurring]
+     *         description: Filtrar por tipo
+     *     responses:
+     *       200:
+     *         description: Relatório gerado com sucesso
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *                   example: true
+     *                 message:
+     *                   type: string
+     *                   example: "Relatório gerado com sucesso usando Template Method"
+     *                 data:
+     *                   type: object
+     *                   properties:
+     *                     summary:
+     *                       type: object
+     *                       properties:
+     *                         statistics:
+     *                           type: object
+     *                           properties:
+     *                             totalDonations:
+     *                               type: integer
+     *                             totalAmount:
+     *                               type: number
+     *                             averageAmount:
+     *                               type: number
+     *                     timeline:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                 templateUsed:
+     *                   type: boolean
+     *                   example: true
+     */
+    router.get("/organization/:organizationId/report", auth, donationController.generateDonationReport);
   }
 
   return router;

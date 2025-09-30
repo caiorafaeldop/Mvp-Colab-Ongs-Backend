@@ -16,6 +16,11 @@ class DonationController {
     this.cancelRecurringDonation = this.cancelRecurringDonation.bind(this);
     this.getDonationStatistics = this.getDonationStatistics.bind(this);
     
+    // Novos métodos com Template Method
+    this.createSingleDonationWithTemplate = this.createSingleDonationWithTemplate.bind(this);
+    this.createRecurringDonationWithTemplate = this.createRecurringDonationWithTemplate.bind(this);
+    this.generateDonationReport = this.generateDonationReport.bind(this);
+    
     console.log('[DONATION CONTROLLER] Inicializado com sucesso');
   }
 
@@ -435,6 +440,155 @@ class DonationController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter estatísticas'
+      });
+    }
+  }
+
+  // ==========================================
+  // NOVOS MÉTODOS COM TEMPLATE METHOD PATTERN
+  // ==========================================
+
+  /**
+   * Cria uma doação única usando Template Method
+   * POST /api/donations/single-template
+   */
+  async createSingleDonationWithTemplate(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Criando doação única com Template Method:', req.body);
+
+      // Usar dados do middleware de validação ou body direto
+      const donationData = req.donationData || req.validatedBody || req.body;
+      
+      // Adicionar contexto da requisição
+      const options = {
+        logger: req.logger,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        requestId: req.requestId
+      };
+
+      const result = await this.donationService.createSingleDonationWithTemplate(donationData, options);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Doação única criada com sucesso usando Template Method',
+        data: {
+          donationId: result.donation.id || result.donation._id,
+          paymentUrl: result.paymentUrl,
+          mercadoPagoId: result.mercadoPagoId,
+          amount: result.amount,
+          organizationName: result.organizationName,
+          templateUsed: result.templateUsed
+        }
+      });
+
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao criar doação única com template:', error);
+      
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor',
+        error: 'DONATION_TEMPLATE_ERROR',
+        requestId: req.requestId
+      });
+    }
+  }
+
+  /**
+   * Cria uma doação recorrente usando Template Method
+   * POST /api/donations/recurring-template
+   */
+  async createRecurringDonationWithTemplate(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Criando doação recorrente com Template Method:', req.body);
+
+      // Usar dados do middleware de validação ou body direto
+      const donationData = req.donationData || req.validatedBody || req.body;
+      
+      // Adicionar contexto da requisição
+      const options = {
+        logger: req.logger,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        requestId: req.requestId
+      };
+
+      const result = await this.donationService.createRecurringDonationWithTemplate(donationData, options);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Doação recorrente criada com sucesso usando Template Method',
+        data: {
+          donationId: result.donation.id || result.donation._id,
+          subscriptionUrl: result.subscriptionUrl,
+          subscriptionId: result.subscriptionId,
+          amount: result.amount,
+          frequency: result.frequency,
+          organizationName: result.organizationName,
+          templateUsed: result.templateUsed
+        }
+      });
+
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao criar doação recorrente com template:', error);
+      
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor',
+        error: 'RECURRING_DONATION_TEMPLATE_ERROR',
+        requestId: req.requestId
+      });
+    }
+  }
+
+  /**
+   * Gera relatório de doações usando Template Method
+   * GET /api/donations/organization/:organizationId/report
+   */
+  async generateDonationReport(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Gerando relatório com Template Method:', req.params, req.query);
+
+      const { organizationId } = req.params;
+      const { startDate, endDate, format = 'json', groupBy = 'day' } = req.query;
+
+      const reportParams = {
+        organizationId,
+        startDate,
+        endDate,
+        groupBy,
+        filters: {
+          status: req.query.status,
+          type: req.query.type,
+          minAmount: req.query.minAmount ? parseFloat(req.query.minAmount) : undefined,
+          maxAmount: req.query.maxAmount ? parseFloat(req.query.maxAmount) : undefined
+        }
+      };
+
+      const options = {
+        format,
+        logger: req.logger,
+        requestId: req.requestId
+      };
+
+      const result = await this.donationService.generateDonationReportWithTemplate(reportParams, options);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Relatório gerado com sucesso usando Template Method',
+        data: result.report,
+        metadata: result.metadata,
+        templateUsed: result.templateUsed
+      });
+
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao gerar relatório com template:', error);
+      
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor',
+        error: 'REPORT_TEMPLATE_ERROR',
+        requestId: req.requestId
       });
     }
   }

@@ -3,6 +3,8 @@
  * Implementa regras de negócio para doações via Mercado Pago
  */
 const PaymentState = require('../../domain/state/PaymentState');
+const { TemplateExamples } = require('../templates');
+const { logger } = require('../../infra/logger');
 
 class DonationService {
   constructor(donationRepository, userRepository, paymentAdapter) {
@@ -371,6 +373,147 @@ class DonationService {
 
   mapMercadoPagoStatus(mpStatus) {
     return PaymentState.fromMercadoPago(mpStatus).toDomain();
+  }
+
+  // ==========================================
+  // NOVOS MÉTODOS COM TEMPLATE METHOD PATTERN
+  // ==========================================
+
+  /**
+   * Cria uma doação única usando Template Method
+   * Versão mais robusta com logs estruturados e validações padronizadas
+   */
+  async createSingleDonationWithTemplate(donationData, options = {}) {
+    try {
+      logger.info('[DONATION SERVICE] Criando doação única com Template Method', {
+        organizationId: donationData.organizationId,
+        amount: donationData.amount,
+        method: 'template'
+      });
+      
+      // Usar template para processar doação
+      const result = await TemplateExamples.processDonation(
+        donationData,
+        'single',
+        {
+          donationRepository: this.donationRepository,
+          userRepository: this.userRepository,
+          paymentAdapter: this.paymentAdapter,
+          logger: options.logger || logger,
+          ...options
+        }
+      );
+      
+      // Adaptar resultado para interface compatível com método original
+      return {
+        donation: result.data.donation,
+        paymentUrl: result.data.payment.paymentUrl,
+        mercadoPagoId: result.data.payment.id,
+        amount: result.data.donation.amount,
+        organizationName: result.data.donation.organizationName,
+        templateUsed: true // Flag para identificar que usou template
+      };
+      
+    } catch (error) {
+      logger.error('[DONATION SERVICE] Erro ao criar doação única com template', {
+        error: error.message,
+        organizationId: donationData.organizationId,
+        amount: donationData.amount,
+        method: 'template'
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Cria uma doação recorrente usando Template Method
+   * Versão mais robusta com logs estruturados e validações padronizadas
+   */
+  async createRecurringDonationWithTemplate(donationData, options = {}) {
+    try {
+      logger.info('[DONATION SERVICE] Criando doação recorrente com Template Method', {
+        organizationId: donationData.organizationId,
+        amount: donationData.amount,
+        frequency: donationData.frequency,
+        method: 'template'
+      });
+      
+      // Usar template para processar doação recorrente
+      const result = await TemplateExamples.processDonation(
+        donationData,
+        'recurring',
+        {
+          donationRepository: this.donationRepository,
+          userRepository: this.userRepository,
+          paymentAdapter: this.paymentAdapter,
+          logger: options.logger || logger,
+          ...options
+        }
+      );
+      
+      // Adaptar resultado para interface compatível com método original
+      return {
+        donation: result.data.donation,
+        subscriptionUrl: result.data.payment.subscriptionUrl,
+        subscriptionId: result.data.payment.subscriptionId,
+        amount: result.data.donation.amount,
+        frequency: result.data.donation.frequency,
+        organizationName: result.data.donation.organizationName,
+        templateUsed: true // Flag para identificar que usou template
+      };
+      
+    } catch (error) {
+      logger.error('[DONATION SERVICE] Erro ao criar doação recorrente com template', {
+        error: error.message,
+        organizationId: donationData.organizationId,
+        amount: donationData.amount,
+        frequency: donationData.frequency,
+        method: 'template'
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Gera relatório de doações usando Template Method
+   * Novo método que não existia antes - mostra valor agregado do template
+   */
+  async generateDonationReportWithTemplate(reportParams, options = {}) {
+    try {
+      logger.info('[DONATION SERVICE] Gerando relatório de doações com Template Method', {
+        organizationId: reportParams.organizationId,
+        startDate: reportParams.startDate,
+        endDate: reportParams.endDate,
+        method: 'template'
+      });
+      
+      // Usar template para gerar relatório
+      const result = await TemplateExamples.generateReport(
+        reportParams,
+        'donations',
+        {
+          donationRepository: this.donationRepository,
+          userRepository: this.userRepository,
+          format: options.format || 'json',
+          logger: options.logger || logger,
+          ...options
+        }
+      );
+      
+      return {
+        report: result.data.report,
+        metadata: result.metadata,
+        templateUsed: true
+      };
+      
+    } catch (error) {
+      logger.error('[DONATION SERVICE] Erro ao gerar relatório com template', {
+        error: error.message,
+        organizationId: reportParams.organizationId,
+        method: 'template'
+      });
+      throw error;
+    }
   }
 }
 

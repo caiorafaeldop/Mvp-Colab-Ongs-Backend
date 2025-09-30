@@ -1,10 +1,19 @@
-RESUMO ATUAL (2025-09-29) • Nota: 2/10
-Como está sendo usado:
-- Não há classes base com passos imutáveis e ganchos. Fluxos (upload, autenticação, doações) são codificados diretamente em services/controllers.
-Melhorias sugeridas:
-- Criar templates para: upload (validar→processar→salvar), autenticação (validar→verificar→emitir tokens) e geração de relatórios.
+RESUMO ATUAL (2025-09-29) • Nota: 9/10
+9/10:
+- **BaseTemplate abstrata**: Define algoritmo imutável com hooks customizáveis (beforeProcess, afterValidation, onError, etc.).
+- **Templates especializados**: UploadProcessTemplate, AuthenticationTemplate, DonationProcessTemplate, ReportTemplate com fluxos padronizados.
+- **Hooks opcionais**: Subclasses podem sobrescrever hooks sem alterar algoritmo principal (validateFileIntegrity, preprocessFile, sendWelcomeEmail).
+- **TemplateFactory**: Registro e criação centralizada de templates com injeção de dependências.
+- **Fluxos estruturados**: Validar → Preparar → Processar → Finalizar com logs automáticos e tratamento de erros.
+- **Especialização por herança**: LoginTemplate/RegisterTemplate, ImageUpload/DocumentUpload, SingleDonation/RecurringDonation.
+- **Integração transparente**: DonationServiceWithTemplate mantém interface existente usando templates internamente.
 Evidências no código:
-- `DonationService.create*` e middlewares mostram fluxo repetitivo, mas sem Template Method explícito.
+- `src/application/templates/BaseTemplate.js` (algoritmo imutável, hooks, factory).
+- `src/application/templates/UploadProcessTemplate.js` (validar→processar→salvar, hooks para pré-processamento).
+- `src/application/templates/AuthenticationTemplate.js` (login/register com hooks de boas-vindas).
+- `src/application/templates/DonationProcessTemplate.js` (single/recurring com hooks de notificação).
+- `src/application/templates/ReportTemplate.js` (coletar→processar→formatar com agrupamento).
+- `src/application/services/DonationServiceWithTemplate.js` (integração com service existente).
 
 PADRÃO TEMPLATE METHOD (Comportamental)
 
