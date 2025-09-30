@@ -1,3 +1,15 @@
+RESUMO ATUAL (2025-09-29) • Nota: 9/10
+Como está sendo usado:
+- `src/main/factories/index.js` (AppFactory) coordena criação de repositories, services e rotas.
+- `src/main/factories/MongoRepositoryFactory.js` cria e faz cache dos repositories Mongo.
+- `src/main/factories/ServiceFactory.js` injeta dependências e valida envs (JWT, MP token).
+- `src/main/factories/AdapterFactory.js` e `src/main/factories/BridgeFactory.js` centralizam adapters/bridges.
+Melhorias sugeridas:
+- Validar variáveis de ambiente antes de criar serviços (já faz em partes; expandir cobertura).
+- Remover referências a factories não usados no momento (ex.: PrismaFactory desabilitado na index).
+Evidências no código:
+- `AppFactory.initialize()` e `create*Routes()`; `MongoRepositoryFactory.getAllRepositories()`; `ServiceFactory.create*()`.
+
 # ANÁLISE DO PADRÃO FACTORY NO PROJETO COLAB-BACKEND
 
 ## O QUE É FACTORY PATTERN?

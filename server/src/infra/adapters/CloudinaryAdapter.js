@@ -1,5 +1,6 @@
 const StorageAdapterContract = require('../../domain/contracts/StorageAdapterContract');
 const cloudinary = require('../../main/config/cloudinary');
+const { logger } = require('../../infra/logger');
 
 /**
  * Adapter para Cloudinary que implementa IStorageAdapter
@@ -75,6 +76,7 @@ class CloudinaryAdapter extends StorageAdapterContract {
         }
       };
     } catch (error) {
+      logger.error('[CLOUDINARY ADAPTER] Upload failed', { message: error.message });
       return {
         success: false,
         data: null,
@@ -108,6 +110,7 @@ class CloudinaryAdapter extends StorageAdapterContract {
         }
       };
     } catch (error) {
+      logger.error('[CLOUDINARY ADAPTER] Delete failed', { fileId, message: error.message });
       return {
         success: false,
         data: null,
@@ -144,6 +147,7 @@ class CloudinaryAdapter extends StorageAdapterContract {
 
       return url;
     } catch (error) {
+      logger.error('[CLOUDINARY ADAPTER] Failed to generate URL', { fileId, message: error.message });
       throw new Error(`Failed to generate URL: ${error.message}`);
     }
   }
@@ -199,6 +203,7 @@ class CloudinaryAdapter extends StorageAdapterContract {
         }
       };
     } catch (error) {
+      logger.error('[CLOUDINARY ADAPTER] List files failed', { message: error.message });
       return {
         success: false,
         data: null,
@@ -209,6 +214,31 @@ class CloudinaryAdapter extends StorageAdapterContract {
           requestId: 'list-files'
         }
       };
+    }
+  }
+
+  /**
+   * Verifica se variáveis de ambiente estão configuradas
+   */
+  validateConfiguration() {
+    try {
+      return !!process.env.CLOUDINARY_CLOUD_NAME && !!process.env.CLOUDINARY_API_KEY && !!process.env.CLOUDINARY_API_SECRET;
+    } catch (error) {
+      logger.error('[CLOUDINARY ADAPTER] Configuração inválida', error);
+      return false;
+    }
+  }
+
+  /**
+   * Health check simples consultando 1 recurso
+   */
+  async healthCheck() {
+    try {
+      const res = await this.cloudinary.search.expression('*').max_results(1).execute();
+      return { success: true, details: { count: res.total_count } };
+    } catch (error) {
+      logger.warn('[CLOUDINARY ADAPTER] Health check falhou', { message: error.message });
+      return { success: false, details: error.message };
     }
   }
 }

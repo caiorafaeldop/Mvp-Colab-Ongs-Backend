@@ -1,31 +1,50 @@
+const { logger } = require('../../infra/logger');
+
 /**
- * Middleware de autenticação simplificado
+ * CHAIN OF RESPONSIBILITY - Middleware de autenticação
+ * Responsável por verificar tokens JWT e adicionar usuário ao contexto
  * Baseado no sistema do projeto Maia Advocacia
- * Verifica apenas tokens JWT no header Authorization
  */
 
 const createSimpleAuthMiddleware = (authService) => {
   return async (req, res, next) => {
+    const requestLogger = req.logger || logger;
+    const startTime = Date.now();
+    
     try {
-      console.log("[SIMPLE AUTH MIDDLEWARE] Verificando autenticação");
+      requestLogger.debug('Middleware de autenticação iniciado', {
+        middleware: 'SimpleAuth',
+        hasAuthHeader: !!req.headers.authorization
+      });
       
       // Extrair token do header Authorization
       const authHeader = req.headers.authorization;
       
       if (!authHeader) {
-        console.log("[SIMPLE AUTH MIDDLEWARE] Header Authorization não encontrado");
+        requestLogger.warn('Header Authorization não encontrado', {
+          middleware: 'SimpleAuth',
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        });
         return res.status(401).json({
           success: false,
           message: "Authorization header is required",
+          error: "MISSING_AUTH_HEADER",
+          requestId: req.requestId
         });
       }
 
       // Verificar formato Bearer
       if (!authHeader.startsWith('Bearer ')) {
-        console.log("[SIMPLE AUTH MIDDLEWARE] Formato de token inválido");
+        requestLogger.warn('Formato de token inválido', {
+          middleware: 'SimpleAuth',
+          authHeaderPrefix: authHeader.substring(0, 10)
+        });
         return res.status(401).json({
           success: false,
           message: "Invalid token format. Use 'Bearer <token>'",
+          error: "INVALID_TOKEN_FORMAT",
+          requestId: req.requestId
         });
       }
 
@@ -33,30 +52,44 @@ const createSimpleAuthMiddleware = (authService) => {
       const token = authHeader.substring(7); // Remove 'Bearer '
       
       if (!token) {
-        console.log("[SIMPLE AUTH MIDDLEWARE] Token não encontrado");
+        requestLogger.warn('Token vazio após Bearer', {
+          middleware: 'SimpleAuth'
+        });
         return res.status(401).json({
           success: false,
           message: "Token is required",
+          error: "EMPTY_TOKEN",
+          requestId: req.requestId
         });
       }
 
-      console.log("[SIMPLE AUTH MIDDLEWARE] Token encontrado, verificando...");
+      requestLogger.debug('Token encontrado, verificando...', {
+        middleware: 'SimpleAuth',
+        tokenLength: token.length
+      });
 
       // Verificar token usando o authService
       const user = await authService.verifyAccessToken(token);
       
       if (!user) {
-        console.log("[SIMPLE AUTH MIDDLEWARE] Usuário não encontrado");
+        requestLogger.warn('Usuário não encontrado para token válido', {
+          middleware: 'SimpleAuth'
+        });
         return res.status(401).json({
           success: false,
           message: "User not found",
+          error: "USER_NOT_FOUND",
+          requestId: req.requestId
         });
       }
 
-      console.log("[SIMPLE AUTH MIDDLEWARE] Usuário autenticado:", {
-        id: user.id || user._id,
+      const duration = Date.now() - startTime;
+      requestLogger.info('Usuário autenticado com sucesso', {
+        middleware: 'SimpleAuth',
+        userId: user.id || user._id,
         email: user.email,
-        userType: user.userType
+        userType: user.userType,
+        duration: `${duration}ms`
       });
 
       // Adicionar usuário ao request
@@ -65,14 +98,21 @@ const createSimpleAuthMiddleware = (authService) => {
       next();
       
     } catch (error) {
-      console.error("[SIMPLE AUTH MIDDLEWARE] Erro na autenticação:", error.message);
+      const duration = Date.now() - startTime;
+      requestLogger.error('Erro na autenticação', {
+        middleware: 'SimpleAuth',
+        error: error.message,
+        duration: `${duration}ms`,
+        stack: error.stack
+      });
       
       // Diferentes tipos de erro JWT
       if (error.message.includes('expired')) {
         return res.status(401).json({
           success: false,
           message: "Token expired",
-          code: "TOKEN_EXPIRED"
+          error: "TOKEN_EXPIRED",
+          requestId: req.requestId
         });
       }
       
@@ -80,7 +120,8 @@ const createSimpleAuthMiddleware = (authService) => {
         return res.status(401).json({
           success: false,
           message: "Invalid token signature",
-          code: "INVALID_SIGNATURE"
+          error: "INVALID_SIGNATURE",
+          requestId: req.requestId
         });
       }
       
@@ -88,7 +129,8 @@ const createSimpleAuthMiddleware = (authService) => {
         return res.status(401).json({
           success: false,
           message: "Invalid token format",
-          code: "INVALID_FORMAT"
+          error: "INVALID_FORMAT",
+          requestId: req.requestId
         });
       }
 
@@ -96,7 +138,8 @@ const createSimpleAuthMiddleware = (authService) => {
       return res.status(401).json({
         success: false,
         message: "Invalid or expired token",
-        code: "AUTHENTICATION_FAILED"
+        error: "AUTHENTICATION_FAILED",
+        requestId: req.requestId
       });
     }
   };

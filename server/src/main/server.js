@@ -9,7 +9,13 @@ const env = require("./config/env");
 const { connectDB } = require("./config/database");
 const AppFactory = require("./factories");
 const { deduplicationMiddleware, getDeduplicationStats } = require("../presentation/middleware/RequestDeduplicationMiddleware");
-const errorHandler = require("../presentation/middleware/ErrorHandler");
+const { 
+  errorHandler, 
+  notFoundHandler,
+  requestCorrelationMiddleware,
+  requestContextMiddleware,
+  RateLimitPresets
+} = require("../presentation/middleware");
 // const uploadRouter = require("../presentation/routes/UploadRoutes"); // Temporariamente comentado
 
 const app = express();
@@ -66,7 +72,14 @@ app.use(express.static('public')); // CHAIN HANDLER 5: Static files
 // Static serve for local uploads when using LocalStorageBridge
 app.use('/uploads', express.static(env.LOCAL_UPLOAD_PATH));
 
-// CHAIN HANDLER 6: Middleware de deduplicação de requisições
+// CHAIN HANDLER 6: Correlação de requests (requestId e logger contextual)
+app.use(requestCorrelationMiddleware);
+app.use(requestContextMiddleware);
+
+// CHAIN HANDLER 7: Rate limiting geral
+app.use(RateLimitPresets.general());
+
+// CHAIN HANDLER 8: Middleware de deduplicação de requisições
 app.use(deduplicationMiddleware);
 
 // SWAGGER DOCUMENTATION SETUP
@@ -290,15 +303,11 @@ app.on("error", (error) => {
 });
 
 
-// If no routes handled the request, it's a 404
-app.use((req, res, next) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
-});
+// CHAIN OF RESPONSIBILITY: Final handlers da cadeia
+// Handler para rotas não encontradas (404) - deve vir antes do error handler
+app.use(notFoundHandler);
 
-// Global error handling middleware
+// Global error handling middleware - último elo da cadeia
 app.use(errorHandler);
 
 app.listen(port, () => {

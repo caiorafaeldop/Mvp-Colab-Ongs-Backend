@@ -3,6 +3,7 @@ const DonationController = require("../controllers/DonationController");
 const { createSimpleAuthMiddleware } = require("../middleware/SimpleAuthMiddleware");
 const { validateBody } = require("../middleware/validationMiddleware");
 const { singleDonationSchema, recurringDonationSchema } = require("../../application/validators/donationSchemas");
+const { DonationChainFactory } = require("../middleware/DonationChainHandler");
 
 /**
  * @swagger
@@ -223,10 +224,19 @@ const createDonationRoutes = (donationService, authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/single", validateBody(singleDonationSchema), donationController.createSingleDonation);
+  // Usar cadeia de handlers coesos para doações únicas
+  router.post("/single", 
+    validateBody(singleDonationSchema),
+    ...DonationChainFactory.createDonationChain(),
+    donationController.createSingleDonation
+  );
   
   // Alias para compatibilidade com testes existentes
-  router.post("/donate", validateBody(singleDonationSchema), donationController.createSingleDonation);
+  router.post("/donate", 
+    validateBody(singleDonationSchema),
+    ...DonationChainFactory.createDonationChain(),
+    donationController.createSingleDonation
+  );
 
   /**
    * @swagger
@@ -283,7 +293,12 @@ const createDonationRoutes = (donationService, authService) => {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  router.post("/recurring", validateBody(recurringDonationSchema), donationController.createRecurringDonation);
+  // Usar cadeia específica para doações recorrentes
+  router.post("/recurring", 
+    validateBody(recurringDonationSchema),
+    ...DonationChainFactory.createRecurringDonationChain(),
+    donationController.createRecurringDonation
+  );
 
   /**
    * @swagger

@@ -1,6 +1,7 @@
 const CloudinaryAdapter = require('../../infra/adapters/CloudinaryAdapter');
 const SimpleMercadoPagoAdapter = require('../../infra/adapters/SimpleMercadoPagoAdapter');
 const WhatsAppUtils = require('../../infra/adapters/WhatsAppUtils');
+const { logger } = require('../../infra/logger');
 
 /**
  * Factory para criação de adapters
@@ -12,10 +13,18 @@ class AdapterFactory {
    * @param {string} provider - Nome do provedor (padrão: 'mercadopago')
    * @returns {PaymentAdapter} Instância do adapter
    */
-  static createPaymentAdapter(provider = 'mercadopago') {
+  static createPaymentAdapter(provider = 'mercadopago', options = {}) {
     switch (provider.toLowerCase()) {
-      case 'mercadopago':
-        return new SimpleMercadoPagoAdapter();
+      case 'mercadopago': {
+        const token = options.accessToken || process.env.MERCADO_PAGO_ACCESS_TOKEN || 'TEST-TOKEN';
+        const adapter = new SimpleMercadoPagoAdapter(token, options);
+        try {
+          if (!adapter.validateConfiguration()) {
+            logger.warn('[ADAPTER FACTORY] Mercado Pago adapter com configuração inválida');
+          }
+        } catch (_) {}
+        return adapter;
+      }
       default:
         throw new Error(`Unsupported payment provider: ${provider}`);
     }
@@ -49,7 +58,13 @@ class AdapterFactory {
    */
   static createDefaultStorageAdapter() {
     const defaultProvider = process.env.DEFAULT_STORAGE_PROVIDER || 'cloudinary';
-    return this.createStorageAdapter(defaultProvider);
+    const adapter = this.createStorageAdapter(defaultProvider);
+    try {
+      if (!adapter.validateConfiguration()) {
+        logger.warn('[ADAPTER FACTORY] Storage adapter com configuração inválida');
+      }
+    } catch (_) {}
+    return adapter;
   }
 
   /**
@@ -58,6 +73,13 @@ class AdapterFactory {
    */
   static getAvailableLLMProviders() {
     return ['openai', 'anthropic'];
+  }
+
+  /**
+   * Lista provedores de pagamento disponíveis
+   */
+  static getAvailablePaymentProviders() {
+    return ['mercadopago'];
   }
 
   /**

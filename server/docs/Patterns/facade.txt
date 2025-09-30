@@ -1,3 +1,13 @@
+RESUMO ATUAL (2025-09-29) • Nota: 4/10
+Como está sendo usado:
+- Não há facades dedicados. `AppFactory` coordena wiring (repositories/services/rotas), mas não expõe uma API simplificada por caso de uso.
+Melhorias sugeridas:
+- Introduzir `AuthFacade`, `ProductFacade`, `UploadFacade` para orquestrar múltiplos services em uma interface simples aos controllers.
+- Documentar contratos dos Facades e mover validações de alto nível para eles.
+Evidências no código:
+- `src/main/factories/index.js` (AppFactory) orquestra dependências.
+- Ausência de `src/infra/facades/`.
+
 PADRÃO FACADE (Estrutural) - IMPLEMENTADO ✅
 
 CONTEXTO NO PROJETO:

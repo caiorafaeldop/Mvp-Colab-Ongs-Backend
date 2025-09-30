@@ -1,3 +1,11 @@
+RESUMO ATUAL (2025-09-29) • Nota: 2/10
+Como está sendo usado:
+- Não há classes base com passos imutáveis e ganchos. Fluxos (upload, autenticação, doações) são codificados diretamente em services/controllers.
+Melhorias sugeridas:
+- Criar templates para: upload (validar→processar→salvar), autenticação (validar→verificar→emitir tokens) e geração de relatórios.
+Evidências no código:
+- `DonationService.create*` e middlewares mostram fluxo repetitivo, mas sem Template Method explícito.
+
 PADRÃO TEMPLATE METHOD (Comportamental)
 
 CONTEXTO NO PROJETO:

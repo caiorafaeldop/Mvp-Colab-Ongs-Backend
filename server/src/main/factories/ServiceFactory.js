@@ -2,7 +2,7 @@ const EnhancedJwtAuthService = require("../../infra/services/EnhancedJwtAuthServ
 const SimpleJwtAuthService = require("../../infra/services/SimpleJwtAuthService");
 const ProductService = require("../../application/services/ProductService");
 const DonationService = require("../../application/services/DonationService");
-const SimpleMercadoPagoAdapter = require("../../infra/adapters/SimpleMercadoPagoAdapter");
+const AdapterFactory = require("./AdapterFactory");
 
 /**
  * Factory para criação de Services seguindo o Factory Pattern
@@ -131,16 +131,21 @@ class ServiceFactory {
         throw new Error('DonationRepository or UserRepository dependency not found');
       }
 
-      // Criar adapter do Mercado Pago (será configurado dinamicamente)
+      // Criar adapter do Mercado Pago via AdapterFactory (injeção de config)
       const mercadoPagoAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-      
       if (!mercadoPagoAccessToken) {
         console.warn('[SERVICE FACTORY] MERCADO_PAGO_ACCESS_TOKEN não configurado - usando token de teste');
       }
 
-      const paymentAdapter = new SimpleMercadoPagoAdapter(
-        mercadoPagoAccessToken || 'TEST-TOKEN'
-      );
+      const paymentAdapter = AdapterFactory.createPaymentAdapter('mercadopago', {
+        accessToken: mercadoPagoAccessToken || 'TEST-TOKEN',
+        backUrls: {
+          success: process.env.MP_BACK_SUCCESS || undefined,
+          failure: process.env.MP_BACK_FAILURE || undefined,
+          pending: process.env.MP_BACK_PENDING || undefined,
+        },
+        notificationUrl: process.env.MP_NOTIFICATION_URL || (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/donations/webhook` : undefined),
+      });
 
       const donationService = new DonationService(
         donationRepository,

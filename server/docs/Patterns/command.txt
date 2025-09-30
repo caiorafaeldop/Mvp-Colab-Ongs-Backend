@@ -1,3 +1,13 @@
+RESUMO ATUAL (2025-09-29) • Nota: 1/10
+Como está sendo usado:
+- Não há Commands que encapsulem operações com execute/undo/redo.
+- Scripts em `server/scripts/` automatizam tarefas, mas não configuram Command Pattern na aplicação.
+Melhorias sugeridas:
+- Criar `UploadCommand`, `DonationCommand`, `CollaborationCommand` com suporte a fila e rollback.
+- Centralizar execução/queue (ex.: BullMQ) e histórico de comandos.
+Evidências no código:
+- Ausência de classes `*Command` nos diretórios `src/`.
+
 PADRÃO COMMAND (Comportamental)
 
 CONTEXTO NO PROJETO:

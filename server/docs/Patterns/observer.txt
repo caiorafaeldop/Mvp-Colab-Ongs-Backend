@@ -1,3 +1,14 @@
+RESUMO ATUAL (2025-09-29) • Nota: 5/10
+Como está sendo usado:
+- `src/infra/events/EventManager.js` implementa um Subject (add/remove/notify, histórico, stats) com singleton utilitário.
+- Não há observers concretos no repositório atual (classes que implementem update/shouldHandle).
+Melhorias sugeridas:
+- Implementar observers reais (Product, User, System) e um `ObserverFactory` para registro dinâmico.
+- Emitir eventos a partir de services/controllers e cobrir com testes.
+Evidências no código:
+- `EventManager.addObserver()`, `notifyObservers()`, `getEventStats()`.
+- Ausência de `src/domain/observers/*` concretos.
+
 PADRÃO OBSERVER (Comportamental) - IMPLEMENTADO ✅
 
 CONTEXTO NO PROJETO:

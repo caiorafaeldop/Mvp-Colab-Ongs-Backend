@@ -66,6 +66,30 @@ class PaymentAdapter {
   async processWebhook(webhookData) {
     throw new Error('processWebhook method must be implemented');
   }
+
+  /**
+   * Retorna o nome do provedor
+   * @returns {string}
+   */
+  getProviderName() {
+    throw new Error('getProviderName method must be implemented');
+  }
+
+  /**
+   * Verifica conectividade e credenciais com o provedor externo
+   * @returns {Promise<{ success: boolean, details?: any }>}
+   */
+  async healthCheck() {
+    throw new Error('healthCheck method must be implemented');
+  }
+
+  /**
+   * Valida configuração necessária (ex.: tokens) para funcionamento do adapter
+   * @returns {boolean}
+   */
+  validateConfiguration() {
+    throw new Error('validateConfiguration method must be implemented');
+  }
 }
 
 module.exports = PaymentAdapter;

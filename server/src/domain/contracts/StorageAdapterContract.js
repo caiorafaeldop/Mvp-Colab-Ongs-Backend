@@ -39,6 +39,22 @@ class IStorageAdapter {
   getProviderName() {
     throw new Error('Method getProviderName must be implemented by concrete adapter');
   }
+
+  /**
+   * Verifica se variáveis de ambiente/config estão OK
+   * @returns {boolean}
+   */
+  validateConfiguration() {
+    throw new Error('Method validateConfiguration must be implemented by concrete adapter');
+  }
+
+  /**
+   * Health check simples (conexão/credenciais)
+   * @returns {Promise<{ success: boolean, details?: any }>}
+   */
+  async healthCheck() {
+    throw new Error('Method healthCheck must be implemented by concrete adapter');
+  }
 }
 
 module.exports = IStorageAdapter;

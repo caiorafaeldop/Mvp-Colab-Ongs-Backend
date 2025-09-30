@@ -5,9 +5,10 @@
 
 const PaymentAdapter = require('../../domain/contracts/PaymentAdapter');
 const axios = require('axios');
+const { logger } = require('../../infra/logger');
 
 class SimpleMercadoPagoAdapter extends PaymentAdapter {
-  constructor(accessToken) {
+  constructor(accessToken, options = {}) {
     super();
     
     if (!accessToken) {
@@ -15,6 +16,10 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
     }
 
     this.accessToken = accessToken;
+    this.defaults = {
+      backUrls: options.backUrls || null,
+      notificationUrl: options.notificationUrl || process.env.MP_NOTIFICATION_URL || `${process.env.BACKEND_URL}/api/donations/webhook`
+    };
     this.baseURL = 'https://api.mercadopago.com';
     
     // Configurar axios com headers padrão
@@ -27,8 +32,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       timeout: 10000
     });
 
-    console.log('[SIMPLE MP ADAPTER] Inicializado com sucesso');
-    console.log('[SIMPLE MP ADAPTER] Token usado:', accessToken?.substring(0, 20) + '...');
+    logger.info('[SIMPLE MP ADAPTER] Inicializado com sucesso');
+    logger.debug('[SIMPLE MP ADAPTER] Token usado:', accessToken ? accessToken.substring(0, 6) + '…' : 'n/a');
   }
 
   /**
@@ -36,7 +41,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   async createPaymentPreference(paymentData) {
     try {
-      console.log('[SIMPLE MP] Criando preferência de pagamento:', paymentData);
+      logger.info('[SIMPLE MP] Criando preferência de pagamento');
+      logger.debug('[SIMPLE MP] Payload recebido:', paymentData);
 
       const preferenceData = {
         items: [
@@ -62,12 +68,12 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
           } : undefined
         },
         back_urls: {
-          success: paymentData.backUrls?.success || 'https://www.mercadopago.com.br/checkout/success',
-          failure: paymentData.backUrls?.failure || 'https://www.mercadopago.com.br/checkout/failure',
-          pending: paymentData.backUrls?.pending || 'https://www.mercadopago.com.br/checkout/pending'
+          success: paymentData.backUrls?.success || this.defaults.backUrls?.success || 'https://www.mercadopago.com.br/checkout/success',
+          failure: paymentData.backUrls?.failure || this.defaults.backUrls?.failure || 'https://www.mercadopago.com.br/checkout/failure',
+          pending: paymentData.backUrls?.pending || this.defaults.backUrls?.pending || 'https://www.mercadopago.com.br/checkout/pending'
         },
         auto_return: 'approved',
-        notification_url: `${process.env.BACKEND_URL}/api/donations/webhook`,
+        notification_url: this.defaults.notificationUrl,
         external_reference: paymentData.externalReference || `donation-${Date.now()}`,
         payment_methods: {
           excluded_payment_methods: [],
@@ -79,10 +85,7 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       const response = await this.api.post('/checkout/preferences', preferenceData);
       const result = response.data;
       
-      console.log('[SIMPLE MP] Preferência criada:', {
-        id: result.id,
-        init_point: result.init_point
-      });
+      logger.info('[SIMPLE MP] Preferência criada', { id: result.id });
 
       return {
         id: result.id,
@@ -93,11 +96,12 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro ao criar preferência:');
-      console.error('Status:', error.response?.status);
-      console.error('Data:', JSON.stringify(error.response?.data, null, 2));
-      console.error('Message:', error.message);
-      throw new Error(`Erro ao criar preferência de pagamento: ${error.response?.data?.message || error.message}`);
+      logger.error('[SIMPLE MP] Erro ao criar preferência', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw new Error(`MercadoPagoAdapter/createPaymentPreference failed: ${error.response?.data?.message || error.message}`);
     }
   }
 
@@ -106,7 +110,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   async createSubscription(subscriptionData) {
     try {
-      console.log('[SIMPLE MP] Criando assinatura recorrente:', subscriptionData);
+      logger.info('[SIMPLE MP] Criando assinatura recorrente');
+      logger.debug('[SIMPLE MP] Payload recebido:', subscriptionData);
 
       // Mapear frequência
       const frequencyMap = {
@@ -131,15 +136,11 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
         status: 'pending'
       };
 
-      console.log('[SIMPLE MP] Payload completo sendo enviado:', JSON.stringify(subscriptionBody, null, 2));
+      logger.debug('[SIMPLE MP] Payload completo sendo enviado:', subscriptionBody);
 
       const response = await this.api.post('/preapproval', subscriptionBody);
       const result = response.data;
-      
-      console.log('[SIMPLE MP] Assinatura criada:', {
-        id: result.id,
-        init_point: result.init_point
-      });
+      logger.info('[SIMPLE MP] Assinatura criada', { id: result.id });
 
       return {
         id: result.id,
@@ -150,20 +151,15 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro completo:', {
+      logger.error('[SIMPLE MP] Erro ao criar assinatura', {
         message: error.message,
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          data: error.config?.data
-        }
+        request: { url: error.config?.url, method: error.config?.method }
       });
-      
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-      throw new Error(`Erro ao criar assinatura: ${errorMessage}`);
+      throw new Error(`MercadoPagoAdapter/createSubscription failed: ${errorMessage}`);
     }
   }
 
@@ -172,7 +168,7 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   async getPaymentStatus(paymentId) {
     try {
-      console.log('[SIMPLE MP] Consultando status do pagamento:', paymentId);
+      logger.info('[SIMPLE MP] Consultando status do pagamento', { paymentId });
 
       const response = await this.api.get(`/v1/payments/${paymentId}`);
       const result = response.data;
@@ -188,12 +184,13 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
           identification: result.payer?.identification
         },
         dateCreated: result.date_created,
-        dateApproved: result.date_approved
+        dateApproved: result.date_approved,
+        externalReference: result.external_reference
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro ao consultar pagamento:', error.response?.data || error.message);
-      throw new Error(`Erro ao consultar pagamento: ${error.message}`);
+      logger.error('[SIMPLE MP] Erro ao consultar pagamento', error.response?.data || error.message);
+      throw new Error(`MercadoPagoAdapter/getPaymentStatus failed: ${error.message}`);
     }
   }
 
@@ -202,7 +199,7 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   async getSubscriptionStatus(subscriptionId) {
     try {
-      console.log('[SIMPLE MP] Consultando status da assinatura:', subscriptionId);
+      logger.info('[SIMPLE MP] Consultando status da assinatura', { subscriptionId });
 
       const response = await this.api.get(`/preapproval/${subscriptionId}`);
       const result = response.data;
@@ -219,8 +216,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro ao consultar assinatura:', error.response?.data || error.message);
-      throw new Error(`Erro ao consultar assinatura: ${error.message}`);
+      logger.error('[SIMPLE MP] Erro ao consultar assinatura', error.response?.data || error.message);
+      throw new Error(`MercadoPagoAdapter/getSubscriptionStatus failed: ${error.message}`);
     }
   }
 
@@ -229,7 +226,7 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   async cancelSubscription(subscriptionId) {
     try {
-      console.log('[SIMPLE MP] Cancelando assinatura:', subscriptionId);
+      logger.info('[SIMPLE MP] Cancelando assinatura', { subscriptionId });
 
       const response = await this.api.put(`/preapproval/${subscriptionId}`, {
         status: 'cancelled'
@@ -243,8 +240,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro ao cancelar assinatura:', error.response?.data || error.message);
-      throw new Error(`Erro ao cancelar assinatura: ${error.message}`);
+      logger.error('[SIMPLE MP] Erro ao cancelar assinatura', error.response?.data || error.message);
+      throw new Error(`MercadoPagoAdapter/cancelSubscription failed: ${error.message}`);
     }
   }
 
@@ -253,7 +250,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   async processWebhook(webhookData) {
     try {
-      console.log('[SIMPLE MP] Processando webhook:', webhookData);
+      logger.info('[SIMPLE MP] Processando webhook');
+      logger.debug('[SIMPLE MP] Webhook data:', webhookData);
 
       const { type, data } = webhookData;
       
@@ -266,7 +264,7 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
           paymentId: data.id,
           status: paymentInfo.status,
           amount: paymentInfo.amount,
-          externalReference: paymentInfo.external_reference
+          externalReference: paymentInfo.externalReference
         };
         
       } else if (type === 'preapproval') {
@@ -287,8 +285,8 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
       };
 
     } catch (error) {
-      console.error('[SIMPLE MP] Erro ao processar webhook:', error.response?.data || error.message);
-      throw new Error(`Erro ao processar webhook: ${error.message}`);
+      logger.error('[SIMPLE MP] Erro ao processar webhook', error.response?.data || error.message);
+      throw new Error(`MercadoPagoAdapter/processWebhook failed: ${error.message}`);
     }
   }
 
@@ -297,10 +295,30 @@ class SimpleMercadoPagoAdapter extends PaymentAdapter {
    */
   validateConfiguration() {
     try {
-      return !!this.accessToken && this.accessToken.startsWith('TEST-');
+      return !!this.accessToken && (
+        this.accessToken.startsWith('TEST-') || this.accessToken.startsWith('APP_USR-')
+      );
     } catch (error) {
-      console.error('[SIMPLE MP] Configuração inválida:', error);
+      logger.error('[SIMPLE MP] Configuração inválida', error);
       return false;
+    }
+  }
+
+  getProviderName() {
+    return 'mercadopago';
+  }
+
+  async healthCheck() {
+    try {
+      // Endpoint simples para validar credenciais
+      const res = await this.api.get('/users/me');
+      return { success: true, details: { id: res.data?.id, nickname: res.data?.nickname } };
+    } catch (error) {
+      logger.warn('[SIMPLE MP] Health check falhou', {
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      return { success: false, details: error.response?.data || error.message };
     }
   }
 }

@@ -1,3 +1,12 @@
+RESUMO ATUAL (2025-09-29) • Nota: 8/10
+Como está sendo usado:
+- `src/infra/singletons/DatabaseConnection.js` e `src/infra/singletons/PrismaService.js` garantem instância única, health/ping e shutdown.
+Melhorias sugeridas:
+- Garantir uso consistente da conexão única; considerar singleton para logger/config centralizado.
+- Adicionar testes para `destroyInstance()` e reconexão.
+Evidências no código:
+- `DatabaseConnection.getInstance()`, `PrismaService.getInstance()` e handlers de processo (SIGINT/SIGTERM).
+
 PADRÃO SINGLETON (Criacional) - IMPLEMENTADO ✅
 
 CONTEXTO NO PROJETO:

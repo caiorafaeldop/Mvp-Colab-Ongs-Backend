@@ -1,3 +1,12 @@
+RESUMO ATUAL (2025-09-29) • Nota: 2/10
+Como está sendo usado:
+- Não há classes Builder explícitas. Objetos complexos são montados inline em services/adapters.
+Melhorias sugeridas:
+- Introduzir Builders para: payloads do Mercado Pago (preference/subscription), respostas padronizadas de API, queries de repositório e emails/notificações.
+Evidências no código:
+- `src/application/services/DonationService.js` constrói objetos grandes inline.
+- `src/infra/adapters/SimpleMercadoPagoAdapter.js` monta payloads manualmente.
+
 PADRÃO BUILDER (Criacional)
 
 CONTEXTO NO PROJETO:

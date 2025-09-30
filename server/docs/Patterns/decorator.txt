@@ -1,3 +1,13 @@
+RESUMO ATUAL (2025-09-29) • Nota: 3/10
+Como está sendo usado:
+- Há preocupações transversais (logging, rate limit, validação) via middlewares, não via Decorators com Proxy.
+Melhorias sugeridas:
+- Criar `DecoratorFactory` e decorators (`LoggingDecorator`, `CachingDecorator`, `ValidationDecorator`) aplicados a services/repositories via Proxy.
+- Definir contrato e configuração por tipo de componente.
+Evidências no código:
+- `src/infra/logging/logger.js`, `src/presentation/middleware/rateLimiter.js`, `validationMiddleware.js`.
+- Ausência de `src/infra/decorators/`.
+
 PADRÃO DECORATOR (Estrutural) - IMPLEMENTADO ✅
 
 CONTEXTO NO PROJETO:

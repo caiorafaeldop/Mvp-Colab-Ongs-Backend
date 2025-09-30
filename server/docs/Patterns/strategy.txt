@@ -1,3 +1,13 @@
+RESUMO ATUAL (2025-09-29) • Nota: 4/10
+Como está sendo usado:
+- `src/main/factories/PrismaRepositoryFactory.js` alterna entre Prisma/Mongo por estratégia (habilitável via `switchDatabaseStrategy`), mas no boot atual usa `MongoRepositoryFactory`.
+- `BridgeFactory.getStorageBridge(preference)` e `AdapterFactory.create*` selecionam implementação (similar a Strategy, embora aplicado via Factory/Bridge).
+Melhorias sugeridas:
+- Ativar/usar estratégia de repositório no startup quando Prisma estiver pronto.
+- Extrair estratégias explícitas para matching/pagamentos com contratos dedicados.
+Evidências no código:
+- `PrismaRepositoryFactory._shouldUsePrisma()`, `switchDatabaseStrategy()`; `BridgeFactory.getStorageBridge()`.
+
 PADRÃO STRATEGY (Comportamental) - IMPLEMENTADO ✅
 
 CONTEXTO NO PROJETO:
