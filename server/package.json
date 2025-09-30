@@ -7,11 +7,14 @@
     "start": "node src/main/server.js",
     "dev": "node src/main/server.js",
     "test": "node tests/test-api.js",
+    "test:singletons": "node scripts/verify-singleton-usage.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "patterns:singleton": "node scripts/verify-singleton-usage.js",
+    "docs:singleton": "cat docs/patterns/SINGLETON-SUMMARY.md"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"

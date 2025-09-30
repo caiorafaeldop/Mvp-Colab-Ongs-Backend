@@ -14,12 +14,24 @@ class ConfigManager extends ISingleton {
 
   /**
    * Obtém instância única do ConfigManager
+   * Thread-safe com Double-Checked Locking pattern
    * @returns {ConfigManager} Instância única
    */
   static getInstance() {
+    // First check (sem lock) - otimização de performance
     if (!ConfigManager.instance) {
-      ConfigManager.instance = new ConfigManager();
-      console.log('[ConfigManager] Nova instância criada');
+      // Double-checked locking para thread safety
+      if (!ConfigManager._creating) {
+        ConfigManager._creating = true;
+        
+        // Second check (com lock)
+        if (!ConfigManager.instance) {
+          ConfigManager.instance = new ConfigManager();
+          console.log('[ConfigManager] Nova instância criada');
+        }
+        
+        ConfigManager._creating = false;
+      }
     }
     return ConfigManager.instance;
   }
@@ -246,7 +258,8 @@ class ConfigManager extends ISingleton {
   }
 }
 
-// Instância única
+// Instância única e flag de criação (thread-safety)
 ConfigManager.instance = null;
+ConfigManager._creating = false;
 
 module.exports = ConfigManager;

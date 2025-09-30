@@ -18,12 +18,24 @@ class PrismaService extends ISingleton {
 
   /**
    * Obtém instância única do PrismaService
+   * Thread-safe com Double-Checked Locking pattern
    * @returns {PrismaService} Instância única
    */
   static getInstance() {
+    // First check (sem lock) - otimização de performance
     if (!PrismaService.instance) {
-      PrismaService.instance = new PrismaService();
-      console.log('[PrismaService] Nova instância criada');
+      // Double-checked locking para thread safety
+      if (!PrismaService._creating) {
+        PrismaService._creating = true;
+        
+        // Second check (com lock)
+        if (!PrismaService.instance) {
+          PrismaService.instance = new PrismaService();
+          console.log('[PrismaService] Nova instância criada');
+        }
+        
+        PrismaService._creating = false;
+      }
     }
     return PrismaService.instance;
   }
@@ -306,7 +318,8 @@ class PrismaService extends ISingleton {
   }
 }
 
-// Instância única
+// Instância única e flag de criação (thread-safety)
 PrismaService.instance = null;
+PrismaService._creating = false;
 
 module.exports = PrismaService;

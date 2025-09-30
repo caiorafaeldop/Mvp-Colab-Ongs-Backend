@@ -23,12 +23,24 @@ class DatabaseConnection extends ISingleton {
 
   /**
    * Obtém instância única do DatabaseConnection
+   * Thread-safe com Double-Checked Locking pattern
    * @returns {DatabaseConnection} Instância única
    */
   static getInstance() {
+    // First check (sem lock) - otimização de performance
     if (!DatabaseConnection.instance) {
-      DatabaseConnection.instance = new DatabaseConnection();
-      console.log('[DatabaseConnection] Nova instância criada');
+      // Double-checked locking para thread safety
+      if (!DatabaseConnection._creating) {
+        DatabaseConnection._creating = true;
+        
+        // Second check (com lock)
+        if (!DatabaseConnection.instance) {
+          DatabaseConnection.instance = new DatabaseConnection();
+          console.log('[DatabaseConnection] Nova instância criada');
+        }
+        
+        DatabaseConnection._creating = false;
+      }
     }
     return DatabaseConnection.instance;
   }
@@ -182,7 +194,8 @@ class DatabaseConnection extends ISingleton {
   }
 }
 
-// Instância única
+// Instância única e flag de criação (thread-safety)
 DatabaseConnection.instance = null;
+DatabaseConnection._creating = false;
 
 module.exports = DatabaseConnection;

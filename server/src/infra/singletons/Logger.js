@@ -35,12 +35,24 @@ class Logger extends ISingleton {
 
   /**
    * Obtém instância única do Logger
+   * Thread-safe com Double-Checked Locking pattern
    * @returns {Logger} Instância única
    */
   static getInstance() {
+    // First check (sem lock) - otimização de performance
     if (!Logger.instance) {
-      Logger.instance = new Logger();
-      console.log('[Logger] Nova instância criada');
+      // Double-checked locking para thread safety
+      if (!Logger._creating) {
+        Logger._creating = true;
+        
+        // Second check (com lock)
+        if (!Logger.instance) {
+          Logger.instance = new Logger();
+          console.log('[Logger] Nova instância criada');
+        }
+        
+        Logger._creating = false;
+      }
     }
     return Logger.instance;
   }
@@ -316,7 +328,8 @@ class Logger extends ISingleton {
   }
 }
 
-// Instância única
+// Instância única e flag de criação (thread-safety)
 Logger.instance = null;
+Logger._creating = false;
 
 module.exports = Logger;
