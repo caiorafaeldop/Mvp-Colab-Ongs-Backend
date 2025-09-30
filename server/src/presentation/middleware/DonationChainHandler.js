@@ -19,9 +19,25 @@ class DonationValidationHandler extends BaseMiddleware {
     
     // Verificar se dados já foram validados pelo middleware anterior
     if (req.validatedBody) {
-      requestLogger.debug('Dados já validados por middleware anterior', {
+      requestLogger.debug('Dados já validados por middleware anterior, criando donationData', {
         middleware: this.name
       });
+      
+      // Criar donationData a partir dos dados validados
+      const validatedData = req.validatedBody;
+      req.donationData = {
+        organizationId: validatedData.organizationId,
+        organizationName: validatedData.organizationName,
+        amount: parseFloat(validatedData.amount),
+        donorEmail: validatedData.donorEmail,
+        donorName: validatedData.donorName,
+        donorPhone: validatedData.donorPhone,
+        donorDocument: validatedData.donorDocument,
+        message: validatedData.message,
+        frequency: validatedData.frequency,
+        isAnonymous: validatedData.isAnonymous || false
+      };
+      
       return next();
     }
     
