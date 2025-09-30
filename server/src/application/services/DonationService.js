@@ -5,12 +5,14 @@
 const PaymentState = require('../../domain/state/PaymentState');
 const { TemplateExamples } = require('../templates');
 const { logger } = require('../../infra/logger');
+const { getInstance: getEventManager } = require('../../infra/events/EventManager');
 
 class DonationService {
   constructor(donationRepository, userRepository, paymentAdapter) {
     this.donationRepository = donationRepository;
     this.userRepository = userRepository;
     this.paymentAdapter = paymentAdapter;
+    this.eventManager = getEventManager();
     
     console.log('[DONATION SERVICE] Inicializado com sucesso');
   }
@@ -80,6 +82,15 @@ class DonationService {
       });
 
       console.log('[DONATION SERVICE] Doação única criada:', donation.id);
+
+      // Emit event
+      await this.eventManager.emit('donation.created', {
+        donationId: donation.id,
+        amount: donation.amount,
+        organizationId: donation.organizationId,
+        organizationName: donation.organizationName,
+        donorEmail: donation.donorEmail
+      }, { source: 'DonationService' });
 
       return {
         donation,
@@ -162,6 +173,14 @@ class DonationService {
 
       console.log('[DONATION SERVICE] Doação recorrente criada:', donation.id);
 
+      // Emit event
+      await this.eventManager.emit('donation.recurring.created', {
+        donationId: donation.id,
+        frequency: donation.frequency,
+        amount: donation.amount,
+        organizationId: donation.organizationId
+      }, { source: 'DonationService' });
+
       return {
         donation,
         subscriptionUrl: subscription.subscriptionUrl,
@@ -214,6 +233,26 @@ class DonationService {
         });
         
         console.log('[DONATION SERVICE] Status da doação atualizado:', donation.id, status);
+
+        // Emit status events
+        const mappedStatus = PaymentState.fromMercadoPago(status).toDomain();
+        if (mappedStatus === 'approved') {
+          await this.eventManager.emit('donation.payment.approved', {
+            donationId: donation.id,
+            amount: donation.amount,
+            mercadoPagoId
+          }, { source: 'DonationService' });
+        } else if (mappedStatus === 'rejected') {
+          await this.eventManager.emit('donation.payment.rejected', {
+            donationId: donation.id,
+            reason: status
+          }, { source: 'DonationService' });
+        } else if (mappedStatus === 'pending') {
+          await this.eventManager.emit('donation.payment.pending', {
+            donationId: donation.id,
+            paymentMethod: donation.paymentMethod
+          }, { source: 'DonationService' });
+        }
       }
 
     } catch (error) {

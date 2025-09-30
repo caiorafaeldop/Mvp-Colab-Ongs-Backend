@@ -1,11 +1,11 @@
-// Interface removida na limpeza
 const Product = require("../../domain/entities/Product");
+const { getInstance: getEventManager } = require('../../infra/events/EventManager');
 
 class ProductService {
   constructor(productRepository, userRepository) {
-    // super() removido na limpeza
     this.productRepository = productRepository;
     this.userRepository = userRepository;
+    this.eventManager = getEventManager();
   }
 
   async createProduct(productData, organizationId) {
@@ -33,6 +33,16 @@ class ProductService {
 
       // Save product
       const savedProduct = await this.productRepository.save(product);
+
+      // Emit event
+      await this.eventManager.emit('product.created', {
+        productId: savedProduct.id,
+        productName: savedProduct.name,
+        organizationId: savedProduct.organizationId,
+        organizationName: savedProduct.organizationName,
+        price: savedProduct.price,
+        category: savedProduct.category
+      }, { source: 'ProductService' });
 
       return {
         id: savedProduct.id,
@@ -77,6 +87,16 @@ class ProductService {
         stock: productData.stock !== undefined ? productData.stock : existingProduct.stock,
       });
 
+      // Emit event
+      await this.eventManager.emit('product.updated', {
+        productId: updatedProduct.id,
+        changes: {
+          name: productData.name !== existingProduct.name,
+          price: productData.price !== existingProduct.price,
+          stock: productData.stock !== existingProduct.stock
+        }
+      }, { source: 'ProductService' });
+
       return {
         id: updatedProduct.id,
         name: updatedProduct.name,
@@ -108,6 +128,13 @@ class ProductService {
       }
 
       await this.productRepository.delete(id);
+
+      // Emit event
+      await this.eventManager.emit('product.deleted', {
+        productId: id,
+        organizationId: existingProduct.organizationId
+      }, { source: 'ProductService' });
+
       return { message: "Product deleted successfully" };
     } catch (error) {
       throw new Error(`Error deleting product: ${error.message}`);
@@ -232,6 +259,12 @@ class ProductService {
         isAvailable: existingProduct.isAvailable,
       });
 
+      // Emit event
+      await this.eventManager.emit('product.availability.changed', {
+        productId: updatedProduct.id,
+        isAvailable: updatedProduct.isAvailable
+      }, { source: 'ProductService' });
+
       return {
         id: updatedProduct.id,
         name: updatedProduct.name,
@@ -266,6 +299,16 @@ class ProductService {
       const updatedProduct = await this.productRepository.update(id, {
         stock: stock,
       });
+
+      // Emit low stock event if needed
+      if (stock < 5 && stock > 0) {
+        await this.eventManager.emit('product.stock.low', {
+          productId: updatedProduct.id,
+          productName: updatedProduct.name,
+          currentStock: stock,
+          threshold: 5
+        }, { source: 'ProductService' });
+      }
 
       return {
         id: updatedProduct.id,

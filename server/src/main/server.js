@@ -151,9 +151,16 @@ const initializeApp = async () => {
     await appFactory.initialize();
     console.log('[Server] AppFactory inicializado com sucesso');
     
-    // Initialize Observer system
+    // Initialize Observer system with ObserverFactory
     if (!eventManager) {
       eventManager = await appFactory.createEventManager();
+      
+      // Register all observers using ObserverFactory
+      console.log('[Server] Registrando observers...');
+      const observerFactory = appFactory.createObserverFactory();
+      observerFactory.setEventManager(eventManager);
+      observerFactory.registerAllObservers();
+      console.log('[Server] Observers registrados com sucesso');
       
       // Emit system startup event
       await eventManager.emit('system.startup', {

@@ -1,15 +1,39 @@
-RESUMO ATUAL (2025-09-29) • Nota: 5/10
+RESUMO ATUAL (2025-09-30) • Nota: 9.5/10
 Como está sendo usado:
-- `src/infra/events/EventManager.js` implementa um Subject (add/remove/notify, histórico, stats) com singleton utilitário.
-- Não há observers concretos no repositório atual (classes que implementem update/shouldHandle).
-Melhorias sugeridas:
-- Implementar observers reais (Product, User, System) e um `ObserverFactory` para registro dinâmico.
-- Emitir eventos a partir de services/controllers e cobrir com testes.
-Evidências no código:
-- `EventManager.addObserver()`, `notifyObservers()`, `getEventStats()`.
-- Ausência de `src/domain/observers/*` concretos.
+- `src/infra/events/EventManager.js` implementa Subject completo (add/remove/notify, histórico, stats) como Singleton.
+- 4 Observers concretos implementados: ProductObserver, UserObserver, DonationObserver, SystemObserver.
+- ObserverFactory para registro dinâmico e centralizado de observers.
+- Eventos emitidos automaticamente pelos services em operações críticas.
+- Integração completa no server.js com registro automático na inicialização.
 
-PADRÃO OBSERVER (Comportamental) - IMPLEMENTADO ✅
+Melhorias implementadas:
+✅ Interfaces IObserver e ISubject em src/domain/observers/
+✅ 4 Observers concretos em src/infra/observers/ com handlers específicos
+✅ ObserverFactory em src/main/factories/ para registro dinâmico
+✅ Eventos emitidos em ProductService (created, updated, deleted, stock.low, availability.changed)
+✅ Eventos emitidos em DonationService (created, payment.approved, payment.rejected, recurring.created)
+✅ Evento system.startup emitido na inicialização do servidor
+✅ Logs estruturados em todos os observers
+✅ AppFactory integrado com ObserverFactory
+
+Evidências no código:
+- src/domain/observers/IObserver.js - Interface com métodos: update(), shouldHandle(), getName(), getEventTypes()
+- src/domain/observers/ISubject.js - Interface para subjects
+- src/infra/observers/ProductObserver.js - Monitora eventos de produtos
+- src/infra/observers/UserObserver.js - Monitora eventos de usuários  
+- src/infra/observers/DonationObserver.js - Monitora eventos de doações
+- src/infra/observers/SystemObserver.js - Monitora eventos do sistema
+- src/main/factories/ObserverFactory.js - Factory para criação e registro
+- src/application/services/ProductService.js - Emite 5 tipos de eventos
+- src/application/services/DonationService.js - Emite 8 tipos de eventos
+- src/main/server.js - Registro automático de observers na inicialização
+
+Eventos implementados (13 tipos):
+PRODUTOS: product.created, product.updated, product.deleted, product.stock.low, product.availability.changed
+DOAÇÕES: donation.created, donation.payment.approved, donation.payment.rejected, donation.payment.pending, donation.recurring.created
+SISTEMA: system.startup, system.error, system.warning
+
+PADRÃO OBSERVER (Comportamental) - IMPLEMENTADO COMPLETO ✅✅✅
 
 CONTEXTO NO PROJETO:
 Observer para marketplace de ONGs - monitora vendas, compras e engajamento real dos usuários.

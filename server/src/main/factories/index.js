@@ -1,6 +1,7 @@
 // PrismaRepositoryFactory temporariamente desabilitado - usando MongoDB
 const RepositoryFactory = require("./MongoRepositoryFactory");
 const ServiceFactory = require("./ServiceFactory");
+const ObserverFactory = require("./ObserverFactory");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createSimpleAuthRoutes = require("../../presentation/routes/simpleAuthRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
@@ -20,6 +21,7 @@ class AppFactory {
     // Sub-factories para diferentes tipos de componentes
     this.repositoryFactory = new RepositoryFactory();
     this.serviceFactory = new ServiceFactory();
+    this.observerFactory = new ObserverFactory();
     
     // Cache de componentes criados
     this.eventManager = null;
@@ -163,6 +165,7 @@ class AppFactory {
       initialized: this.initialized,
       repositories: this.repositoryFactory.getFactoryState(),
       services: this.serviceFactory.getFactoryState(),
+      observers: this.observerFactory.getCreatedObservers(),
       hasEventManager: !!this.eventManager,
       hasBridges: !!this.bridges
     };
@@ -170,19 +173,22 @@ class AppFactory {
 
   async createEventManager() {
     if (!this.eventManager) {
-      // Temporariamente desabilitado até implementar ObserverFactory
-      console.log('[AppFactory] EventManager temporariamente desabilitado');
-      this.eventManager = {
-        emit: async () => {},
-        getEventStats: () => ({ totalEvents: 0, recentEvents: [] }),
-        getObservers: () => []
-      };
+      const { getInstance } = require('../../infra/events/EventManager');
+      this.eventManager = getInstance();
+      console.log('[AppFactory] EventManager criado com sucesso');
     }
     return this.eventManager;
   }
 
   getEventManager() {
     return this.eventManager;
+  }
+
+  /**
+   * Cria ou retorna ObserverFactory
+   */
+  createObserverFactory() {
+    return this.observerFactory;
   }
 
   getBridges() {
