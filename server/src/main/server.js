@@ -244,6 +244,20 @@ app.use("/api/donations", (req, res, next) => {
   return appFactory.createDonationRoutes()(req, res, next);
 });
 
+// Rotas do padrão Composite (hierarquias de organizações)
+app.use("/api/organizations", (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: "Server is still initializing, please try again in a moment"
+    });
+  }
+  
+  // Importar rotas do Composite dinamicamente
+  const organizationCompositeRoutes = require('./routes/organizationCompositeRoutes');
+  return organizationCompositeRoutes(req, res, next);
+});
+
 // Health check endpoint
 
 /**

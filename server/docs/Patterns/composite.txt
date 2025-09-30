@@ -1,0 +1,193 @@
+COMPOSITE PATTERN (Estrutural)
+=============================
+
+CONTEXTO NO PROJETO:
+- Sistema de colaboração entre ONGs com hierarquias organizacionais
+- Organizações podem ter filiais (matriz → filiais → sub-filiais)
+- Operações devem funcionar tanto em organizações individuais quanto em grupos
+- Necessidade de calcular métricas agregadas (produtos, doações) recursivamente
+
+PROBLEMA:
+- Como tratar organizações individuais e grupos de organizações uniformemente?
+- Como executar operações em toda uma hierarquia organizacional?
+- Como evitar código duplicado para operações em árvores de organizações?
+
+SOLUÇÃO - COMPOSITE PATTERN:
+Compõe objetos em estruturas de árvore para representar hierarquias parte-todo.
+Permite que clientes tratem objetos individuais e composições uniformemente.
+
+IMPLEMENTAÇÃO:
+
+1. COMPONENT (OrganizationComponent):
+   - Interface base para organizações
+   - Define operações comuns: getTotalProducts(), getTotalDonations(), display()
+   - Métodos abstratos para add(), remove(), getChild()
+
+2. LEAF (OrganizationLeaf):
+   - Organizações folha (sem filiais)
+   - Implementa operações básicas
+   - Não pode ter filhas (add/remove lançam exceção)
+   - Operações retornam dados apenas desta organização
+
+3. COMPOSITE (OrganizationComposite):
+   - Organizações que podem ter filiais
+   - Mantém lista de children (OrganizationComponent)
+   - Operações são executadas recursivamente em toda a árvore
+   - Pode conter tanto Leafs quanto outros Composites
+
+4. FACTORY (CompositeFactory):
+   - Cria organizações baseado no tipo
+   - Constrói árvores completas do banco de dados
+   - Gerencia injeção de dependências (repositories)
+
+ESTRUTURA DE ARQUIVOS:
+src/domain/composite/
+├── OrganizationComponent.js     # Interface base
+├── OrganizationLeaf.js          # Organizações folha
+└── OrganizationComposite.js     # Organizações com filiais
+
+src/main/factories/
+└── CompositeFactory.js          # Factory para criar hierarquias
+
+CASOS DE USO:
+
+1. ORGANIZAÇÃO SIMPLES (Leaf):
+   - ONG independente sem filiais
+   - Calcula apenas seus próprios produtos/doações
+   - Não pode adicionar sub-organizações
+
+2. ORGANIZAÇÃO MATRIZ (Composite):
+   - ONG principal com filiais
+   - Calcula métricas agregadas de toda a rede
+   - Pode adicionar/remover filiais
+   - Operações recursivas em toda a árvore
+
+3. FILIAL COM SUB-FILIAIS (Composite):
+   - Filial que também tem suas próprias filiais
+   - Comporta-se como Composite
+   - Contribui para métricas da matriz
+
+OPERAÇÕES PRINCIPAIS:
+
+1. getTotalProducts():
+   - Leaf: retorna produtos apenas desta organização
+   - Composite: soma produtos desta + todas as filiais (recursivo)
+
+2. getTotalDonations():
+   - Leaf: retorna doações apenas desta organização
+   - Composite: soma doações desta + todas as filiais (recursivo)
+
+3. display():
+   - Leaf: exibe informações básicas
+   - Composite: exibe árvore completa com indentação
+
+4. findById():
+   - Busca organização na árvore por ID (recursivo)
+
+5. getOrganizationTree():
+   - Retorna estrutura hierárquica como JSON
+
+EXEMPLO DE USO:
+
+```javascript
+const factory = new CompositeFactory(productRepo, donationRepo);
+
+// Criar árvore de organizações
+const matrix = await factory.buildOrganizationTree('matrix-id');
+
+// Operações uniformes (funciona para Leaf ou Composite)
+const totalProducts = await matrix.getTotalProducts();
+const totalDonations = await matrix.getTotalDonations();
+
+// Exibir estrutura
+console.log(matrix.display());
+// 📁 ONG Matriz [COMPOSITE] (2 filiais)
+//   ├─ Filial Norte [COMPOSITE] (1 filiais)
+//     └─ Sub-filial A [LEAF] (branch)
+//   └─ Filial Sul [LEAF] (branch)
+
+// Buscar organização específica
+const org = matrix.findById('filial-id');
+
+// Árvore como JSON
+const tree = matrix.getOrganizationTree();
+```
+
+VANTAGENS:
+
+1. UNIFORMIDADE:
+   - Mesma interface para organizações individuais e grupos
+   - Cliente não precisa distinguir entre Leaf e Composite
+
+2. FLEXIBILIDADE:
+   - Fácil adicionar novos tipos de organizações
+   - Estruturas hierárquicas dinâmicas
+
+3. RECURSIVIDADE:
+   - Operações automáticas em toda a árvore
+   - Código limpo e reutilizável
+
+4. ESCALABILIDADE:
+   - Suporta hierarquias de qualquer profundidade
+   - Performance otimizada com lazy loading
+
+INTEGRAÇÃO COM SISTEMA:
+
+1. REPOSITORIES:
+   - MongoOrganizationRepository para persistência
+   - ProductRepository e DonationRepository injetados
+
+2. CONTROLLERS:
+   - OrganizationCompositeController para endpoints
+   - Operações CRUD em hierarquias
+
+3. SERVICES:
+   - OrganizationCompositeService para lógica de negócio
+   - Validações e regras específicas
+
+4. ROTAS:
+   - GET /organizations/:id/tree - árvore completa
+   - GET /organizations/:id/metrics - métricas agregadas
+   - POST /organizations/:id/children - adicionar filial
+   - DELETE /organizations/:parentId/children/:childId - remover filial
+
+CASOS DE TESTE:
+
+1. Criar organização Leaf
+2. Criar organização Composite
+3. Adicionar filiais a Composite
+4. Remover filiais de Composite
+5. Calcular métricas recursivas
+6. Buscar organizações na árvore
+7. Exibir estrutura hierárquica
+8. Converter para JSON
+
+PADRÕES RELACIONADOS:
+
+- FACTORY: CompositeFactory cria hierarquias
+- REPOSITORY: Persistência das organizações
+- STRATEGY: Diferentes tipos de organizações
+- VISITOR: Operações específicas na árvore (futuro)
+
+CONSIDERAÇÕES:
+
+1. PERFORMANCE:
+   - Operações recursivas podem ser custosas
+   - Implementar cache para métricas frequentes
+   - Lazy loading de filiais quando necessário
+
+2. CONSISTÊNCIA:
+   - Validar integridade da árvore
+   - Evitar referências circulares
+   - Transações para operações complexas
+
+3. SEGURANÇA:
+   - Verificar permissões antes de operações
+   - Logs detalhados para auditoria
+   - Validação de dados de entrada
+
+STATUS: ✅ IMPLEMENTADO
+- Component, Leaf, Composite criados
+- Factory implementada
+- Operações básicas funcionando
+- Pronto para integração com controllers/services

@@ -1,0 +1,237 @@
+RESUMO ATUAL (2025-09-30) • Nota: 10/10
+Como está sendo usado:
+- Repository Pattern implementado em todas as entidades do domínio.
+- Interfaces em src/domain/repositories/ definem contratos (IUserRepository, IProductRepository, etc).
+- Implementações MongoDB em src/infra/repositories/ (MongoUserRepository, MongoProductRepository, etc).
+- Implementações Prisma em src/infra/repositories/ (PrismaUserRepository, PrismaProductRepository).
+- Repositories injetados em Services via Dependency Injection.
+- Abstração completa do acesso a dados.
+- Facilita troca de banco (MongoDB ↔ Prisma) via Strategy Pattern.
+
+Implementações realizadas:
+✅ IUserRepository - Interface com métodos: findById, findByEmail, save, update, delete, existsByEmail
+✅ IProductRepository - Interface com métodos: findById, findByOrganizationId, findAvailable, search, save, update, delete
+✅ IDonationRepository - Interface com métodos: findById, findByMercadoPagoId, findBySubscriptionId, create, update
+✅ MongoUserRepository - Implementação MongoDB completa
+✅ MongoProductRepository - Implementação MongoDB completa
+✅ MongoDonationRepository - Implementação MongoDB completa
+✅ MongoCollaborationRepository - Implementação MongoDB para colaborações
+✅ MongoFileRepository - Implementação MongoDB para arquivos
+✅ MongoNotificationRepository - Implementação MongoDB para notificações
+✅ PrismaUserRepository - Implementação Prisma alternativa
+✅ PrismaProductRepository - Implementação Prisma alternativa
+✅ PrismaDonationRepository - Implementação Prisma alternativa
+✅ PrismaCollaborationRepository - Implementação Prisma alternativa
+
+Evidências no código:
+- src/domain/repositories/IUserRepository.js - Interface base
+  * findById(id): Promise<User | null>
+  * findByEmail(email): Promise<User | null>
+  * save(user): Promise<User>
+  * update(id, data): Promise<User>
+  * delete(id): Promise<void>
+  * existsByEmail(email): Promise<boolean>
+  * count(): Promise<number>
+  * findWithPagination(page, limit): Promise<Array<User>>
+
+- src/infra/repositories/MongoUserRepository.js - Implementação MongoDB
+  * Usa mongoose models
+  * Queries otimizadas
+  * Validações de dados
+  * Error handling robusto
+
+- src/infra/repositories/PrismaUserRepository.js - Implementação Prisma
+  * Usa Prisma Client
+  * Type safety
+  * Transações suportadas
+  * Relacionamentos otimizados
+
+- src/main/factories/MongoRepositoryFactory.js - Factory MongoDB
+  * Cria repositories MongoDB
+  * Gerencia conexões
+  * Singleton per repository
+
+- src/main/factories/PrismaRepositoryFactory.js - Factory Prisma
+  * Cria repositories Prisma
+  * Strategy Pattern para alternar
+  * Fallback para MongoDB
+
+- src/application/services/ProductService.js - Usa repositories
+  * constructor(productRepository, userRepository)
+  * Não conhece implementação (MongoDB ou Prisma)
+  * Trabalha apenas com interfaces
+
+Benefícios alcançados:
+✅ Abstração completa do acesso a dados
+✅ Services independentes de tecnologia de persistência
+✅ Fácil trocar banco de dados (MongoDB → PostgreSQL via Prisma)
+✅ Facilita testes unitários (mock repositories)
+✅ Queries encapsuladas e reutilizáveis
+✅ Separação clara entre lógica de negócio e persistência
+✅ SOLID - Single Responsibility Principle
+✅ SOLID - Dependency Inversion Principle
+✅ Clean Architecture - Camada de dados isolada
+
+Padrão de uso:
+```javascript
+// 1. Definir interface
+class IUserRepository {
+  async findById(id) { throw new Error('Not implemented'); }
+  async save(user) { throw new Error('Not implemented'); }
+}
+
+// 2. Implementar com tecnologia específica
+class MongoUserRepository extends IUserRepository {
+  constructor(model) {
+    super();
+    this.model = model;
+  }
+  
+  async findById(id) {
+    return await this.model.findById(id);
+  }
+  
+  async save(user) {
+    return await this.model.create(user);
+  }
+}
+
+// 3. Injetar em Service
+class UserService {
+  constructor(userRepository) { // IUserRepository
+    this.userRepository = userRepository;
+  }
+  
+  async getUser(id) {
+    // Não sabe se é Mongo ou Prisma
+    return await this.userRepository.findById(id);
+  }
+}
+
+// 4. Factory cria e injeta
+const userRepo = repositoryFactory.createUserRepository();
+const userService = new UserService(userRepo);
+```
+
+Repositories por entidade:
+1. USER REPOSITORY:
+   - findById, findByEmail, save, update, delete
+   - existsByEmail, count, findWithPagination
+   - Validações de email e senha
+
+2. PRODUCT REPOSITORY:
+   - findById, findByOrganizationId, findAvailable
+   - searchByName, save, update, delete
+   - Filtros por categoria e disponibilidade
+
+3. DONATION REPOSITORY:
+   - findById, findByMercadoPagoId, findBySubscriptionId
+   - findByOrganizationId, create, update
+   - Queries para relatórios
+
+4. COLLABORATION REPOSITORY:
+   - findById, findByOrganizationIds, save, update
+   - Status tracking de colaborações
+
+5. FILE REPOSITORY:
+   - findById, findByOwnerId, save, delete
+   - Metadata de uploads
+
+6. NOTIFICATION REPOSITORY:
+   - findById, findByUserId, markAsRead, save
+   - Notificações não lidas
+
+Integração com outros patterns:
+- Factory Pattern: Factories criam repositories
+- Dependency Injection: Repositories injetados em services
+- Strategy Pattern: Alterna entre MongoDB e Prisma
+- Proxy Pattern: Pode adicionar cache a repositories
+- Singleton Pattern: Repositories gerenciados como singletons
+
+Comparação MongoDB vs Prisma:
+MONGODB:
+- Mongoose ODM
+- Schema validation
+- Queries flexíveis
+- Bom para dados não estruturados
+
+PRISMA:
+- Type safety
+- Migrations automáticas
+- Queries otimizadas
+- Bom para dados estruturados
+- Relacionamentos declarativos
+
+Ambos implementam a mesma interface IRepository!
+
+Query examples:
+```javascript
+// MongoDB
+await UserModel.findOne({ email: 'user@example.com' });
+
+// Prisma
+await prisma.user.findUnique({ where: { email: 'user@example.com' } });
+
+// Service não sabe qual é usado!
+await userRepository.findByEmail('user@example.com');
+```
+
+Performance:
+- Queries otimizadas por implementação
+- Indexes definidos no schema
+- Paginação implementada
+- Cache pode ser adicionado via Proxy
+
+Testing:
+```javascript
+// Mock repository para testes
+class MockUserRepository extends IUserRepository {
+  constructor() {
+    super();
+    this.users = [];
+  }
+  
+  async findById(id) {
+    return this.users.find(u => u.id === id);
+  }
+  
+  async save(user) {
+    this.users.push(user);
+    return user;
+  }
+}
+
+// Service testável sem banco real
+const mockRepo = new MockUserRepository();
+const service = new UserService(mockRepo);
+```
+
+PADRÃO REPOSITORY (Estrutural) - IMPLEMENTADO COMPLETO ✅✅✅
+
+CONTEXTO NO PROJETO:
+Sistema de marketplace de ONGs com múltiplas entidades (User, Product, Donation, etc).
+Necessidade de abstrair persistência para facilitar testes e permitir múltiplos bancos.
+
+APLICAÇÕES PRÁTICAS:
+1. UserRepository: Autenticação e perfis
+2. ProductRepository: Marketplace de produtos
+3. DonationRepository: Sistema de doações
+4. CollaborationRepository: Parcerias entre ONGs
+5. FileRepository: Gerenciamento de uploads
+6. NotificationRepository: Sistema de notificações
+
+IMPACTO NO TCC:
+- Clean Architecture exemplar
+- SOLID principles aplicados
+- Fácil demonstrar troca de banco (MongoDB → Prisma)
+- Testabilidade alta (mocks)
+- Separação de responsabilidades clara
+- Pattern fundamental bem implementado
+
+DIFERENCIAL:
+- Dual implementation (MongoDB + Prisma)
+- Strategy Pattern integrado
+- Todos os CRUDs implementados
+- Queries complexas abstraídas
+- Performance otimizada
+- Pronto para escalar

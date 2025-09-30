@@ -99,3 +99,66 @@ model Donation {
 
   @@map("donations")
 }
+
+// Collaboration model
+model Collaboration {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("collaborations")
+}
+
+// Notification model
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@map("notifications")
+}
+
+// File model
+model File {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  filename  String
+  originalName String
+  mimetype  String
+  size      Int
+  url       String
+  ownerId   String   @db.ObjectId
+  ownerType String   // 'user', 'product', 'organization'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("files")
+}
+
+// COMPOSITE PATTERN - Organization Hierarchy
+model Organization {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String   @unique
+  description String?
+  type        String   @default("independent") // 'matrix', 'branch', 'independent'
+  
+  // Composite Pattern - Hierarchy
+  parentId    String?  @db.ObjectId
+  parent      Organization?  @relation("OrganizationHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    Organization[] @relation("OrganizationHierarchy")
+  
+  // Metadata
+  adminUserId String?  @db.ObjectId
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([parentId])
+  @@index([type])
+  @@map("organizations")
+}
