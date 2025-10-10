@@ -6,6 +6,9 @@ const MongoFileRepository = require('../../infra/repositories/MongoFileRepositor
 const MongoNotificationRepository = require('../../infra/repositories/MongoNotificationRepository');
 const MongoDonationRepository = require('../../infra/repositories/MongoDonationRepository');
 
+// Prisma Repository para TopDonor (usa Prisma com MongoDB)
+const PrismaTopDonorRepository = require('../../infra/repositories/PrismaTopDonorRepository');
+
 /**
  * Factory para criação de repositories MongoDB
  * Implementa Strategy Pattern para alternar entre diferentes tipos de persistência
@@ -90,6 +93,18 @@ class MongoRepositoryFactory {
   }
 
   /**
+   * Cria repository de doadores de destaque (Prisma)
+   * @returns {PrismaTopDonorRepository} Repository de doadores de destaque
+   */
+  createTopDonorRepository() {
+    if (!this.repositories.topDonor) {
+      this.repositories.topDonor = new PrismaTopDonorRepository();
+      console.log('[MongoRepositoryFactory] PrismaTopDonorRepository criado');
+    }
+    return this.repositories.topDonor;
+  }
+
+  /**
    * Obtém todos os repositories criados
    * @returns {Object} Objeto com todos os repositories
    */
@@ -101,6 +116,7 @@ class MongoRepositoryFactory {
       fileRepository: this.createFileRepository(),
       notificationRepository: this.createNotificationRepository(),
       donationRepository: this.createDonationRepository(),
+      topDonorRepository: this.createTopDonorRepository(),
     };
   }
 

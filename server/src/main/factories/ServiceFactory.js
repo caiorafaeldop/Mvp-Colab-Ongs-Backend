@@ -2,6 +2,7 @@ const EnhancedJwtAuthService = require('../../infra/services/EnhancedJwtAuthServ
 const SimpleJwtAuthService = require('../../infra/services/SimpleJwtAuthService');
 const ProductService = require('../../application/services/ProductService');
 const DonationService = require('../../application/services/DonationService');
+const TopDonorService = require('../../application/services/TopDonorService');
 const AdapterFactory = require('./AdapterFactory');
 
 /**
@@ -157,6 +158,29 @@ class ServiceFactory {
   }
 
   /**
+   * Cria ou retorna instância existente do TopDonorService
+   * @returns {TopDonorService}
+   */
+  createTopDonorService() {
+    if (!this.services.has('topDonorService')) {
+      console.log('[SERVICE FACTORY] Criando TopDonorService');
+
+      const topDonorRepository = this.dependencies.get('topDonorRepository');
+
+      if (!topDonorRepository) {
+        throw new Error('TopDonorRepository dependency not found');
+      }
+
+      const topDonorService = new TopDonorService(topDonorRepository);
+
+      this.services.set('topDonorService', topDonorService);
+      console.log('[SERVICE FACTORY] TopDonorService criado com sucesso');
+    }
+
+    return this.services.get('topDonorService');
+  }
+
+  /**
    * Cria service por nome usando reflexão
    * @param {string} serviceName - Nome do service
    * @param {Array} dependencies - Array de dependências
@@ -176,6 +200,7 @@ class ServiceFactory {
       authservice: () => this.createAuthService(),
       productservice: () => this.createProductService(),
       donationservice: () => this.createDonationService(),
+      topdonorservice: () => this.createTopDonorService(),
     };
 
     const factory = serviceMap[serviceKey];
