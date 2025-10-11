@@ -10,26 +10,7 @@ const options = {
     info: {
       title: 'RFCC-Colab API - Sistema de Doações',
       version: '2.0.0',
-      description: `
-        🎯 **API completa para sistema de doações via Mercado Pago**
-        
-        ## 💰 Funcionalidades:
-        - ✅ Doações únicas e recorrentes
-        - ✅ Integração Mercado Pago (PRODUÇÃO)
-        - ✅ Webhook automático
-        - ✅ Lista pública de doadores
-        - ✅ Estatísticas em tempo real
-        
-        ## 🔑 Credenciais:
-        - **Ambiente:** PRODUÇÃO (pagamentos reais)
-        - **Conta MP:** 1992214220
-        - **Aplicação:** RFCC-Colab
-        
-        ## 🚀 Como usar:
-        1. **Fazer doação:** POST /api/donations/donate
-        2. **Ver doações:** GET /api/donations/public
-        3. **Estatísticas:** GET /api/donations/stats
-      `,
+      description: ` `,
       contact: {
         name: 'RFCC-Colab',
         email: 'caiorafaeldop@gmail.com',
@@ -43,10 +24,6 @@ const options = {
       {
         url: 'https://mvp-colab-ongs-backend.onrender.com',
         description: 'Servidor de produção (Render)',
-      },
-      {
-        url: 'https://unexcitable-escapeless-adalyn.ngrok-free.dev',
-        description: 'Servidor público (ngrok)',
       },
     ],
     components: {
