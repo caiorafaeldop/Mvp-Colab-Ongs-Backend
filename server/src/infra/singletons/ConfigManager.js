@@ -1,4 +1,4 @@
-const ISingleton = require('../../domain/singletons/ISingleton');
+const ISingleton = require('../../domain/singleton/ISingleton');
 
 /**
  * Singleton para gerenciamento de configurações
