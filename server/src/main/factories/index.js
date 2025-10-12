@@ -7,6 +7,8 @@ const createSimpleAuthRoutes = require('../../presentation/routes/simpleAuthRout
 const createProductRoutes = require('../../presentation/routes/productRoutes');
 const createDonationRoutes = require('../../presentation/routes/donationRoutes');
 const createUploadRoutes = require('../../presentation/routes/UploadRoutes');
+const { createAuthenticatedTopDonorRoutes } = require('../../presentation/routes/topDonorRoutes');
+const TopDonorController = require('../../presentation/controllers/TopDonorController');
 // Factories removidos na limpeza - não utilizados
 const AdapterFactory = require('./AdapterFactory');
 const BridgeFactory = require('./BridgeFactory');
@@ -87,6 +89,10 @@ class AppFactory {
     return this.repositoryFactory.createDonationRepository();
   }
 
+  createTopDonorRepository() {
+    return this.repositoryFactory.createTopDonorRepository();
+  }
+
   /**
    * Métodos de criação de services usando ServiceFactory
    */
@@ -116,6 +122,13 @@ class AppFactory {
       throw new Error('AppFactory must be initialized before creating services');
     }
     return this.serviceFactory.createDonationService();
+  }
+
+  createTopDonorService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createTopDonorService();
   }
 
   /**
@@ -154,6 +167,28 @@ class AppFactory {
     }
 
     return createUploadRoutes(storageBridge);
+  }
+
+  createTopDonorRoutes() {
+    console.log('[APP FACTORY] Criando rotas de TopDonor...');
+
+    console.log('[APP FACTORY] Criando TopDonorService...');
+    const topDonorService = this.createTopDonorService();
+    console.log('[APP FACTORY] TopDonorService criado:', !!topDonorService);
+
+    console.log('[APP FACTORY] Criando SimpleAuthService...');
+    const authService = this.createSimpleAuthService();
+    console.log('[APP FACTORY] SimpleAuthService criado:', !!authService);
+
+    console.log('[APP FACTORY] Criando TopDonorController...');
+    const topDonorController = new TopDonorController(topDonorService);
+    console.log('[APP FACTORY] TopDonorController criado:', !!topDonorController);
+
+    console.log('[APP FACTORY] Criando rotas autenticadas...');
+    const routes = createAuthenticatedTopDonorRoutes(authService, topDonorController);
+    console.log('[APP FACTORY] Rotas de TopDonor criadas com sucesso!');
+
+    return routes;
   }
 
   /**
