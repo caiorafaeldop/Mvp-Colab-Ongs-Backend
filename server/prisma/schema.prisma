@@ -198,3 +198,20 @@ model TopDonor {
   @@index([organizationId])
   @@map("topDonors")
 }
+
+// Supporter model - Colaboradores/Apoiadores exibidos na Home
+model Supporter {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  imageUrl    String?
+  description String?
+  website     String?
+  order       Int      @default(0)
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([visible])
+  @@index([order])
+  @@map("supporters")
+}

@@ -7,8 +7,16 @@ const createSimpleAuthRoutes = require('../../presentation/routes/simpleAuthRout
 const createProductRoutes = require('../../presentation/routes/productRoutes');
 const createDonationRoutes = require('../../presentation/routes/donationRoutes');
 const createUploadRoutes = require('../../presentation/routes/UploadRoutes');
-const { createAuthenticatedTopDonorRoutes } = require('../../presentation/routes/topDonorRoutes');
+const {
+  createAuthenticatedTopDonorRoutes,
+  createPublicTopDonorRoutes,
+} = require('../../presentation/routes/topDonorRoutes');
 const TopDonorController = require('../../presentation/controllers/TopDonorController');
+const {
+  createAuthenticatedSupporterRoutes,
+  createPublicSupporterRoutes,
+} = require('../../presentation/routes/supporterRoutes');
+const SupporterController = require('../../presentation/controllers/SupporterController');
 // Factories removidos na limpeza - não utilizados
 const AdapterFactory = require('./AdapterFactory');
 const BridgeFactory = require('./BridgeFactory');
@@ -131,6 +139,13 @@ class AppFactory {
     return this.serviceFactory.createTopDonorService();
   }
 
+  createSupporterService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createSupporterService();
+  }
+
   /**
    * Métodos de criação de rotas
    */
@@ -188,6 +203,34 @@ class AppFactory {
     const routes = createAuthenticatedTopDonorRoutes(authService, topDonorController);
     console.log('[APP FACTORY] Rotas de TopDonor criadas com sucesso!');
 
+    return routes;
+  }
+
+  createPublicTopDonorRoutes() {
+    console.log('[APP FACTORY] Criando rotas públicas de TopDonor...');
+
+    const topDonorService = this.createTopDonorService();
+    const topDonorController = new TopDonorController(topDonorService);
+    const routes = createPublicTopDonorRoutes(topDonorController);
+    return routes;
+  }
+
+  createSupporterRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Supporter...');
+
+    const supporterService = this.createSupporterService();
+    const authService = this.createSimpleAuthService();
+    const supporterController = new SupporterController(supporterService);
+    const routes = createAuthenticatedSupporterRoutes(authService, supporterController);
+    return routes;
+  }
+
+  createPublicSupporterRoutes() {
+    console.log('[APP FACTORY] Criando rotas públicas de Supporter...');
+
+    const supporterService = this.createSupporterService();
+    const supporterController = new SupporterController(supporterService);
+    const routes = createPublicSupporterRoutes(supporterController);
     return routes;
   }
 

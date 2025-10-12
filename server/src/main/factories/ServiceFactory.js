@@ -3,6 +3,7 @@ const SimpleJwtAuthService = require('../../infra/services/SimpleJwtAuthService'
 const ProductService = require('../../application/services/ProductService');
 const DonationService = require('../../application/services/DonationService');
 const TopDonorService = require('../../application/services/TopDonorService');
+const SupporterService = require('../../application/services/SupporterService');
 const AdapterFactory = require('./AdapterFactory');
 
 /**
@@ -181,6 +182,29 @@ class ServiceFactory {
   }
 
   /**
+   * Cria ou retorna instância existente do SupporterService
+   * @returns {SupporterService}
+   */
+  createSupporterService() {
+    if (!this.services.has('supporterService')) {
+      console.log('[SERVICE FACTORY] Criando SupporterService');
+
+      const supporterRepository = this.dependencies.get('supporterRepository');
+
+      if (!supporterRepository) {
+        throw new Error('SupporterRepository dependency not found');
+      }
+
+      const supporterService = new SupporterService(supporterRepository);
+
+      this.services.set('supporterService', supporterService);
+      console.log('[SERVICE FACTORY] SupporterService criado com sucesso');
+    }
+
+    return this.services.get('supporterService');
+  }
+
+  /**
    * Cria service por nome usando reflexão
    * @param {string} serviceName - Nome do service
    * @param {Array} dependencies - Array de dependências
@@ -201,6 +225,7 @@ class ServiceFactory {
       productservice: () => this.createProductService(),
       donationservice: () => this.createDonationService(),
       topdonorservice: () => this.createTopDonorService(),
+      supporterservice: () => this.createSupporterService(),
     };
 
     const factory = serviceMap[serviceKey];

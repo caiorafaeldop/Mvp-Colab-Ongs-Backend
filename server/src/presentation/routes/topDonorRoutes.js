@@ -69,7 +69,6 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *       type: object
  *       required:
  *         - donorName
- *         - topPosition
  *         - donatedAmount
  *         - donationType
  *         - donationDate
@@ -83,7 +82,7 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *         topPosition:
  *           type: integer
  *           minimum: 1
- *           description: Posição no ranking
+ *           description: Opcional. Será recalculada automaticamente pelo sistema com base no valor doado.
  *           example: 1
  *         donatedAmount:
  *           type: number
@@ -654,4 +653,12 @@ function createAuthenticatedTopDonorRoutes(authService, topDonorController) {
 module.exports = {
   createTopDonorRoutes,
   createAuthenticatedTopDonorRoutes,
+  // Cria rotas públicas somente-leitura para consumo pelo frontend
+  createPublicTopDonorRoutes: function (topDonorController) {
+    const router = express.Router();
+    // Expor apenas consultas públicas
+    router.get('/top/:year/:month/:limit', topDonorController.getTopN);
+    router.get('/period/:year/:month', topDonorController.getByPeriod);
+    return router;
+  },
 };

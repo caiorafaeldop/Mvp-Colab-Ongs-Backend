@@ -184,6 +184,48 @@ class PrismaTopDonorRepository {
   }
 
   /**
+   * Busca doadores por período ordenados por valor doado desc (para recálculo de ranking)
+   */
+  async findByPeriodOrderByAmount(month, year) {
+    try {
+      const prisma = this._getPrismaClient();
+      const topDonors = await prisma.topDonor.findMany({
+        where: {
+          referenceMonth: Number(month),
+          referenceYear: Number(year),
+        },
+        orderBy: [{ donatedAmount: 'desc' }, { donationDate: 'asc' }, { createdAt: 'asc' }],
+      });
+      return topDonors;
+    } catch (error) {
+      console.error('[PRISMA TOP DONOR REPOSITORY] Erro ao buscar período por valor:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Busca doadores de um período ordenados por valor doado (desc)
+   */
+  async findByPeriodOrderByAmount(month, year) {
+    try {
+      const prisma = this._getPrismaClient();
+      return prisma.topDonor.findMany({
+        where: {
+          referenceMonth: Number(month),
+          referenceYear: Number(year),
+        },
+        orderBy: [{ donatedAmount: 'desc' }, { donationDate: 'asc' }, { createdAt: 'asc' }],
+      });
+    } catch (error) {
+      console.error(
+        '[PRISMA TOP DONOR REPOSITORY] Erro ao buscar por período ordenado por valor:',
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Busca doadores de destaque por organização
    */
   async findByOrganization(organizationId) {
@@ -254,6 +296,32 @@ class PrismaTopDonorRepository {
       return topDonor;
     } catch (error) {
       console.error('[PRISMA TOP DONOR REPOSITORY] Erro ao atualizar doador de destaque:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atualiza apenas a posição de um registro
+   */
+  async updatePosition(id, topPosition) {
+    try {
+      const prisma = this._getPrismaClient();
+      return await prisma.topDonor.update({ where: { id }, data: { topPosition } });
+    } catch (error) {
+      console.error('[PRISMA TOP DONOR REPOSITORY] Erro ao atualizar posição:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atualiza apenas a posição do top para um registro
+   */
+  async updatePosition(id, topPosition) {
+    try {
+      const prisma = this._getPrismaClient();
+      return prisma.topDonor.update({ where: { id }, data: { topPosition } });
+    } catch (error) {
+      console.error('[PRISMA TOP DONOR REPOSITORY] Erro ao atualizar posição do top:', error);
       throw error;
     }
   }
