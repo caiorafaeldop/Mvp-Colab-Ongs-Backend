@@ -26,14 +26,14 @@ const adminMiddleware = () => {
       console.log('[ADMIN MIDDLEWARE] User Type:', req.user.userType);
       console.log('[ADMIN MIDDLEWARE] User Email:', req.user.email);
 
-      // Verifica se o usuário é admin
-      if (req.user.userType !== 'admin') {
-        console.error('[ADMIN MIDDLEWARE] ❌ Acesso negado - não é admin');
+      // Verifica se o usuário é organization (admin)
+      if (req.user.userType !== 'organization') {
+        console.error('[ADMIN MIDDLEWARE] ❌ Acesso negado - não é organization');
         console.error('[ADMIN MIDDLEWARE] userType atual:', req.user.userType);
-        console.error('[ADMIN MIDDLEWARE] userType esperado: admin');
+        console.error('[ADMIN MIDDLEWARE] userType esperado: organization');
         return res.status(403).json({
           success: false,
-          message: 'Access denied. Admin privileges required.',
+          message: 'Access denied. Organization privileges required.',
         });
       }
 
