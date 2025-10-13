@@ -2,6 +2,7 @@
 const PrismaUserRepository = require('../../infra/repositories/PrismaUserRepository');
 const PrismaProductRepository = require('../../infra/repositories/PrismaProductRepository');
 const PrismaCollaborationRepository = require('../../infra/repositories/PrismaCollaborationRepository');
+const PrismaTopDonorRepository = require('../../infra/repositories/PrismaTopDonorRepository');
 
 // MongoDB Repositories (fallback)
 const MongoUserRepository = require('../../infra/repositories/MongoUserRepository');
@@ -41,6 +42,22 @@ class PrismaRepositoryFactory {
     }
 
     return this.repositories.get('donationRepository');
+  }
+
+  /**
+   * Cria ou retorna instância existente do TopDonorRepository
+   * Sempre Prisma (não há implementação MongoDB)
+   * @returns {PrismaTopDonorRepository}
+   */
+  async createTopDonorRepository() {
+    if (!this.repositories.has('topDonorRepository')) {
+      console.log('[PRISMA REPOSITORY FACTORY] Criando TopDonorRepository (Prisma)');
+      const repository = new PrismaTopDonorRepository();
+      this.repositories.set('topDonorRepository', repository);
+      console.log('[PRISMA REPOSITORY FACTORY] TopDonorRepository criado com sucesso');
+    }
+
+    return this.repositories.get('topDonorRepository');
   }
 
   /**
@@ -239,6 +256,7 @@ class PrismaRepositoryFactory {
       fileRepository: await this.createFileRepository(),
       notificationRepository: await this.createNotificationRepository(),
       donationRepository: await this.createDonationRepository(),
+      topDonorRepository: await this.createTopDonorRepository(),
     };
   }
 

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const ISingleton = require('../../domain/singletons/ISingleton');
+const ISingleton = require('../../domain/singleton/ISingleton');
 
 /**
  * Singleton para sistema de logging

@@ -251,6 +251,61 @@ app.use('/api/donations', (req, res, next) => {
   return appFactory.createDonationRoutes()(req, res, next);
 });
 
+// Rotas de doadores de destaque (Admin only)
+app.use('/api/top-donors', (req, res, next) => {
+  console.log('=== [SERVER] Requisição para /api/top-donors ===');
+  console.log('[SERVER] Method:', req.method);
+  console.log('[SERVER] URL completa:', req.url);
+  console.log(
+    '[SERVER] Headers Authorization:',
+    req.headers.authorization ? 'Presente' : 'Ausente'
+  );
+
+  if (!appFactory || !appFactory.initialized) {
+    console.error('[SERVER] AppFactory não inicializado!');
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+
+  console.log('[SERVER] AppFactory inicializado, processando requisição...');
+  return appFactory.createTopDonorRoutes()(req, res, next);
+});
+
+// Rotas públicas para top donors (consulta sem autenticação)
+app.use('/api/public/top-donors', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createPublicTopDonorRoutes()(req, res, next);
+});
+
+// Rotas de colaboradores/apoiadores (Admin only)
+app.use('/api/supporters', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createSupporterRoutes()(req, res, next);
+});
+
+// Rotas públicas de colaboradores/apoiadores
+app.use('/api/public/supporters', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createPublicSupporterRoutes()(req, res, next);
+});
+
 // Rotas do padrão Composite (hierarquias de organizações)
 app.use('/api/organizations', (req, res, next) => {
   if (!appFactory || !appFactory.initialized) {
@@ -319,6 +374,15 @@ app.get('/health', (req, res) => {
       totalEvents: stats.totalEvents,
       recentEvents: stats.recentEvents.length,
     };
+  }
+
+  // Prisma status (se disponível)
+  try {
+    const PrismaService = require('../infra/singletons/PrismaService');
+    const prismaService = PrismaService.getInstance();
+    healthData.prisma = prismaService.getStatus();
+  } catch (e) {
+    // ignore
   }
 
   res.status(200).json(healthData);

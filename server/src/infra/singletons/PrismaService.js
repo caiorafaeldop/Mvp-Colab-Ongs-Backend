@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const ISingleton = require('../../domain/singletons/ISingleton');
+const ISingleton = require('../../domain/singleton/ISingleton');
 
 /**
  * Singleton para cliente Prisma
@@ -112,7 +112,10 @@ class PrismaService extends ISingleton {
       await this.prisma.$connect();
 
       // Verifica se a conexão está funcionando
-      await this.prisma.$queryRaw`SELECT 1`;
+      // Para MongoDB utilizamos $runCommandRaw com ping
+      if (this.prisma.$runCommandRaw) {
+        await this.prisma.$runCommandRaw({ ping: 1 });
+      }
 
       this.isConnected = true;
       this.connectionAttempts = 0;
@@ -127,9 +130,17 @@ class PrismaService extends ISingleton {
       this.isConnected = false;
       this.fallbackMode = true;
 
+      // Em ambiente de teste, não agendar retries para evitar logs após término dos testes
+      if (process.env.NODE_ENV === 'test') {
+        throw new Error(`Falha ao conectar: ${error.message}`);
+      }
+
       if (this.connectionAttempts < this.maxRetries) {
         console.log(`[PrismaService] Tentando reconectar em 2 segundos...`);
-        setTimeout(() => this.connect(), 2000);
+        if (this._retryTimeout) {
+          clearTimeout(this._retryTimeout);
+        }
+        this._retryTimeout = setTimeout(() => this.connect(), 2000);
       } else {
         throw new Error(`Falha ao conectar após ${this.maxRetries} tentativas: ${error.message}`);
       }
@@ -167,6 +178,10 @@ class PrismaService extends ISingleton {
    */
   async disconnect() {
     try {
+      if (this._retryTimeout) {
+        clearTimeout(this._retryTimeout);
+        this._retryTimeout = null;
+      }
       if (this.prisma && this.isConnected) {
         await this.prisma.$disconnect();
         this.isConnected = false;
@@ -205,8 +220,9 @@ class PrismaService extends ISingleton {
       if (!this.prisma || !this.isConnected) {
         return false;
       }
-
-      await this.prisma.$queryRaw`SELECT 1`;
+      if (this.prisma.$runCommandRaw) {
+        await this.prisma.$runCommandRaw({ ping: 1 });
+      }
       return true;
     } catch (error) {
       console.error('[PrismaService] Ping falhou:', error.message);
@@ -283,6 +299,10 @@ class PrismaService extends ISingleton {
    */
   static async destroyInstance() {
     if (PrismaService.instance) {
+      if (PrismaService.instance._retryTimeout) {
+        clearTimeout(PrismaService.instance._retryTimeout);
+        PrismaService.instance._retryTimeout = null;
+      }
       await PrismaService.instance.disconnect();
       PrismaService.instance = null;
       console.log('[PrismaService] Instância destruída');

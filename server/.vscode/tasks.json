@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Sanity API checks (auth + supporters + top donors)",
+      "type": "shell",
+      "command": "node -e \"(async()=>{const axios=require('axios');const base='http://localhost:3000';function h(t){return {headers:{Authorization:`Bearer ${t}`}};}try{const login=await axios.post(base+'/api/auth/login',{email:process.env.ADMIN_EMAIL||'colab@gmail.com',password:process.env.ADMIN_PASSWORD||'123456'});const token=login.data?.data?.accessToken; if(!token){throw new Error('no token');}console.log('token ok');const pubSupp=await axios.get(base+'/api/public/supporters');console.log('public supporters:',pubSupp.data?.data?.length??0);const created=await axios.post(base+'/api/supporters',{name:'Alpargatas',description:'Parceiro',order:1,visible:true},h(token));console.log('created supporter id',created.data?.data?.id);const upd=await axios.patch(base+'/api/supporters/'+created.data.data.id,{order:2},h(token));console.log('updated order',upd.data?.data?.order);const pubTop=await axios.get(base+'/api/public/top-donors/top/2025/10/10');console.log('public top donors len',pubTop.data?.data?.length??0);const td=await axios.post(base+'/api/top-donors',{donorName:'Doado X',donatedAmount:1000,donationType:'total',donationDate:new Date().toISOString(),referenceMonth:10,referenceYear:2025},h(token));console.log('top donor id',td.data?.data?.id);const td2=await axios.post(base+'/api/top-donors',{donorName:'Doado Y',donatedAmount:2000,donationType:'total',donationDate:new Date().toISOString(),referenceMonth:10,referenceYear:2025},h(token));console.log('top donor2 id',td2.data?.data?.id);const top10=await axios.get(base+'/api/public/top-donors/top/2025/10/10');console.log('top positions',top10.data.data.map(x=>({name:x.donorName,pos:x.topPosition,amt:x.donatedAmount})));await axios.delete(base+'/api/supporters/'+created.data.data.id,h(token));await axios.delete(base+'/api/top-donors/'+td.data.data.id,h(token));await axios.delete(base+'/api/top-donors/'+td2.data.data.id,h(token));console.log('cleanup ok');}catch(e){console.error('sanity error', e.response?.status, e.response?.data || e.message);process.exit(1);} })()\"",
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}

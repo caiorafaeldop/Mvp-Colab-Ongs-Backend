@@ -162,3 +162,56 @@ model Organization {
   @@index([type])
   @@map("organizations")
 }
+
+// TopDonor model - Doadores de destaque do mês
+model TopDonor {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Dados do doador
+  donorName       String   // Nome do doador
+  
+  // Ranking
+  topPosition     Int      // Colocação no top (1, 2, 3, etc.)
+  
+  // Dados da doação
+  donatedAmount   Float    // Valor doado
+  donationType    String   // 'single' (única), 'recurring' (recorrente), 'total' (acumulado)
+  donationDate    DateTime // Data da doação ou data de referência
+  
+  // Instituição (opcional)
+  organizationId  String?  @db.ObjectId // ID da organização beneficiada
+  organizationName String? // Nome da organização (desnormalizado para performance)
+  
+  // Período de referência
+  referenceMonth  Int      // Mês de referência (1-12)
+  referenceYear   Int      // Ano de referência (2024, 2025, etc.)
+  
+  // Metadados
+  metadata        Json?    @default("{}")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Índices para queries eficientes
+  @@index([referenceYear, referenceMonth])
+  @@index([topPosition])
+  @@index([organizationId])
+  @@map("topDonors")
+}
+
+// Supporter model - Colaboradores/Apoiadores exibidos na Home
+model Supporter {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  imageUrl    String?
+  description String?
+  website     String?
+  order       Int      @default(0)
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([visible])
+  @@index([order])
+  @@map("supporters")
+}
