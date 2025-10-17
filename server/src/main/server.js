@@ -317,6 +317,28 @@ app.use('/api/prestacao-contas', (req, res, next) => {
   return appFactory.createPrestacaoContasRoutes()(req, res, next);
 });
 
+// Rotas de FAQ (Perguntas Frequentes)
+app.use('/api/faqs', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createFAQRoutes()(req, res, next);
+});
+
+// Rotas de Testimonials (Depoimentos)
+app.use('/api/testimonials', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createTestimonialRoutes()(req, res, next);
+});
+
 // Rotas do padrão Composite (hierarquias de organizações)
 app.use('/api/organizations', (req, res, next) => {
   if (!appFactory || !appFactory.initialized) {

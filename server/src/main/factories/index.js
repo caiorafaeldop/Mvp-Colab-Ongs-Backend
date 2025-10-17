@@ -18,6 +18,8 @@ const {
 } = require('../../presentation/routes/supporterRoutes');
 const SupporterController = require('../../presentation/controllers/SupporterController');
 const createPrestacaoContasRoutes = require('../../presentation/routes/prestacaoContasRoutes');
+const createFAQRoutes = require('../../presentation/routes/faqRoutes');
+const createTestimonialRoutes = require('../../presentation/routes/testimonialRoutes');
 // Factories removidos na limpeza - não utilizados
 const AdapterFactory = require('./AdapterFactory');
 const BridgeFactory = require('./BridgeFactory');
@@ -158,6 +160,20 @@ class AppFactory {
     return this.serviceFactory.createPrestacaoContasService();
   }
 
+  createFAQService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createFAQService();
+  }
+
+  createTestimonialService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createTestimonialService();
+  }
+
   /**
    * Métodos de criação de rotas
    */
@@ -252,6 +268,24 @@ class AppFactory {
     const prestacaoContasService = this.createPrestacaoContasService();
     const authService = this.createSimpleAuthService();
     const routes = createPrestacaoContasRoutes(prestacaoContasService, authService);
+    return routes;
+  }
+
+  createFAQRoutes() {
+    console.log('[APP FACTORY] Criando rotas de FAQ...');
+
+    const faqService = this.createFAQService();
+    const authService = this.createSimpleAuthService();
+    const routes = createFAQRoutes(faqService, authService);
+    return routes;
+  }
+
+  createTestimonialRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Testimonials...');
+
+    const testimonialService = this.createTestimonialService();
+    const authService = this.createSimpleAuthService();
+    const routes = createTestimonialRoutes(testimonialService, authService);
     return routes;
   }
 

@@ -245,3 +245,35 @@ model PrestacaoContas {
   @@index([data])
   @@map("prestacoes_contas")
 }
+
+// FAQ model - Perguntas Frequentes
+model FAQ {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  pergunta  String
+  resposta  String
+  ordem     Int      @default(0) // Para ordenar as perguntas
+  ativo     Boolean  @default(true) // Para ativar/desativar
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativo])
+  @@index([ordem])
+  @@map("faqs")
+}
+
+// Testimonial model - Depoimentos
+model Testimonial {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nome      String
+  cargo     String   // Filiação, cargo, função, etc. (ex: "Voluntária", "Doadora", "Presidente")
+  depoimento String
+  fotoUrl   String?  // URL da foto da pessoa
+  ordem     Int      @default(0) // Para ordenar os depoimentos
+  ativo     Boolean  @default(true) // Para ativar/desativar
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativo])
+  @@index([ordem])
+  @@map("testimonials")
+}

@@ -5,6 +5,8 @@ const DonationService = require('../../application/services/DonationService');
 const TopDonorService = require('../../application/services/TopDonorService');
 const SupporterService = require('../../application/services/SupporterService');
 const PrestacaoContasService = require('../../application/services/PrestacaoContasService');
+const FAQService = require('../../application/services/FAQService');
+const TestimonialService = require('../../application/services/TestimonialService');
 const AdapterFactory = require('./AdapterFactory');
 
 /**
@@ -229,6 +231,52 @@ class ServiceFactory {
   }
 
   /**
+   * Cria ou retorna instância existente do FAQService
+   * @returns {FAQService}
+   */
+  createFAQService() {
+    if (!this.services.has('faqService')) {
+      console.log('[SERVICE FACTORY] Criando FAQService');
+
+      const faqRepository = this.dependencies.get('faqRepository');
+
+      if (!faqRepository) {
+        throw new Error('FAQRepository dependency not found');
+      }
+
+      const faqService = new FAQService(faqRepository);
+
+      this.services.set('faqService', faqService);
+      console.log('[SERVICE FACTORY] FAQService criado com sucesso');
+    }
+
+    return this.services.get('faqService');
+  }
+
+  /**
+   * Cria ou retorna instância existente do TestimonialService
+   * @returns {TestimonialService}
+   */
+  createTestimonialService() {
+    if (!this.services.has('testimonialService')) {
+      console.log('[SERVICE FACTORY] Criando TestimonialService');
+
+      const testimonialRepository = this.dependencies.get('testimonialRepository');
+
+      if (!testimonialRepository) {
+        throw new Error('TestimonialRepository dependency not found');
+      }
+
+      const testimonialService = new TestimonialService(testimonialRepository);
+
+      this.services.set('testimonialService', testimonialService);
+      console.log('[SERVICE FACTORY] TestimonialService criado com sucesso');
+    }
+
+    return this.services.get('testimonialService');
+  }
+
+  /**
    * Cria service por nome usando reflexão
    * @param {string} serviceName - Nome do service
    * @param {Array} dependencies - Array de dependências
@@ -251,6 +299,8 @@ class ServiceFactory {
       topdonorservice: () => this.createTopDonorService(),
       supporterservice: () => this.createSupporterService(),
       prestacaocontasservice: () => this.createPrestacaoContasService(),
+      faqservice: () => this.createFAQService(),
+      testimonialservice: () => this.createTestimonialService(),
     };
 
     const factory = serviceMap[serviceKey];

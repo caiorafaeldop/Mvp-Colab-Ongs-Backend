@@ -10,6 +10,8 @@ const MongoDonationRepository = require('../../infra/repositories/MongoDonationR
 const PrismaTopDonorRepository = require('../../infra/repositories/PrismaTopDonorRepository');
 const PrismaSupporterRepository = require('../../infra/repositories/PrismaSupporterRepository');
 const PrismaPrestacaoContasRepository = require('../../infra/repositories/PrismaPrestacaoContasRepository');
+const PrismaFAQRepository = require('../../infra/repositories/PrismaFAQRepository');
+const PrismaTestimonialRepository = require('../../infra/repositories/PrismaTestimonialRepository');
 // Prisma Service singleton (para garantir inicialização do cliente Prisma)
 const PrismaService = require('../../infra/singletons/PrismaService');
 
@@ -133,6 +135,30 @@ class MongoRepositoryFactory {
   }
 
   /**
+   * Cria repository de FAQ (Prisma)
+   * @returns {PrismaFAQRepository}
+   */
+  createFAQRepository() {
+    if (!this.repositories.faq) {
+      this.repositories.faq = new PrismaFAQRepository();
+      console.log('[MongoRepositoryFactory] PrismaFAQRepository criado');
+    }
+    return this.repositories.faq;
+  }
+
+  /**
+   * Cria repository de Testimonial (Prisma)
+   * @returns {PrismaTestimonialRepository}
+   */
+  createTestimonialRepository() {
+    if (!this.repositories.testimonial) {
+      this.repositories.testimonial = new PrismaTestimonialRepository();
+      console.log('[MongoRepositoryFactory] PrismaTestimonialRepository criado');
+    }
+    return this.repositories.testimonial;
+  }
+
+  /**
    * Obtém todos os repositories criados
    * @returns {Object} Objeto com todos os repositories
    */
@@ -147,6 +173,8 @@ class MongoRepositoryFactory {
       topDonorRepository: this.createTopDonorRepository(),
       supporterRepository: this.createSupporterRepository(),
       prestacaoContasRepository: this.createPrestacaoContasRepository(),
+      faqRepository: this.createFAQRepository(),
+      testimonialRepository: this.createTestimonialRepository(),
     };
   }
 
