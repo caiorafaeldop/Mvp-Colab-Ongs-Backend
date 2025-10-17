@@ -34,7 +34,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relacionamentos simplificados
-  products  Product[]  @relation("UserProducts")
+  products         Product[]         @relation("UserProducts")
+  prestacoesContas PrestacaoContas[] @relation("OrganizationPrestacoes")
 
   @@map("users")
 }
@@ -214,4 +215,33 @@ model Supporter {
   @@index([visible])
   @@index([order])
   @@map("supporters")
+}
+
+// PrestacaoContas model - Prestação de Contas das ONGs
+model PrestacaoContas {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Dados básicos
+  titulo            String
+  descricao         String
+  orgaoDoador       String   // Nome do órgão/entidade doadora
+  valor             Float
+  data              DateTime
+  
+  // Categorização
+  categoria         String   // "Despesa", "Receita", "Investimento"
+  tipoDespesa       String?  // "Alimentação", "Transporte", "Equipamentos", etc.
+  
+  // Relacionamento com a organização
+  organizationId    String   @db.ObjectId
+  organization      User     @relation("OrganizationPrestacoes", fields: [organizationId], references: [id])
+  
+  // Metadados
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([categoria])
+  @@index([data])
+  @@map("prestacoes_contas")
 }

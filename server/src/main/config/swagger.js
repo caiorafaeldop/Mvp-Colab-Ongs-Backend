@@ -481,6 +481,18 @@ const options = {
         description: '💰 Sistema de doações via Mercado Pago',
       },
       {
+        name: 'Prestação de Contas',
+        description: '📊 Gerenciamento de prestação de contas das ONGs',
+      },
+      {
+        name: 'TopDonors',
+        description: '🏆 Doadores de destaque',
+      },
+      {
+        name: 'Supporters',
+        description: '🤝 Apoiadores e colaboradores',
+      },
+      {
         name: 'Health',
         description: '🏥 Verificação de saúde do sistema',
       },

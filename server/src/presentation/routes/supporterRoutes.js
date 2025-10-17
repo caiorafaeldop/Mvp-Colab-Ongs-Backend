@@ -107,7 +107,7 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *     summary: Lista todos os apoiadores (Admin)
  *     description: Retorna lista paginada de apoiadores com filtros opcionais. Requer autenticação de admin.
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -165,7 +165,7 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *     summary: Cria um novo apoiador
  *     description: Cria um novo apoiador/colaborador. Requer autenticação de admin.
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -200,7 +200,7 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *     summary: Atualiza um apoiador
  *     description: Atualiza os dados de um apoiador existente. Requer autenticação de admin.
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -240,7 +240,7 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *     summary: Deleta um apoiador
  *     description: Remove um apoiador do sistema. Requer autenticação de admin.
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
