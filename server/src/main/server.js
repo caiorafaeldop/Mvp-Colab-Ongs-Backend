@@ -82,7 +82,7 @@ app.use(requestCorrelationMiddleware);
 app.use(requestContextMiddleware);
 
 // CHAIN HANDLER 7: Rate limiting geral
-app.use(RateLimitPresets.general());
+// app.use(RateLimitPresets.general()); // DESABILITADO TEMPORARIAMENTE
 
 // CHAIN HANDLER 8: Middleware de deduplicação de requisições
 app.use(deduplicationMiddleware);
