@@ -17,6 +17,7 @@ const {
   createPublicSupporterRoutes,
 } = require('../../presentation/routes/supporterRoutes');
 const SupporterController = require('../../presentation/controllers/SupporterController');
+const createPrestacaoContasRoutes = require('../../presentation/routes/prestacaoContasRoutes');
 // Factories removidos na limpeza - não utilizados
 const AdapterFactory = require('./AdapterFactory');
 const BridgeFactory = require('./BridgeFactory');
@@ -101,6 +102,10 @@ class AppFactory {
     return this.repositoryFactory.createTopDonorRepository();
   }
 
+  createPrestacaoContasRepository() {
+    return this.repositoryFactory.createPrestacaoContasRepository();
+  }
+
   /**
    * Métodos de criação de services usando ServiceFactory
    */
@@ -144,6 +149,13 @@ class AppFactory {
       throw new Error('AppFactory must be initialized before creating services');
     }
     return this.serviceFactory.createSupporterService();
+  }
+
+  createPrestacaoContasService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createPrestacaoContasService();
   }
 
   /**
@@ -231,6 +243,15 @@ class AppFactory {
     const supporterService = this.createSupporterService();
     const supporterController = new SupporterController(supporterService);
     const routes = createPublicSupporterRoutes(supporterController);
+    return routes;
+  }
+
+  createPrestacaoContasRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Prestação de Contas...');
+
+    const prestacaoContasService = this.createPrestacaoContasService();
+    const authService = this.createSimpleAuthService();
+    const routes = createPrestacaoContasRoutes(prestacaoContasService, authService);
     return routes;
   }
 

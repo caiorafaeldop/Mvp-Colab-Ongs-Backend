@@ -4,6 +4,7 @@ const ProductService = require('../../application/services/ProductService');
 const DonationService = require('../../application/services/DonationService');
 const TopDonorService = require('../../application/services/TopDonorService');
 const SupporterService = require('../../application/services/SupporterService');
+const PrestacaoContasService = require('../../application/services/PrestacaoContasService');
 const AdapterFactory = require('./AdapterFactory');
 
 /**
@@ -205,6 +206,29 @@ class ServiceFactory {
   }
 
   /**
+   * Cria ou retorna instância existente do PrestacaoContasService
+   * @returns {PrestacaoContasService}
+   */
+  createPrestacaoContasService() {
+    if (!this.services.has('prestacaoContasService')) {
+      console.log('[SERVICE FACTORY] Criando PrestacaoContasService');
+
+      const prestacaoContasRepository = this.dependencies.get('prestacaoContasRepository');
+
+      if (!prestacaoContasRepository) {
+        throw new Error('PrestacaoContasRepository dependency not found');
+      }
+
+      const prestacaoContasService = new PrestacaoContasService(prestacaoContasRepository);
+
+      this.services.set('prestacaoContasService', prestacaoContasService);
+      console.log('[SERVICE FACTORY] PrestacaoContasService criado com sucesso');
+    }
+
+    return this.services.get('prestacaoContasService');
+  }
+
+  /**
    * Cria service por nome usando reflexão
    * @param {string} serviceName - Nome do service
    * @param {Array} dependencies - Array de dependências
@@ -226,6 +250,7 @@ class ServiceFactory {
       donationservice: () => this.createDonationService(),
       topdonorservice: () => this.createTopDonorService(),
       supporterservice: () => this.createSupporterService(),
+      prestacaocontasservice: () => this.createPrestacaoContasService(),
     };
 
     const factory = serviceMap[serviceKey];

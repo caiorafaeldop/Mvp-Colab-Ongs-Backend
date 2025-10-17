@@ -9,6 +9,7 @@ const MongoDonationRepository = require('../../infra/repositories/MongoDonationR
 // Prisma Repository para TopDonor (usa Prisma com MongoDB)
 const PrismaTopDonorRepository = require('../../infra/repositories/PrismaTopDonorRepository');
 const PrismaSupporterRepository = require('../../infra/repositories/PrismaSupporterRepository');
+const PrismaPrestacaoContasRepository = require('../../infra/repositories/PrismaPrestacaoContasRepository');
 // Prisma Service singleton (para garantir inicialização do cliente Prisma)
 const PrismaService = require('../../infra/singletons/PrismaService');
 
@@ -120,6 +121,18 @@ class MongoRepositoryFactory {
   }
 
   /**
+   * Cria repository de prestação de contas (Prisma)
+   * @returns {PrismaPrestacaoContasRepository}
+   */
+  createPrestacaoContasRepository() {
+    if (!this.repositories.prestacaoContas) {
+      this.repositories.prestacaoContas = new PrismaPrestacaoContasRepository();
+      console.log('[MongoRepositoryFactory] PrismaPrestacaoContasRepository criado');
+    }
+    return this.repositories.prestacaoContas;
+  }
+
+  /**
    * Obtém todos os repositories criados
    * @returns {Object} Objeto com todos os repositories
    */
@@ -133,6 +146,7 @@ class MongoRepositoryFactory {
       donationRepository: this.createDonationRepository(),
       topDonorRepository: this.createTopDonorRepository(),
       supporterRepository: this.createSupporterRepository(),
+      prestacaoContasRepository: this.createPrestacaoContasRepository(),
     };
   }
 
