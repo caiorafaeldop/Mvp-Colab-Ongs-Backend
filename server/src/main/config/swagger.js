@@ -493,6 +493,14 @@ const options = {
         description: '🤝 Apoiadores e colaboradores',
       },
       {
+        name: 'FAQ',
+        description: '📋 Perguntas Frequentes',
+      },
+      {
+        name: 'Testimonials',
+        description: '💬 Depoimentos',
+      },
+      {
         name: 'Health',
         description: '🏥 Verificação de saúde do sistema',
       },
