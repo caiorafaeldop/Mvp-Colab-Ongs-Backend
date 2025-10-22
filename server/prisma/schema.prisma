@@ -217,20 +217,25 @@ model Supporter {
   @@map("supporters")
 }
 
-// PrestacaoContas model - Prestação de Contas das ONGs
+// PrestacaoContas model - Prestação de Contas com estrutura flexível tipo planilha
 model PrestacaoContas {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   
-  // Dados básicos
-  titulo            String
-  descricao         String
-  orgaoDoador       String   // Nome do órgão/entidade doadora
-  valor             Float
-  data              DateTime
+  // Estrutura flexível - JSON com dados da planilha
+  // Cada linha é um objeto com colunas dinâmicas
+  linhas            Json     // Array de objetos: [{ col1: "valor", col2: 123, ... }]
   
-  // Categorização
-  categoria         String   // "Despesa", "Receita", "Investimento"
-  tipoDespesa       String?  // "Alimentação", "Transporte", "Equipamentos", etc.
+  // Definição das colunas (cabeçalhos)
+  colunas           Json     // Array de objetos: [{ id: "col1", nome: "CREDOR", tipo: "text" }, ...]
+  
+  // Metadados da planilha
+  titulo            String   @default("Prestação de Contas")
+  ano               Int      @default(2025)
+  mes               Int?     // Opcional: mês específico
+  
+  // Configurações de exibição
+  mostrarTotal      Boolean  @default(true)
+  colunasTotal      Json?    // Array com IDs das colunas que devem ser somadas no total
   
   // Relacionamento com a organização
   organizationId    String   @db.ObjectId
@@ -238,6 +243,10 @@ model PrestacaoContas {
   
   // Metadados
   createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("prestacaocontas")
+}
   updatedAt         DateTime @updatedAt
   
   @@index([organizationId])
