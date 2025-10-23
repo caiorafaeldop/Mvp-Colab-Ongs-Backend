@@ -1,6 +1,14 @@
 const { CreateUserDTO, LoginDTO } = require('../../application/dtos');
-const { RegisterUserUseCase, LoginUserUseCase } = require('../../application/use-cases');
+const {
+  RegisterUserUseCase,
+  LoginUserUseCase,
+  VerifyEmailUseCase,
+} = require('../../application/use-cases');
 const { logger } = require('../../infra/logger');
+const {
+  getVerificationCodeRepository,
+} = require('../../infra/repositories/VerificationCodeRepository');
+const { getEmailService } = require('../../infra/services/EmailService');
 
 /**
  * Controller de autenticação usando as novas melhorias:
@@ -14,8 +22,17 @@ class EnhancedAuthController {
     this.userRepository = userRepository;
     this.authService = authService;
 
+    // Criar VerifyEmailUseCase
+    const verificationCodeRepository = getVerificationCodeRepository();
+    const emailService = getEmailService();
+    const verifyEmailUseCase = new VerifyEmailUseCase(
+      userRepository,
+      verificationCodeRepository,
+      emailService
+    );
+
     // Criar Use Cases com dependências injetadas
-    this.registerUserUseCase = new RegisterUserUseCase(userRepository, logger);
+    this.registerUserUseCase = new RegisterUserUseCase(userRepository, logger, verifyEmailUseCase);
     this.loginUserUseCase = new LoginUserUseCase(userRepository, authService, logger);
 
     // Bind dos métodos para preservar contexto
