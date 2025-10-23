@@ -19,6 +19,7 @@ model User {
   password  String
   userType  String   @default("organization") // Sempre 'organization' agora
   phone     String?
+  emailVerified Boolean  @default(false) // Se o email foi verificado
   
   // Dados específicos da ONG
   description String?  // Descrição da ONG
@@ -83,7 +84,7 @@ model Donation {
   donorZipCode      String?  // CEP opcional
   
   // Mercado Pago
-  mercadoPagoId     String?  @unique // ID da transação no Mercado Pago
+  mercadoPagoId     String?  // ID da transação no Mercado Pago
   subscriptionId    String?  // ID da assinatura (para recorrentes)
   paymentStatus     String   @default("pending") // pending, approved, rejected, cancelled
   paymentMethod     String?  // credit_card, debit_card, pix, etc.
@@ -98,6 +99,7 @@ model Donation {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  @@index([mercadoPagoId])
   @@map("donations")
 }
 
@@ -276,4 +278,21 @@ model Testimonial {
   @@index([ativo])
   @@index([ordem])
   @@map("testimonials")
+}
+
+// VerificationCode model - Códigos de verificação de email e recuperação de senha
+model VerificationCode {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   // Email do usuário
+  code      String   // Código de 6 dígitos
+  type      String   // 'email_verification' ou 'password_reset'
+  expiresAt DateTime // Data de expiração do código
+  used      Boolean  @default(false) // Se o código já foi usado
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email, type])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("verification_codes")
 }

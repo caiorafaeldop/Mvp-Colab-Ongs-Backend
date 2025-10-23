@@ -2,6 +2,8 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const User = require('../../domain/entities/User');
+const { getVerificationCodeRepository } = require('../repositories/VerificationCodeRepository');
+const { getEmailService } = require('./EmailService');
 
 /**
  * Interface do serviço de autenticação
@@ -14,6 +16,10 @@ class SimpleJwtAuthService {
     // super() removido na limpeza
     this.userRepository = userRepository;
     this.jwtSecret = jwtSecret || process.env.JWT_SECRET || 'default-secret';
+
+    // Serviços para verificação de email
+    this.verificationCodeRepository = getVerificationCodeRepository();
+    this.emailService = getEmailService();
   }
 
   /**
@@ -194,6 +200,15 @@ class SimpleJwtAuthService {
       // Salvar usuário
       const savedUser = await this.userRepository.save(user);
 
+      // Enviar email de verificação automaticamente
+      try {
+        await this.sendVerificationEmail(savedUser.email, savedUser.name);
+        console.log('[SIMPLE JWT AUTH] Email de verificação enviado automaticamente');
+      } catch (emailError) {
+        console.error('[SIMPLE JWT AUTH] Erro ao enviar email:', emailError.message);
+        // Não falhar o registro se o email não for enviado
+      }
+
       // Gerar tokens
       const tokens = await this.generateTokens(savedUser);
 
@@ -337,6 +352,47 @@ class SimpleJwtAuthService {
     return {
       accessToken: tokens.accessToken,
     };
+  }
+
+  /**
+   * Enviar email de verificação
+   */
+  async sendVerificationEmail(email, name) {
+    try {
+      // Verificar rate limiting (máximo 3 códigos em 5 minutos)
+      const recentAttempts = await this.verificationCodeRepository.countRecentAttempts(
+        email,
+        'email_verification',
+        5
+      );
+
+      if (recentAttempts >= 3) {
+        throw new Error('Muitas tentativas. Aguarde 5 minutos antes de solicitar um novo código.');
+      }
+
+      // Invalidar códigos anteriores
+      await this.verificationCodeRepository.invalidatePreviousCodes(email, 'email_verification');
+
+      // Gerar novo código
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+      // Salvar código no banco
+      await this.verificationCodeRepository.create({
+        email,
+        code,
+        type: 'email_verification',
+        expiresAt,
+      });
+
+      // Enviar email
+      const emailResult = await this.emailService.sendVerificationEmail(email, name, code);
+
+      return emailResult;
+    } catch (error) {
+      console.error('[SIMPLE JWT AUTH] Erro ao enviar email de verificação:', error.message);
+      throw error;
+    }
   }
 }
 

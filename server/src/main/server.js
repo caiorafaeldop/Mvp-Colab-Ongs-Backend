@@ -205,6 +205,12 @@ app.use('/api/auth', (req, res, next) => {
       message: 'Server is still initializing, please try again in a moment',
     });
   }
+
+  // Verificar se é uma rota de verificação
+  if (req.path.startsWith('/verify-email') || req.path.startsWith('/password-reset')) {
+    return appFactory.createVerificationRoutes()(req, res, next);
+  }
+
   return appFactory.createSimpleAuthRoutes()(req, res, next);
 });
 

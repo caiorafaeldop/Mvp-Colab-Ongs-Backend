@@ -20,6 +20,7 @@ const SupporterController = require('../../presentation/controllers/SupporterCon
 const createPrestacaoContasRoutes = require('../../presentation/routes/prestacaoContasRoutes');
 const createFAQRoutes = require('../../presentation/routes/faqRoutes');
 const createTestimonialRoutes = require('../../presentation/routes/testimonialRoutes');
+const createVerificationRoutes = require('../../presentation/routes/verificationRoutes');
 // Factories removidos na limpeza - não utilizados
 const AdapterFactory = require('./AdapterFactory');
 const BridgeFactory = require('./BridgeFactory');
@@ -286,6 +287,44 @@ class AppFactory {
     const testimonialService = this.createTestimonialService();
     const authService = this.createSimpleAuthService();
     const routes = createTestimonialRoutes(testimonialService, authService);
+    return routes;
+  }
+
+  createVerificationRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Verificação...');
+
+    const VerificationController = require('../../presentation/controllers/VerificationController');
+    const { VerifyEmailUseCase, PasswordResetUseCase } = require('../../application/use-cases');
+    const {
+      VerificationCodeRepository,
+    } = require('../../infra/repositories/VerificationCodeRepository');
+    const { getEmailService } = require('../../infra/services/EmailService');
+
+    // Criar repositórios e serviços
+    const userRepository = this.createUserRepository();
+    const verificationCodeRepository = new VerificationCodeRepository();
+    const emailService = getEmailService();
+
+    // Criar Use Cases
+    const verifyEmailUseCase = new VerifyEmailUseCase(
+      userRepository,
+      verificationCodeRepository,
+      emailService
+    );
+    const passwordResetUseCase = new PasswordResetUseCase(
+      userRepository,
+      verificationCodeRepository,
+      emailService
+    );
+
+    // Criar Controller
+    const verificationController = new VerificationController(
+      verifyEmailUseCase,
+      passwordResetUseCase
+    );
+
+    const routes = createVerificationRoutes(verificationController);
+    console.log('[APP FACTORY] Rotas de Verificação criadas com sucesso!');
     return routes;
   }
 
