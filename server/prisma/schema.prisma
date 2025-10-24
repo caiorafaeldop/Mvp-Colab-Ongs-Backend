@@ -233,6 +233,9 @@ model PrestacaoContas {
   // Metadados da planilha
   titulo            String   @default("Prestação de Contas")
   descricaoPlanilha String?  // Descrição opcional da planilha
+  origemRecurso     String?  // Origem do recurso (ex: "Convênio Federal", "Doações")
+  valorTotalRecurso Float?   // Valor total do recurso (formato numérico)
+  saldoConta        Float?   // Saldo em conta (formato numérico)
   ano               Int      @default(2025)
   mes               Int?     // Opcional: mês específico (retrocompatibilidade)
   mesInicial        Int?     // Mês inicial do período
