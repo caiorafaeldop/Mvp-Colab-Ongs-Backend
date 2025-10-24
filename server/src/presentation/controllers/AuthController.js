@@ -202,6 +202,94 @@ class AuthController {
   };
 
   /**
+   * Endpoint para atualizar perfil do usuário
+   */
+  updateProfile = async (req, res) => {
+    try {
+      console.log('[AUTH CONTROLLER] Atualização de perfil iniciada');
+
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      const { name, email, phone } = req.body;
+
+      if (!name || !email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name and email are required',
+        });
+      }
+
+      // Delega para o service
+      const updatedUser = await this.authService.updateProfile(req.user.id, {
+        name,
+        email,
+        phone,
+      });
+
+      console.log('[AUTH CONTROLLER] Perfil atualizado com sucesso');
+
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error('[AUTH CONTROLLER] Erro ao atualizar perfil:', error.message);
+      this._handleError(res, error, 400);
+    }
+  };
+
+  /**
+   * Endpoint para alterar senha
+   */
+  changePassword = async (req, res) => {
+    try {
+      console.log('[AUTH CONTROLLER] Mudança de senha iniciada');
+
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password and new password are required',
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 8 characters long',
+        });
+      }
+
+      // Delega para o service
+      await this.authService.changePassword(req.user.id, currentPassword, newPassword);
+
+      console.log('[AUTH CONTROLLER] Senha alterada com sucesso');
+
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    } catch (error) {
+      console.error('[AUTH CONTROLLER] Erro ao alterar senha:', error.message);
+      this._handleError(res, error, 400);
+    }
+  };
+
+  /**
    * Método privado para configurar cookie de refresh token
    * @param {Response} res - Objeto de resposta Express
    * @param {string} refreshToken - Token de refresh

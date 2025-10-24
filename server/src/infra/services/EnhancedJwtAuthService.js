@@ -336,6 +336,102 @@ class EnhancedJwtAuthService {
   }
 
   /**
+   * Atualiza o perfil do usuário
+   * @param {string} userId - ID do usuário
+   * @param {Object} updateData - Dados para atualizar
+   * @returns {Object} Usuário atualizado
+   */
+  async updateProfile(userId, updateData) {
+    try {
+      console.log('[UPDATE PROFILE] Atualizando perfil:', userId);
+
+      // Validar dados
+      if (!updateData.name || updateData.name.trim().length < 2) {
+        throw new Error('Name must be at least 2 characters long');
+      }
+
+      if (!updateData.email || !this._isValidEmail(updateData.email)) {
+        throw new Error('Valid email is required');
+      }
+
+      // Verificar se o email já está em uso por outro usuário
+      const existingUser = await this.userRepository.findByEmail(updateData.email);
+      if (existingUser && existingUser._id.toString() !== userId) {
+        throw new Error('Email already in use by another user');
+      }
+
+      // Buscar usuário atual
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Atualizar dados
+      user.name = updateData.name.trim();
+      user.email = updateData.email.toLowerCase().trim();
+      if (updateData.phone) {
+        user.phone = updateData.phone.trim();
+      }
+
+      // Salvar
+      const updatedUser = await this.userRepository.save(user);
+      console.log('[UPDATE PROFILE] Perfil atualizado com sucesso');
+
+      return {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        userType: updatedUser.userType,
+      };
+    } catch (error) {
+      console.error('[UPDATE PROFILE] Erro:', error.message);
+      throw new Error(`Profile update failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Altera a senha do usuário
+   * @param {string} userId - ID do usuário
+   * @param {string} currentPassword - Senha atual
+   * @param {string} newPassword - Nova senha
+   */
+  async changePassword(userId, currentPassword, newPassword) {
+    try {
+      console.log('[CHANGE PASSWORD] Alterando senha:', userId);
+
+      // Validar nova senha
+      if (!newPassword || newPassword.length < 8) {
+        throw new Error('New password must be at least 8 characters long');
+      }
+
+      // Buscar usuário
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Verificar senha atual
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        throw new Error('Current password is incorrect');
+      }
+
+      // Hash da nova senha
+      user.password = await this.hashPassword(newPassword);
+
+      // Salvar
+      await this.userRepository.save(user);
+      console.log('[CHANGE PASSWORD] Senha alterada com sucesso');
+
+      return true;
+    } catch (error) {
+      console.error('[CHANGE PASSWORD] Erro:', error.message);
+      throw new Error(`Password change failed: ${error.message}`);
+    }
+  }
+
+  /**
    * Valida e sanitiza dados de registro
    * @param {Object} userData - Dados do usuário
    * @returns {Object} Dados sanitizados

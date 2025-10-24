@@ -287,6 +287,74 @@ const createSimpleAuthRoutes = (authService) => {
    */
   router.get('/profile', authMiddleware, cachedAuthController.getProfile);
 
+  /**
+   * @swagger
+   * /api/auth/profile:
+   *   put:
+   *     tags: [Authentication]
+   *     summary: Atualizar perfil do usuário
+   *     description: Atualiza informações do usuário autenticado
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - name
+   *               - email
+   *             properties:
+   *               name:
+   *                 type: string
+   *               email:
+   *                 type: string
+   *               phone:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Perfil atualizado com sucesso
+   *       400:
+   *         description: Dados inválidos
+   *       401:
+   *         description: Não autenticado
+   */
+  router.put('/profile', authMiddleware, cachedAuthController.updateProfile);
+
+  /**
+   * @swagger
+   * /api/auth/change-password:
+   *   put:
+   *     tags: [Authentication]
+   *     summary: Alterar senha do usuário
+   *     description: Altera a senha do usuário autenticado
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - currentPassword
+   *               - newPassword
+   *             properties:
+   *               currentPassword:
+   *                 type: string
+   *               newPassword:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Senha alterada com sucesso
+   *       400:
+   *         description: Dados inválidos
+   *       401:
+   *         description: Não autenticado ou senha atual incorreta
+   */
+  router.put('/change-password', authMiddleware, cachedAuthController.changePassword);
+
   return router;
 };
 
