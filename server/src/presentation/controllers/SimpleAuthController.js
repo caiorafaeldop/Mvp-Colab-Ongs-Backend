@@ -194,6 +194,100 @@ class SimpleAuthController {
       });
     }
   };
+
+  /**
+   * Endpoint para atualizar perfil do usuário
+   */
+  updateProfile = async (req, res) => {
+    try {
+      console.log('[SIMPLE AUTH CONTROLLER] Atualização de perfil iniciada');
+
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      const { name, email, phone } = req.body;
+
+      if (!name || !email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name and email are required',
+        });
+      }
+
+      // Delega para o service
+      const updatedUser = await this.authService.updateProfile(req.user.id, {
+        name,
+        email,
+        phone,
+      });
+
+      console.log('[SIMPLE AUTH CONTROLLER] Perfil atualizado com sucesso');
+
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error('[SIMPLE AUTH CONTROLLER] Erro ao atualizar perfil:', error.message);
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
+
+  /**
+   * Endpoint para alterar senha
+   */
+  changePassword = async (req, res) => {
+    try {
+      console.log('[SIMPLE AUTH CONTROLLER] Mudança de senha iniciada');
+
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password and new password are required',
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 8 characters long',
+        });
+      }
+
+      // Delega para o service
+      await this.authService.changePassword(req.user.id, currentPassword, newPassword);
+
+      console.log('[SIMPLE AUTH CONTROLLER] Senha alterada com sucesso');
+
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    } catch (error) {
+      console.error('[SIMPLE AUTH CONTROLLER] Erro ao alterar senha:', error.message);
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
 }
 
 module.exports = SimpleAuthController;
