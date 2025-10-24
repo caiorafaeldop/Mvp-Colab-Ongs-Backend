@@ -243,18 +243,22 @@ model PrestacaoContas {
   organizationId    String   @db.ObjectId
   organization      User     @relation("OrganizationPrestacoes", fields: [organizationId], references: [id])
   
+  // Campos antigos (opcional para compatibilidade retroativa)
+  descricao         String?
+  orgaoDoador       String?
+  valor             Float?
+  data              DateTime?
+  categoria         String?
+  tipoDespesa       String?
+  
   // Metadados
   createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  @@map("prestacaocontas")
-}
   updatedAt         DateTime @updatedAt
   
   @@index([organizationId])
   @@index([categoria])
   @@index([data])
-  @@map("prestacoes_contas")
+  @@map("prestacaocontas")
 }
 
 // FAQ model - Perguntas Frequentes
