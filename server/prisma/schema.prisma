@@ -232,6 +232,7 @@ model PrestacaoContas {
   
   // Metadados da planilha
   titulo            String   @default("Prestação de Contas")
+  descricaoPlanilha String?  // Descrição opcional da planilha
   ano               Int      @default(2025)
   mes               Int?     // Opcional: mês específico (retrocompatibilidade)
   mesInicial        Int?     // Mês inicial do período
