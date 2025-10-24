@@ -27,52 +27,52 @@ class PrestacaoContasController {
     try {
       console.log('[PRESTACAO CONTAS CONTROLLER] Criando prestação de contas:', req.body);
 
-      const {
-        titulo,
-        descricao,
-        orgaoDoador,
-        valor,
-        data,
-        categoria,
-        tipoDespesa,
-        organizationId,
-      } = req.body;
+      const { titulo, ano, mes, mostrarTotal, colunas, linhas, colunasTotal, organizationId } =
+        req.body;
 
       // Validações básicas
-      if (
-        !titulo ||
-        !descricao ||
-        !orgaoDoador ||
-        !valor ||
-        !data ||
-        !categoria ||
-        !organizationId
-      ) {
+      if (!titulo || !ano || !colunas || !linhas) {
         return res.status(400).json({
           success: false,
-          message:
-            'Dados obrigatórios: titulo, descricao, orgaoDoador, valor, data, categoria, organizationId',
+          message: 'Dados obrigatórios: titulo, ano, colunas, linhas',
         });
       }
 
-      // Validar categoria
-      const categoriasValidas = ['Despesa', 'Receita', 'Investimento'];
-      if (!categoriasValidas.includes(categoria)) {
+      // Validar se colunas é um array
+      if (!Array.isArray(colunas) || colunas.length === 0) {
         return res.status(400).json({
           success: false,
-          message: `Categoria inválida. Use: ${categoriasValidas.join(', ')}`,
+          message: 'Colunas deve ser um array não vazio',
+        });
+      }
+
+      // Validar se linhas é um array
+      if (!Array.isArray(linhas)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Linhas deve ser um array',
+        });
+      }
+
+      // Obter organizationId do usuário autenticado se não foi fornecido
+      const orgId = organizationId || req.user?.id;
+
+      if (!orgId) {
+        return res.status(400).json({
+          success: false,
+          message: 'organizationId é obrigatório',
         });
       }
 
       const prestacao = await this.prestacaoContasService.create({
         titulo,
-        descricao,
-        orgaoDoador,
-        valor: parseFloat(valor),
-        data: new Date(data),
-        categoria,
-        tipoDespesa,
-        organizationId,
+        ano: parseInt(ano),
+        mes: mes ? parseInt(mes) : null,
+        mostrarTotal: mostrarTotal !== false,
+        colunas,
+        linhas,
+        colunasTotal: colunasTotal || [],
+        organizationId: orgId,
       });
 
       return res.status(201).json({
@@ -249,14 +249,13 @@ class PrestacaoContasController {
       const { id } = req.params;
       const updateData = req.body;
 
-      // Se houver data, converter para Date
-      if (updateData.data) {
-        updateData.data = new Date(updateData.data);
+      // Converter tipos se necessário
+      if (updateData.ano) {
+        updateData.ano = parseInt(updateData.ano);
       }
 
-      // Se houver valor, converter para Float
-      if (updateData.valor) {
-        updateData.valor = parseFloat(updateData.valor);
+      if (updateData.mes) {
+        updateData.mes = parseInt(updateData.mes);
       }
 
       const prestacao = await this.prestacaoContasService.update(id, updateData);
