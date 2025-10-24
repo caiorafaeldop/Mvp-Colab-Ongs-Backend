@@ -233,7 +233,9 @@ model PrestacaoContas {
   // Metadados da planilha
   titulo            String   @default("Prestação de Contas")
   ano               Int      @default(2025)
-  mes               Int?     // Opcional: mês específico
+  mes               Int?     // Opcional: mês específico (retrocompatibilidade)
+  mesInicial        Int?     // Mês inicial do período
+  mesFinal          Int?     // Mês final do período
   
   // Configurações de exibição
   mostrarTotal      Boolean  @default(true)
