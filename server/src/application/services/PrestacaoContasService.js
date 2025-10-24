@@ -16,15 +16,29 @@ class PrestacaoContasService {
     try {
       console.log('[PRESTACAO CONTAS SERVICE] Criando prestação de contas:', data);
 
-      // Validações de negócio
-      if (data.valor <= 0) {
+      // Validações de negócio para nova estrutura (colunas e linhas)
+      if (!data.titulo || !data.ano) {
+        throw new Error('Título e ano são obrigatórios');
+      }
+
+      if (!Array.isArray(data.colunas) || data.colunas.length === 0) {
+        throw new Error('Colunas deve ser um array não vazio');
+      }
+
+      if (!Array.isArray(data.linhas)) {
+        throw new Error('Linhas deve ser um array');
+      }
+
+      // Validar estrutura antigo (compatibilidade retroativa)
+      if (data.valor !== undefined && data.valor <= 0) {
         throw new Error('O valor deve ser maior que zero');
       }
 
-      // Validar categoria
-      const categoriasValidas = ['Despesa', 'Receita', 'Investimento'];
-      if (!categoriasValidas.includes(data.categoria)) {
-        throw new Error(`Categoria inválida. Use: ${categoriasValidas.join(', ')}`);
+      if (data.categoria) {
+        const categoriasValidas = ['Despesa', 'Receita', 'Investimento'];
+        if (!categoriasValidas.includes(data.categoria)) {
+          throw new Error(`Categoria inválida. Use: ${categoriasValidas.join(', ')}`);
+        }
       }
 
       // Criar prestação de contas
@@ -104,7 +118,7 @@ class PrestacaoContasService {
     try {
       console.log('[PRESTACAO CONTAS SERVICE] Atualizando prestação de contas:', id);
 
-      // Validações de negócio
+      // Validações de negócio para estrutura antiga (compatibilidade retroativa)
       if (data.valor !== undefined && data.valor <= 0) {
         throw new Error('O valor deve ser maior que zero');
       }
@@ -114,6 +128,18 @@ class PrestacaoContasService {
         if (!categoriasValidas.includes(data.categoria)) {
           throw new Error(`Categoria inválida. Use: ${categoriasValidas.join(', ')}`);
         }
+      }
+
+      // Validações para nova estrutura
+      if (
+        data.colunas !== undefined &&
+        (!Array.isArray(data.colunas) || data.colunas.length === 0)
+      ) {
+        throw new Error('Colunas deve ser um array não vazio');
+      }
+
+      if (data.linhas !== undefined && !Array.isArray(data.linhas)) {
+        throw new Error('Linhas deve ser um array');
       }
 
       const prestacao = await this.prestacaoContasRepository.update(id, data);
