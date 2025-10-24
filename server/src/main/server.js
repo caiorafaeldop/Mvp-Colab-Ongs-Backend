@@ -82,7 +82,7 @@ app.use(requestCorrelationMiddleware);
 app.use(requestContextMiddleware);
 
 // CHAIN HANDLER 7: Rate limiting geral
-app.use(RateLimitPresets.general());
+// app.use(RateLimitPresets.general()); // DESABILITADO TEMPORARIAMENTE
 
 // CHAIN HANDLER 8: Middleware de deduplicação de requisições
 app.use(deduplicationMiddleware);
@@ -273,6 +273,72 @@ app.use('/api/top-donors', (req, res, next) => {
   return appFactory.createTopDonorRoutes()(req, res, next);
 });
 
+// Rotas públicas para top donors (consulta sem autenticação)
+app.use('/api/public/top-donors', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createPublicTopDonorRoutes()(req, res, next);
+});
+
+// Rotas de colaboradores/apoiadores (Admin only)
+app.use('/api/supporters', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createSupporterRoutes()(req, res, next);
+});
+
+// Rotas públicas de colaboradores/apoiadores
+app.use('/api/public/supporters', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createPublicSupporterRoutes()(req, res, next);
+});
+
+// Rotas de prestação de contas
+app.use('/api/prestacao-contas', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createPrestacaoContasRoutes()(req, res, next);
+});
+
+// Rotas de FAQ (Perguntas Frequentes)
+app.use('/api/faqs', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createFAQRoutes()(req, res, next);
+});
+
+// Rotas de Testimonials (Depoimentos)
+app.use('/api/testimonials', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createTestimonialRoutes()(req, res, next);
+});
+
 // Rotas do padrão Composite (hierarquias de organizações)
 app.use('/api/organizations', (req, res, next) => {
   if (!appFactory || !appFactory.initialized) {
@@ -341,6 +407,15 @@ app.get('/health', (req, res) => {
       totalEvents: stats.totalEvents,
       recentEvents: stats.recentEvents.length,
     };
+  }
+
+  // Prisma status (se disponível)
+  try {
+    const PrismaService = require('../infra/singletons/PrismaService');
+    const prismaService = PrismaService.getInstance();
+    healthData.prisma = prismaService.getStatus();
+  } catch (e) {
+    // ignore
   }
 
   res.status(200).json(healthData);

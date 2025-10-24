@@ -26,14 +26,7 @@ class TopDonorService {
       }
       console.log('[TOP DONOR SERVICE] ✓ donorName válido');
 
-      if (!data.topPosition || data.topPosition < 1) {
-        console.error(
-          '[TOP DONOR SERVICE] Validação falhou: topPosition inválido:',
-          data.topPosition
-        );
-        throw new Error('Posição no top deve ser maior que 0');
-      }
-      console.log('[TOP DONOR SERVICE] ✓ topPosition válido');
+      // topPosition é opcional: será recalculado automaticamente após criação
 
       if (!data.donatedAmount || data.donatedAmount <= 0) {
         console.error(
@@ -82,7 +75,7 @@ class TopDonorService {
       // Prepara dados para criação
       const createData = {
         donorName: data.donorName.trim(),
-        topPosition: Number(data.topPosition),
+        topPosition: data.topPosition !== undefined ? Number(data.topPosition) : 9999,
         donatedAmount: Number(data.donatedAmount),
         donationType: data.donationType,
         donationDate: new Date(data.donationDate),
@@ -100,6 +93,9 @@ class TopDonorService {
       console.log('[TOP DONOR SERVICE] Chamando topDonorRepository.create...');
 
       const topDonor = await this.topDonorRepository.create(createData);
+
+      // Após criar, recalcula ranking do período com base no valor doado (desc)
+      await this._recomputeRankingForPeriod(createData.referenceMonth, createData.referenceYear);
 
       console.log('[TOP DONOR SERVICE] Repository retornou:', topDonor);
       console.log('[TOP DONOR SERVICE] Doador de destaque criado com sucesso, ID:', topDonor.id);
@@ -318,6 +314,15 @@ class TopDonorService {
 
       const topDonor = await this.topDonorRepository.update(id, updateData);
 
+      // Determina período afetado para recalcular ranking
+      const month =
+        updateData.referenceMonth !== undefined
+          ? updateData.referenceMonth
+          : existing.referenceMonth;
+      const year =
+        updateData.referenceYear !== undefined ? updateData.referenceYear : existing.referenceYear;
+      await this._recomputeRankingForPeriod(month, year);
+
       console.log('[TOP DONOR SERVICE] Doador de destaque atualizado com sucesso:', id);
       return topDonor;
     } catch (error) {
@@ -343,7 +348,14 @@ class TopDonorService {
         throw new Error('Doador de destaque não encontrado');
       }
 
+      // Captura período antes de deletar para recomputar
+      const month = existing.referenceMonth;
+      const year = existing.referenceYear;
+
       await this.topDonorRepository.delete(id);
+
+      // Recalcula ranking após exclusão
+      await this._recomputeRankingForPeriod(month, year);
 
       console.log('[TOP DONOR SERVICE] Doador de destaque deletado com sucesso:', id);
       return { success: true, message: 'Doador de destaque deletado com sucesso' };
@@ -378,5 +390,25 @@ class TopDonorService {
     }
   }
 }
+
+/**
+ * Métodos privados auxiliares
+ */
+TopDonorService.prototype._recomputeRankingForPeriod = async function (month, year) {
+  try {
+    const list = await this.topDonorRepository.findByPeriodOrderByAmount(month, year);
+    let pos = 1;
+    for (const item of list) {
+      // Atualiza a posição apenas se mudou
+      if (item.topPosition !== pos) {
+        await this.topDonorRepository.updatePosition(item.id, pos);
+      }
+      pos += 1;
+    }
+  } catch (error) {
+    console.error('[TOP DONOR SERVICE] Erro ao recalcular ranking:', error);
+    // Não propaga para não quebrar a operação primária
+  }
+};
 
 module.exports = TopDonorService;

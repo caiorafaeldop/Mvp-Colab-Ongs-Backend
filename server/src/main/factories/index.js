@@ -7,8 +7,19 @@ const createSimpleAuthRoutes = require('../../presentation/routes/simpleAuthRout
 const createProductRoutes = require('../../presentation/routes/productRoutes');
 const createDonationRoutes = require('../../presentation/routes/donationRoutes');
 const createUploadRoutes = require('../../presentation/routes/UploadRoutes');
-const { createAuthenticatedTopDonorRoutes } = require('../../presentation/routes/topDonorRoutes');
+const {
+  createAuthenticatedTopDonorRoutes,
+  createPublicTopDonorRoutes,
+} = require('../../presentation/routes/topDonorRoutes');
 const TopDonorController = require('../../presentation/controllers/TopDonorController');
+const {
+  createAuthenticatedSupporterRoutes,
+  createPublicSupporterRoutes,
+} = require('../../presentation/routes/supporterRoutes');
+const SupporterController = require('../../presentation/controllers/SupporterController');
+const createPrestacaoContasRoutes = require('../../presentation/routes/prestacaoContasRoutes');
+const createFAQRoutes = require('../../presentation/routes/faqRoutes');
+const createTestimonialRoutes = require('../../presentation/routes/testimonialRoutes');
 // Factories removidos na limpeza - não utilizados
 const AdapterFactory = require('./AdapterFactory');
 const BridgeFactory = require('./BridgeFactory');
@@ -93,6 +104,10 @@ class AppFactory {
     return this.repositoryFactory.createTopDonorRepository();
   }
 
+  createPrestacaoContasRepository() {
+    return this.repositoryFactory.createPrestacaoContasRepository();
+  }
+
   /**
    * Métodos de criação de services usando ServiceFactory
    */
@@ -129,6 +144,34 @@ class AppFactory {
       throw new Error('AppFactory must be initialized before creating services');
     }
     return this.serviceFactory.createTopDonorService();
+  }
+
+  createSupporterService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createSupporterService();
+  }
+
+  createPrestacaoContasService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createPrestacaoContasService();
+  }
+
+  createFAQService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createFAQService();
+  }
+
+  createTestimonialService() {
+    if (!this.initialized) {
+      throw new Error('AppFactory must be initialized before creating services');
+    }
+    return this.serviceFactory.createTestimonialService();
   }
 
   /**
@@ -188,6 +231,61 @@ class AppFactory {
     const routes = createAuthenticatedTopDonorRoutes(authService, topDonorController);
     console.log('[APP FACTORY] Rotas de TopDonor criadas com sucesso!');
 
+    return routes;
+  }
+
+  createPublicTopDonorRoutes() {
+    console.log('[APP FACTORY] Criando rotas públicas de TopDonor...');
+
+    const topDonorService = this.createTopDonorService();
+    const topDonorController = new TopDonorController(topDonorService);
+    const routes = createPublicTopDonorRoutes(topDonorController);
+    return routes;
+  }
+
+  createSupporterRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Supporter...');
+
+    const supporterService = this.createSupporterService();
+    const authService = this.createSimpleAuthService();
+    const supporterController = new SupporterController(supporterService);
+    const routes = createAuthenticatedSupporterRoutes(authService, supporterController);
+    return routes;
+  }
+
+  createPublicSupporterRoutes() {
+    console.log('[APP FACTORY] Criando rotas públicas de Supporter...');
+
+    const supporterService = this.createSupporterService();
+    const supporterController = new SupporterController(supporterService);
+    const routes = createPublicSupporterRoutes(supporterController);
+    return routes;
+  }
+
+  createPrestacaoContasRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Prestação de Contas...');
+
+    const prestacaoContasService = this.createPrestacaoContasService();
+    const authService = this.createSimpleAuthService();
+    const routes = createPrestacaoContasRoutes(prestacaoContasService, authService);
+    return routes;
+  }
+
+  createFAQRoutes() {
+    console.log('[APP FACTORY] Criando rotas de FAQ...');
+
+    const faqService = this.createFAQService();
+    const authService = this.createSimpleAuthService();
+    const routes = createFAQRoutes(faqService, authService);
+    return routes;
+  }
+
+  createTestimonialRoutes() {
+    console.log('[APP FACTORY] Criando rotas de Testimonials...');
+
+    const testimonialService = this.createTestimonialService();
+    const authService = this.createSimpleAuthService();
+    const routes = createTestimonialRoutes(testimonialService, authService);
     return routes;
   }
 

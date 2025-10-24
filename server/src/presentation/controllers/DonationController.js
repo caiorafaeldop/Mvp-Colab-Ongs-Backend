@@ -279,7 +279,7 @@ class DonationController {
       const { status, type, startDate, endDate, page = 1, limit = 20 } = req.query;
 
       // Verificar se o usuário tem permissão (deve ser da mesma organização)
-      if (req.user && req.user.id !== organizationId && req.user.userType !== 'admin') {
+      if (req.user && req.user.id !== organizationId && req.user.userType !== 'organization') {
         return res.status(403).json({
           success: false,
           message: 'Não autorizado a visualizar essas doações',
@@ -337,7 +337,11 @@ class DonationController {
       }
 
       // Verificar permissão
-      if (req.user && req.user.id !== donation.organizationId && req.user.userType !== 'admin') {
+      if (
+        req.user &&
+        req.user.id !== donation.organizationId &&
+        req.user.userType !== 'organization'
+      ) {
         return res.status(403).json({
           success: false,
           message: 'Não autorizado a visualizar esta doação',
@@ -400,7 +404,7 @@ class DonationController {
       const { startDate, endDate } = req.query;
 
       // Verificar permissão
-      if (req.user && req.user.id !== organizationId && req.user.userType !== 'admin') {
+      if (req.user && req.user.id !== organizationId && req.user.userType !== 'organization') {
         return res.status(403).json({
           success: false,
           message: 'Não autorizado a visualizar essas estatísticas',

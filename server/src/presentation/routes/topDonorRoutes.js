@@ -69,7 +69,6 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *       type: object
  *       required:
  *         - donorName
- *         - topPosition
  *         - donatedAmount
  *         - donationType
  *         - donationDate
@@ -83,7 +82,7 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *         topPosition:
  *           type: integer
  *           minimum: 1
- *           description: Posição no ranking
+ *           description: Opcional. Será recalculada automaticamente pelo sistema com base no valor doado.
  *           example: 1
  *         donatedAmount:
  *           type: number
@@ -159,12 +158,6 @@ const { adminMiddleware } = require('../middleware/AdminMiddleware');
  *         metadata:
  *           type: object
  *
- *   securitySchemes:
- *     BearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
  * tags:
  *   name: TopDonors
  *   description: Gerenciamento de doadores de destaque (Admin apenas)
@@ -185,7 +178,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Cria um novo doador de destaque
    *     description: Cria um novo registro de doador de destaque. Requer permissões de admin.
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     requestBody:
    *       required: true
    *       content:
@@ -225,7 +218,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Lista todos os doadores de destaque
    *     description: Retorna lista paginada de doadores de destaque com filtros opcionais
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: query
    *         name: page
@@ -306,7 +299,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Busca doadores de um período específico
    *     description: Retorna todos os doadores de destaque de um mês/ano específico
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: year
@@ -357,7 +350,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Busca doadores de uma organização
    *     description: Retorna todos os doadores de destaque de uma organização específica
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: organizationId
@@ -397,7 +390,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Busca o top N doadores de um período
    *     description: Retorna os N primeiros doadores de destaque de um período
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: year
@@ -457,7 +450,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Busca um doador de destaque por ID
    *     description: Retorna os detalhes de um doador de destaque específico
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -497,7 +490,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Atualiza um doador de destaque
    *     description: Atualiza os dados de um doador de destaque existente
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -545,7 +538,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Deleta um doador de destaque
    *     description: Remove um doador de destaque do sistema
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -583,7 +576,7 @@ function createTopDonorRoutes(topDonorController) {
    *     summary: Deleta todos os doadores de um período
    *     description: Remove todos os doadores de destaque de um mês/ano específico
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: year
@@ -654,4 +647,12 @@ function createAuthenticatedTopDonorRoutes(authService, topDonorController) {
 module.exports = {
   createTopDonorRoutes,
   createAuthenticatedTopDonorRoutes,
+  // Cria rotas públicas somente-leitura para consumo pelo frontend
+  createPublicTopDonorRoutes: function (topDonorController) {
+    const router = express.Router();
+    // Expor apenas consultas públicas
+    router.get('/top/:year/:month/:limit', topDonorController.getTopN);
+    router.get('/period/:year/:month', topDonorController.getByPeriod);
+    return router;
+  },
 };

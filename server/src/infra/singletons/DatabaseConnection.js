@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const ISingleton = require('../../domain/singletons/ISingleton');
+const ISingleton = require('../../domain/singleton/ISingleton');
 
 /**
  * Singleton para conexão com banco de dados
