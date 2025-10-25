@@ -453,7 +453,110 @@ const createDonationRoutes = (donationService, authService) => {
    *       400:
    *         description: Erro ao cancelar assinatura
    */
-  router.delete('/recurring/:subscriptionId', donationController.cancelRecurringDonation);
+  // Rotas protegidas de gerenciamento de assinatura pelo doador
+  if (auth) {
+    /**
+     * @swagger
+     * /api/donations/me/subscription:
+     *   get:
+     *     tags: [Donations - Self Service]
+     *     summary: Obter assinatura ativa do doador
+     *     description: Retorna a assinatura ativa do doador autenticado
+     *     security:
+     *       - bearerAuth: []
+     *     responses:
+     *       200:
+     *         description: Assinatura encontrada
+     *       404:
+     *         description: Nenhuma assinatura ativa encontrada
+     */
+    router.get('/me/subscription', auth, donationController.getMySubscription);
+
+    /**
+     * @swagger
+     * /api/donations/recurring/{subscriptionId}:
+     *   put:
+     *     tags: [Donations - Self Service]
+     *     summary: Atualizar assinatura recorrente
+     *     description: Pausar, reativar ou alterar valor/frequência de uma assinatura
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: subscriptionId
+     *         required: true
+     *         schema:
+     *           type: string
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               action:
+     *                 type: string
+     *                 enum: [pause, resume, update]
+     *               amount:
+     *                 type: number
+     *               frequency:
+     *                 type: string
+     *                 enum: [monthly, weekly, yearly]
+     *     responses:
+     *       200:
+     *         description: Assinatura atualizada com sucesso
+     */
+    router.put('/recurring/:subscriptionId', auth, donationController.updateSubscriptionDetails);
+
+    /**
+     * @swagger
+     * /api/donations/recurring/{subscriptionId}/reauthorize:
+     *   post:
+     *     tags: [Donations - Self Service]
+     *     summary: Reautorizar assinatura (atualizar cartão)
+     *     description: Gera nova URL de checkout para atualizar dados de pagamento
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: subscriptionId
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: Nova URL de checkout gerada
+     */
+    router.post(
+      '/recurring/:subscriptionId/reauthorize',
+      auth,
+      donationController.reauthorizeSubscriptionForDonor
+    );
+
+    /**
+     * @swagger
+     * /api/donations/recurring/{subscriptionId}:
+     *   delete:
+     *     tags: [Donations - Self Service]
+     *     summary: Cancelar assinatura recorrente
+     *     description: Cancela uma assinatura recorrente (autenticado)
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: subscriptionId
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: Assinatura cancelada com sucesso
+     */
+    router.delete('/recurring/:subscriptionId', auth, donationController.cancelSubscriptionAsOwner);
+  } else {
+    // Rota não autenticada de cancelamento (manter para compatibilidade)
+    router.delete('/recurring/:subscriptionId', donationController.cancelRecurringDonation);
+  }
 
   /**
    * @swagger

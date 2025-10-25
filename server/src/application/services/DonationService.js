@@ -390,11 +390,8 @@ class DonationService {
       throw new Error('Nome do doador é obrigatório');
     }
 
-    // Validar email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.donorEmail)) {
-      throw new Error('Email do doador inválido');
-    }
+    // Validação de email removida - aceita qualquer string no donorEmail
+    // Isso permite que admins com usernames não-email façam doações
   }
   validateRecurringData(data) {
     const validFrequencies = ['monthly', 'weekly', 'yearly'];
@@ -423,6 +420,150 @@ class DonationService {
 
   mapMercadoPagoStatus(mpStatus) {
     return PaymentState.fromMercadoPago(mpStatus).toDomain();
+  }
+
+  /**
+   * Atualiza uma assinatura (pausar/reativar/alterar valor/frequência)
+   */
+  async updateSubscription(subscriptionId, options = {}) {
+    try {
+      console.log('[DONATION SERVICE] Atualizando assinatura:', subscriptionId, options);
+
+      // Buscar a doação para validação e atualização no banco
+      const donation = await this.donationRepository.findBySubscriptionId(subscriptionId);
+      if (!donation) {
+        throw new Error('Assinatura não encontrada');
+      }
+
+      const updateData = {};
+      const adapterOptions = {};
+
+      // Processar ação (pause/resume/update)
+      if (options.action === 'pause') {
+        adapterOptions.status = 'paused';
+        updateData.paymentStatus = 'paused';
+      } else if (options.action === 'resume') {
+        adapterOptions.status = 'authorized';
+        updateData.paymentStatus = 'approved';
+      } else if (options.action === 'update') {
+        if (options.amount) {
+          adapterOptions.amount = options.amount;
+          updateData.amount = options.amount;
+        }
+        if (options.frequency) {
+          adapterOptions.frequency = options.frequency;
+          updateData.frequency = options.frequency;
+        }
+      }
+
+      // Atualizar no Mercado Pago
+      const result = await this.paymentAdapter.updateSubscription(subscriptionId, adapterOptions);
+
+      // Atualizar no banco de dados
+      if (Object.keys(updateData).length > 0) {
+        updateData.updatedAt = new Date();
+        await this.donationRepository.update(donation.id, updateData);
+      }
+
+      console.log('[DONATION SERVICE] Assinatura atualizada com sucesso');
+
+      return {
+        success: true,
+        ...result,
+      };
+    } catch (error) {
+      console.error('[DONATION SERVICE] Erro ao atualizar assinatura:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reautoriza uma assinatura (cria nova URL de checkout para atualizar cartão)
+   */
+  async reauthorizeSubscription(subscriptionId) {
+    try {
+      console.log('[DONATION SERVICE] Reautorizando assinatura:', subscriptionId);
+
+      // Buscar doação existente
+      const donation = await this.donationRepository.findBySubscriptionId(subscriptionId);
+      if (!donation) {
+        throw new Error('Assinatura não encontrada');
+      }
+
+      // Criar nova assinatura com os mesmos dados
+      const newSubscription = await this.paymentAdapter.createSubscription({
+        amount: donation.amount,
+        frequency: donation.frequency || 'monthly',
+        title: `Doação Recorrente - Reautorização`,
+        description: donation.message || `Doação recorrente - atualização de cartão`,
+        payer: {
+          name: donation.donorName,
+          email: donation.donorEmail,
+          phone: donation.donorPhone,
+          document: donation.donorDocument,
+        },
+        externalReference: `reauth-${subscriptionId}-${Date.now()}`,
+      });
+
+      console.log(
+        '[DONATION SERVICE] Nova assinatura criada para reautorização:',
+        newSubscription.id
+      );
+
+      return {
+        subscriptionUrl: newSubscription.subscriptionUrl,
+        subscriptionId: newSubscription.id,
+        oldSubscriptionId: subscriptionId,
+      };
+    } catch (error) {
+      console.error('[DONATION SERVICE] Erro ao reautorizar assinatura:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Busca assinatura ativa do doador por email
+   */
+  async getMySubscriptionByEmail(email) {
+    try {
+      console.log('[DONATION SERVICE] Buscando assinatura por email:', email);
+
+      // Buscar doações do email
+      const donations = await this.donationRepository.findByDonorEmail(email);
+
+      // Filtrar apenas recorrentes não canceladas
+      const activeDonation = donations.find(
+        (d) => d.type === 'recurring' && d.paymentStatus !== 'cancelled' && d.subscriptionId
+      );
+
+      if (!activeDonation) {
+        return null;
+      }
+
+      // Buscar status atualizado no Mercado Pago
+      let mpStatus = {};
+      try {
+        mpStatus = await this.paymentAdapter.getSubscriptionStatus(activeDonation.subscriptionId);
+      } catch (error) {
+        console.warn('[DONATION SERVICE] Erro ao buscar status no MP:', error.message);
+      }
+
+      // Mesclar dados
+      return {
+        id: activeDonation.id,
+        subscriptionId: activeDonation.subscriptionId,
+        amount: mpStatus.amount || activeDonation.amount,
+        frequency: activeDonation.frequency,
+        status: mpStatus.status || activeDonation.paymentStatus,
+        donorName: activeDonation.donorName,
+        donorEmail: activeDonation.donorEmail,
+        createdAt: activeDonation.createdAt,
+        subscriptionUrl: activeDonation.metadata?.subscriptionUrl,
+      };
+    } catch (error) {
+      console.error('[DONATION SERVICE] Erro ao buscar assinatura por email:', error);
+      throw error;
+    }
   }
 
   // ==========================================

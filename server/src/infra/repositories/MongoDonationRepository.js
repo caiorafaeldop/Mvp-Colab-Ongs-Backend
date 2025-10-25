@@ -73,6 +73,22 @@ class MongoDonationRepository {
     }
   }
 
+  async findByDonorEmail(donorEmail) {
+    try {
+      const donations = await DonationModel.find({ donorEmail }).sort({ createdAt: -1 });
+      console.log(
+        '[MONGO DONATION REPOSITORY] Encontradas',
+        donations.length,
+        'doações para',
+        donorEmail
+      );
+      return donations;
+    } catch (error) {
+      console.error('[MONGO DONATION REPOSITORY] Erro ao buscar doações por email:', error.message);
+      throw error;
+    }
+  }
+
   async updateStatus(id, status) {
     try {
       const donation = await DonationModel.findByIdAndUpdate(
@@ -83,6 +99,21 @@ class MongoDonationRepository {
       return donation;
     } catch (error) {
       console.error('[MONGO DONATION REPOSITORY] Erro ao atualizar status:', error.message);
+      throw error;
+    }
+  }
+
+  async update(id, updateData) {
+    try {
+      const donation = await DonationModel.findByIdAndUpdate(
+        id,
+        { ...updateData, updatedAt: new Date() },
+        { new: true }
+      );
+      console.log('[MONGO DONATION REPOSITORY] Doação atualizada:', id);
+      return donation;
+    } catch (error) {
+      console.error('[MONGO DONATION REPOSITORY] Erro ao atualizar doação:', error.message);
       throw error;
     }
   }

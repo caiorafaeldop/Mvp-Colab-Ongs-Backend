@@ -246,6 +246,13 @@ app.use('/api/upload', (req, res, next) => {
   return appFactory.createUploadRoutes()(req, res, next);
 });
 
+// Rotas mock para simular checkout (apenas se MOCK_MERCADO_PAGO=true)
+if (process.env.MOCK_MERCADO_PAGO === 'true') {
+  const createMockRoutes = require('../presentation/routes/mockRoutes');
+  app.use('/mock', createMockRoutes());
+  console.log('🎭 [SERVER] Rotas mock ativadas em /mock/*');
+}
+
 // Rotas de doações (Mercado Pago)
 app.use('/api/donations', (req, res, next) => {
   if (!appFactory || !appFactory.initialized) {

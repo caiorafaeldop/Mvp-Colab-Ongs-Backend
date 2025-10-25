@@ -21,10 +21,18 @@ class SimpleAuthController {
 
       const { email, password } = req.body;
 
-      if (!email || !password) {
+      // Validação relaxada: aceita qualquer string no campo email (para admins com username)
+      if (!email || typeof email !== 'string' || email.trim() === '') {
         return res.status(400).json({
           success: false,
-          message: 'Email and password are required',
+          message: 'Email/username and password are required',
+        });
+      }
+
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email/username and password are required',
         });
       }
 

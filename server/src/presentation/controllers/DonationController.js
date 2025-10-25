@@ -21,6 +21,12 @@ class DonationController {
     this.createRecurringDonationWithTemplate = this.createRecurringDonationWithTemplate.bind(this);
     this.generateDonationReport = this.generateDonationReport.bind(this);
 
+    // Métodos de gerenciamento de assinatura pelo doador
+    this.getMySubscription = this.getMySubscription.bind(this);
+    this.updateSubscriptionDetails = this.updateSubscriptionDetails.bind(this);
+    this.reauthorizeSubscriptionForDonor = this.reauthorizeSubscriptionForDonor.bind(this);
+    this.cancelSubscriptionAsOwner = this.cancelSubscriptionAsOwner.bind(this);
+
     console.log('[DONATION CONTROLLER] Inicializado com sucesso');
   }
 
@@ -593,6 +599,190 @@ class DonationController {
         message: error.message || 'Erro interno do servidor',
         error: 'REPORT_TEMPLATE_ERROR',
         requestId: req.requestId,
+      });
+    }
+  }
+
+  /**
+   * Busca assinatura ativa do doador autenticado
+   * GET /api/donations/me/subscription
+   */
+  async getMySubscription(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Buscando assinatura do usuário:', req.user?.email);
+
+      if (!req.user || !req.user.email) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuário não autenticado',
+        });
+      }
+
+      const subscription = await this.donationService.getMySubscriptionByEmail(req.user.email);
+
+      if (!subscription) {
+        return res.status(404).json({
+          success: false,
+          message: 'Nenhuma assinatura ativa encontrada',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Assinatura encontrada',
+        data: subscription,
+      });
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao buscar assinatura:', error);
+
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Erro ao buscar assinatura',
+      });
+    }
+  }
+
+  /**
+   * Atualiza detalhes da assinatura (pausar/reativar/alterar valor/frequência)
+   * PUT /api/donations/recurring/:subscriptionId
+   */
+  async updateSubscriptionDetails(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Atualizando assinatura:', req.params, req.body);
+
+      const { subscriptionId } = req.params;
+      const { action, amount, frequency } = req.body;
+
+      if (!req.user || !req.user.email) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuário não autenticado',
+        });
+      }
+
+      // Validar que o usuário é dono da assinatura
+      const donation =
+        await this.donationService.donationRepository.findBySubscriptionId(subscriptionId);
+      if (!donation || donation.donorEmail !== req.user.email) {
+        return res.status(403).json({
+          success: false,
+          message: 'Você não tem permissão para alterar esta assinatura',
+        });
+      }
+
+      // Validar ação
+      if (!action || !['pause', 'resume', 'update'].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ação inválida. Use: pause, resume ou update',
+        });
+      }
+
+      const result = await this.donationService.updateSubscription(subscriptionId, {
+        action,
+        amount,
+        frequency,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: `Assinatura ${action === 'pause' ? 'pausada' : action === 'resume' ? 'reativada' : 'atualizada'} com sucesso`,
+        data: result,
+      });
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao atualizar assinatura:', error);
+
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Erro ao atualizar assinatura',
+      });
+    }
+  }
+
+  /**
+   * Reautoriza assinatura (gera nova URL para atualizar cartão)
+   * POST /api/donations/recurring/:subscriptionId/reauthorize
+   */
+  async reauthorizeSubscriptionForDonor(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Reautorizando assinatura:', req.params);
+
+      const { subscriptionId } = req.params;
+
+      if (!req.user || !req.user.email) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuário não autenticado',
+        });
+      }
+
+      // Validar que o usuário é dono da assinatura
+      const donation =
+        await this.donationService.donationRepository.findBySubscriptionId(subscriptionId);
+      if (!donation || donation.donorEmail !== req.user.email) {
+        return res.status(403).json({
+          success: false,
+          message: 'Você não tem permissão para reautorizar esta assinatura',
+        });
+      }
+
+      const result = await this.donationService.reauthorizeSubscription(subscriptionId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Nova URL de checkout gerada para atualização do cartão',
+        data: result,
+      });
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao reautorizar assinatura:', error);
+
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Erro ao reautorizar assinatura',
+      });
+    }
+  }
+
+  /**
+   * Cancela assinatura como dono (autenticado)
+   * DELETE /api/donations/recurring/:subscriptionId
+   */
+  async cancelSubscriptionAsOwner(req, res) {
+    try {
+      console.log('[DONATION CONTROLLER] Cancelando assinatura como dono:', req.params);
+
+      const { subscriptionId } = req.params;
+
+      if (!req.user || !req.user.email) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuário não autenticado',
+        });
+      }
+
+      // Validar que o usuário é dono da assinatura
+      const donation =
+        await this.donationService.donationRepository.findBySubscriptionId(subscriptionId);
+      if (!donation || donation.donorEmail !== req.user.email) {
+        return res.status(403).json({
+          success: false,
+          message: 'Você não tem permissão para cancelar esta assinatura',
+        });
+      }
+
+      const result = await this.donationService.cancelSubscription(subscriptionId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Assinatura cancelada com sucesso',
+        data: result,
+      });
+    } catch (error) {
+      console.error('[DONATION CONTROLLER] Erro ao cancelar assinatura:', error);
+
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Erro ao cancelar assinatura',
       });
     }
   }

@@ -2,6 +2,7 @@ const { z } = require('zod');
 
 /**
  * DTO para criação de usuário
+ * MANTÉM validação de email estrita - registro deve usar email válido
  */
 const CreateUserDTO = z.object({
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
@@ -13,9 +14,10 @@ const CreateUserDTO = z.object({
 
 /**
  * DTO para login
+ * RELAXADO: aceita qualquer string no campo email (permite username/admin)
  */
 const LoginDTO = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().min(1, 'Email/username é obrigatório'),
   password: z.string().min(1, 'Senha é obrigatória'),
 });
 
