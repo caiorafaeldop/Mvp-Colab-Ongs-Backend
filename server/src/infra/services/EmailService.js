@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const https = require('https');
 const { logger } = require('../logger');
 
 /**
@@ -23,17 +24,29 @@ class EmailService {
     }
 
     try {
-      // Leadsim-style: SMTP único, sem Ethereal, sem mock
+      // Detectar se tem SendGrid API Key (preferir API no Render)
+      this.sendgridApiKey = process.env.SENDGRID_API_KEY;
+      this.useSendGridAPI = !!this.sendgridApiKey && process.env.USE_SENDGRID_API !== 'false';
+
+      if (this.useSendGridAPI) {
+        logger.info('EmailService inicializado com SendGrid API (HTTP)', {
+          isRender: !!process.env.RENDER,
+          apiKeyPresent: !!this.sendgridApiKey,
+        });
+        this.initialized = true;
+        return;
+      }
+
+      // Fallback para SMTP
       const host = process.env.MAIL_HOST || process.env.SMTP_HOST;
       const user = process.env.MAIL_USERNAME || process.env.SMTP_USER;
-      const pass =
-        process.env.SENDGRID_API_KEY || process.env.MAIL_PASSWORD || process.env.SMTP_PASS;
+      const pass = process.env.MAIL_PASSWORD || process.env.SMTP_PASS;
       const port = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '587');
       const secure = (process.env.MAIL_SECURE || process.env.SMTP_SECURE) === 'true';
 
       if (!host || !user || !pass) {
         const msg =
-          'SMTP não configurado. Defina MAIL_HOST/MAIL_USERNAME/SENDGRID_API_KEY (ou SMTP_HOST/SMTP_USER/SMTP_PASS).';
+          'Email não configurado. Defina SENDGRID_API_KEY ou MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD.';
         logger.error(msg, { host, userPresent: !!user, passPresent: !!pass });
         throw new Error(msg);
       }
@@ -48,7 +61,7 @@ class EmailService {
         socketTimeout: 12000,
       });
 
-      logger.info('EmailService inicializado com SMTP (Leadsim-style)', {
+      logger.info('EmailService inicializado com SMTP', {
         host,
         port,
         secure,
@@ -198,6 +211,67 @@ class EmailService {
   }
 
   /**
+   * Enviar email via SendGrid API (HTTP)
+   */
+  async sendViaSendGridAPI(to, subject, html, fromAddress, fromName) {
+    return new Promise((resolve, reject) => {
+      const data = JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: fromAddress, name: fromName },
+        subject: subject,
+        content: [{ type: 'text/html', value: html }],
+      });
+
+      const options = {
+        hostname: 'api.sendgrid.com',
+        port: 443,
+        path: '/v3/mail/send',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.sendgridApiKey}`,
+          'Content-Type': 'application/json',
+          'Content-Length': data.length,
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        let body = '';
+        res.on('data', (chunk) => (body += chunk));
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            const messageId = res.headers['x-message-id'] || `sendgrid-${Date.now()}`;
+            logger.info('✅ Email enviado via SendGrid API', {
+              to,
+              statusCode: res.statusCode,
+              messageId,
+            });
+            resolve({ messageId, accepted: [to] });
+          } else {
+            logger.error('❌ SendGrid API retornou erro', {
+              statusCode: res.statusCode,
+              body,
+            });
+            reject(new Error(`SendGrid API error: ${res.statusCode} - ${body}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        logger.error('❌ Erro na requisição SendGrid API', { error: error.message });
+        reject(error);
+      });
+
+      req.setTimeout(10000, () => {
+        req.destroy();
+        reject(new Error('SendGrid API timeout (10s)'));
+      });
+
+      req.write(data);
+      req.end();
+    });
+  }
+
+  /**
    * Enviar email de verificação com código de 6 dígitos
    */
   async sendVerificationEmail(email, name, code) {
@@ -212,20 +286,33 @@ class EmailService {
       const fromAddress =
         process.env.MAIL_FROM || process.env.EMAIL_FROM || 'noreply@plataformaongs.com';
       const fromName = process.env.EMAIL_FROM_NAME || 'Plataforma ONGs';
+      const subject = 'Verificação de Email - Código de Confirmação';
+      const html = this.getVerificationEmailTemplate(name, code);
 
-      const mailOptions = {
-        from: `"${fromName}" <${fromAddress}>`,
-        to: email,
-        subject: 'Verificação de Email - Código de Confirmação',
-        html: this.getVerificationEmailTemplate(name, code),
-      };
+      let info;
 
-      const info = await this.transporter.sendMail(mailOptions);
+      // Usar SendGrid API se disponível
+      if (this.useSendGridAPI) {
+        logger.info('📤 Enviando via SendGrid API (HTTP)...');
+        info = await this.sendViaSendGridAPI(email, subject, html, fromAddress, fromName);
+      } else {
+        // Fallback para SMTP
+        logger.info('📤 Enviando via SMTP...');
+        const mailOptions = {
+          from: `"${fromName}" <${fromAddress}>`,
+          to: email,
+          subject,
+          html,
+        };
+        info = await this.transporter.sendMail(mailOptions);
+      }
+
       const previewUrl = nodemailer.getTestMessageUrl(info) || false;
 
       logger.info('Email de verificação enviado', {
         email,
         messageId: info.messageId,
+        method: this.useSendGridAPI ? 'API' : 'SMTP',
         previewUrl,
       });
 
@@ -255,20 +342,33 @@ class EmailService {
       const fromAddress =
         process.env.MAIL_FROM || process.env.EMAIL_FROM || 'noreply@plataformaongs.com';
       const fromName = process.env.EMAIL_FROM_NAME || 'Plataforma ONGs';
+      const subject = 'Recuperação de Senha - Código de Verificação';
+      const html = this.getPasswordResetEmailTemplate(name, code);
 
-      const mailOptions = {
-        from: `"${fromName}" <${fromAddress}>`,
-        to: email,
-        subject: 'Recuperação de Senha - Código de Verificação',
-        html: this.getPasswordResetEmailTemplate(name, code),
-      };
+      let info;
 
-      const info = await this.transporter.sendMail(mailOptions);
+      // Usar SendGrid API se disponível
+      if (this.useSendGridAPI) {
+        logger.info('📤 Enviando via SendGrid API (HTTP)...');
+        info = await this.sendViaSendGridAPI(email, subject, html, fromAddress, fromName);
+      } else {
+        // Fallback para SMTP
+        logger.info('📤 Enviando via SMTP...');
+        const mailOptions = {
+          from: `"${fromName}" <${fromAddress}>`,
+          to: email,
+          subject,
+          html,
+        };
+        info = await this.transporter.sendMail(mailOptions);
+      }
+
       const previewUrl = nodemailer.getTestMessageUrl(info) || false;
 
       logger.info('Email de recuperação de senha enviado', {
         email,
         messageId: info.messageId,
+        method: this.useSendGridAPI ? 'API' : 'SMTP',
         previewUrl,
       });
 
