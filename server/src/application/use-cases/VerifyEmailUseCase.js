@@ -239,18 +239,28 @@ class VerifyEmailUseCase {
         metadata: pendingUserData,
       });
 
-      // Enviar email
-      logger.info('[VERIFY EMAIL] Tentando enviar email...', { email, code });
-      const emailResult = await this.emailService.sendVerificationEmail(email, name, code);
-      logger.info('[VERIFY EMAIL] Email enviado com sucesso!', {
-        email,
-        messageId: emailResult.messageId,
-        previewUrl: emailResult.previewUrl,
-      });
+      // Enviar email DE FORMA ASSÍNCRONA (não esperar)
+      logger.info('[VERIFY EMAIL] Agendando envio de email...', { email, code });
 
-      logger.info('Código de verificação de registro enviado', {
+      // Enviar email em background (fire and forget)
+      this.emailService
+        .sendVerificationEmail(email, name, code)
+        .then((emailResult) => {
+          logger.info('[VERIFY EMAIL] Email enviado com sucesso!', {
+            email,
+            messageId: emailResult.messageId,
+            previewUrl: emailResult.previewUrl,
+          });
+        })
+        .catch((error) => {
+          logger.error('[VERIFY EMAIL] Erro ao enviar email (background):', {
+            email,
+            error: error.message,
+          });
+        });
+
+      logger.info('Código de verificação de registro criado (email sendo enviado em background)', {
         email,
-        previewUrl: emailResult.previewUrl,
       });
 
       return {
@@ -259,10 +269,6 @@ class VerifyEmailUseCase {
         data: {
           email,
           expiresIn: '15 minutos',
-          // Em desenvolvimento, retornar preview URL
-          ...(process.env.NODE_ENV !== 'production' && {
-            previewUrl: emailResult.previewUrl,
-          }),
         },
       };
     } catch (error) {

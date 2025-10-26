@@ -34,6 +34,10 @@ class EmailService {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
           },
+          // TIMEOUTS AGRESSIVOS para não travar
+          connectionTimeout: 5000, // 5s para conectar
+          greetingTimeout: 5000, // 5s para greeting
+          socketTimeout: 10000, // 10s para socket
         });
 
         logger.info('EmailService inicializado com SMTP configurado');
@@ -120,12 +124,18 @@ class EmailService {
     logger.info('[EMAIL SERVICE] Inicialização completa, enviando email...');
 
     try {
-      const info = await this.transporter.sendMail({
-        from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
-        to: email,
-        subject: 'Verificação de Email - Código de Confirmação',
-        html: this.getVerificationEmailTemplate(name, code),
-      });
+      // Timeout de 5s para envio de email
+      const info = await Promise.race([
+        this.transporter.sendMail({
+          from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
+          to: email,
+          subject: 'Verificação de Email - Código de Confirmação',
+          html: this.getVerificationEmailTemplate(name, code),
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout ao enviar email (5s)')), 5000)
+        ),
+      ]);
 
       const previewUrl = nodemailer.getTestMessageUrl(info);
 
@@ -168,12 +178,18 @@ class EmailService {
     await this.initialize();
 
     try {
-      const info = await this.transporter.sendMail({
-        from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
-        to: email,
-        subject: 'Recuperação de Senha - Código de Verificação',
-        html: this.getPasswordResetEmailTemplate(name, code),
-      });
+      // Timeout de 5s para envio de email
+      const info = await Promise.race([
+        this.transporter.sendMail({
+          from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
+          to: email,
+          subject: 'Recuperação de Senha - Código de Verificação',
+          html: this.getPasswordResetEmailTemplate(name, code),
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout ao enviar email (5s)')), 5000)
+        ),
+      ]);
 
       const previewUrl = nodemailer.getTestMessageUrl(info);
 
