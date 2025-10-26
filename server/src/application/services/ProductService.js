@@ -66,7 +66,7 @@ class ProductService {
     }
   }
 
-  async updateProduct(id, productData, organizationId) {
+  async updateProduct(id, productData, organizationId, userType = null) {
     try {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
@@ -74,7 +74,8 @@ class ProductService {
         throw new Error('Product not found');
       }
 
-      if (existingProduct.organizationId !== organizationId) {
+      // REGRA: Contas 'organization' podem editar QUALQUER produto
+      if (userType !== 'organization' && existingProduct.organizationId !== organizationId) {
         throw new Error('You can only update your own products');
       }
 
@@ -123,7 +124,7 @@ class ProductService {
     }
   }
 
-  async deleteProduct(id, organizationId) {
+  async deleteProduct(id, organizationId, userType = null) {
     try {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
@@ -131,7 +132,8 @@ class ProductService {
         throw new Error('Product not found');
       }
 
-      if (existingProduct.organizationId !== organizationId) {
+      // REGRA: Contas 'organization' podem deletar QUALQUER produto
+      if (userType !== 'organization' && existingProduct.organizationId !== organizationId) {
         throw new Error('You can only delete your own products');
       }
 
@@ -252,7 +254,7 @@ class ProductService {
     }
   }
 
-  async toggleProductAvailability(id, organizationId) {
+  async toggleProductAvailability(id, organizationId, userType = null) {
     try {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
@@ -260,7 +262,8 @@ class ProductService {
         throw new Error('Product not found');
       }
 
-      if (existingProduct.organizationId !== organizationId) {
+      // REGRA: Contas 'organization' podem editar QUALQUER produto
+      if (userType !== 'organization' && existingProduct.organizationId !== organizationId) {
         throw new Error('You can only update your own products');
       }
 
@@ -293,7 +296,7 @@ class ProductService {
     }
   }
 
-  async updateProductStock(id, stock, organizationId) {
+  async updateProductStock(id, stock, organizationId, userType = null) {
     try {
       // Verify if product exists and belongs to organization
       const existingProduct = await this.productRepository.findById(id);
@@ -301,7 +304,8 @@ class ProductService {
         throw new Error('Product not found');
       }
 
-      if (existingProduct.organizationId !== organizationId) {
+      // REGRA: Contas 'organization' podem editar QUALQUER produto
+      if (userType !== 'organization' && existingProduct.organizationId !== organizationId) {
         throw new Error('You can only update your own products');
       }
 

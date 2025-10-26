@@ -21,6 +21,7 @@ class VerificationCodeRepository {
           type: data.type,
           expiresAt: data.expiresAt,
           used: false,
+          metadata: data.metadata || {},
         },
       });
 

@@ -24,6 +24,19 @@ class LoginUserUseCase {
         throw new Error('Credenciais inválidas');
       }
 
+      // VERIFICAR SE EMAIL FOI VERIFICADO - Retorna status especial em vez de erro
+      if (!user.emailVerified) {
+        return {
+          success: false,
+          emailNotVerified: true,
+          message: 'Email não verificado',
+          data: {
+            email: user.email,
+            name: user.name,
+          },
+        };
+      }
+
       // Gerar tokens
       const tokens = await this.authService.generateTokens(user);
 

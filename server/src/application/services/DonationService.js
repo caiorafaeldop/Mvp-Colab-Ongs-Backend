@@ -173,6 +173,7 @@ class DonationService {
         paymentStatus: new PaymentState('pending').toDomain(),
         metadata: {
           externalReference: subscription.externalReference,
+          subscriptionUrl: subscription.subscriptionUrl,
         },
       });
 
@@ -558,7 +559,7 @@ class DonationService {
         donorName: activeDonation.donorName,
         donorEmail: activeDonation.donorEmail,
         createdAt: activeDonation.createdAt,
-        subscriptionUrl: activeDonation.metadata?.subscriptionUrl,
+        subscriptionUrl: activeDonation.metadata?.subscriptionUrl || mpStatus.initPoint,
       };
     } catch (error) {
       console.error('[DONATION SERVICE] Erro ao buscar assinatura por email:', error);

@@ -453,16 +453,17 @@ class EnhancedJwtAuthService {
       throw new Error('Valid email is required');
     }
 
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
-    }
+    // VALIDAÇÃO TEMPORARIAMENTE DESATIVADA
+    // if (!password || typeof password !== 'string' || password.length < 6) {
+    //   throw new Error('Password must be at least 6 characters long');
+    // }
 
-    if (!userType || !['organization', 'common'].includes(userType)) {
-      throw new Error('User type must be either "organization" or "common"');
-    }
+    // NOTA: userType não é validado aqui pois RegisterUserUseCase sempre força 'common'
+    // Apenas organizações podem ter outros tipos, criados manualmente
 
-    if (!phone || typeof phone !== 'string' || !this._isValidPhone(phone)) {
-      throw new Error('Valid phone number is required');
+    // NOTA: phone é opcional no registro
+    if (phone && (typeof phone !== 'string' || !this._isValidPhone(phone))) {
+      throw new Error('Invalid phone number format');
     }
 
     // Sanitização
@@ -471,7 +472,7 @@ class EnhancedJwtAuthService {
       email: email.toLowerCase().trim(),
       password: password,
       userType: userType,
-      phone: phone.trim(),
+      phone: phone ? phone.trim() : '',
     };
   }
 

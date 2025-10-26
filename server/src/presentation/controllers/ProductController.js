@@ -39,6 +39,7 @@ class ProductController {
       const { id } = req.params;
       const productData = req.body;
       const organizationId = req.user.id;
+      const userType = req.user.userType; // Pegar userType do token
 
       // Validação básica direta
       if (productData.name === '' || productData.price < 0) {
@@ -48,7 +49,12 @@ class ProductController {
         });
       }
 
-      const product = await this.productService.updateProduct(id, productData, organizationId);
+      const product = await this.productService.updateProduct(
+        id,
+        productData,
+        organizationId,
+        userType
+      );
 
       res.status(200).json({
         success: true,
@@ -67,8 +73,9 @@ class ProductController {
     try {
       const { id } = req.params;
       const organizationId = req.user.id;
+      const userType = req.user.userType; // Pegar userType do token
 
-      await this.productService.deleteProduct(id, organizationId);
+      await this.productService.deleteProduct(id, organizationId, userType);
 
       res.status(200).json({
         success: true,
@@ -156,8 +163,13 @@ class ProductController {
     try {
       const { id } = req.params;
       const organizationId = req.user.id;
+      const userType = req.user.userType; // Pegar userType do token
 
-      const product = await this.productService.toggleProductAvailability(id, organizationId);
+      const product = await this.productService.toggleProductAvailability(
+        id,
+        organizationId,
+        userType
+      );
 
       res.status(200).json({
         success: true,
@@ -177,6 +189,7 @@ class ProductController {
       const { id } = req.params;
       const { stock } = req.body;
       const organizationId = req.user.id;
+      const userType = req.user.userType; // Pegar userType do token
 
       if (typeof stock !== 'number' || stock < 0) {
         return res.status(400).json({
@@ -185,7 +198,12 @@ class ProductController {
         });
       }
 
-      const product = await this.productService.updateProductStock(id, stock, organizationId);
+      const product = await this.productService.updateProductStock(
+        id,
+        stock,
+        organizationId,
+        userType
+      );
 
       res.status(200).json({
         success: true,

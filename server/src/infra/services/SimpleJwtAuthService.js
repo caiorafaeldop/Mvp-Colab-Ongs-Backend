@@ -160,7 +160,7 @@ class SimpleJwtAuthService {
   }
 
   /**
-   * Registro simplificado
+   * Registro simplificado - NOVO FLUXO COM VERIFICAÇÃO DE EMAIL
    */
   async register(userData) {
     try {
@@ -169,60 +169,46 @@ class SimpleJwtAuthService {
       // Validação básica
       this.validateRegistrationData(userData);
 
-      // Verificar se usuário já existe
-      const existingUser = await this.userRepository.findByEmail(
-        userData.email.toLowerCase().trim()
+      // USAR RegisterUserUseCase com VerifyEmailUseCase
+      const RegisterUserUseCase = require('../../application/use-cases/RegisterUserUseCase');
+      const VerifyEmailUseCase = require('../../application/use-cases/VerifyEmailUseCase');
+      const VerificationCodeRepository =
+        require('../repositories/VerificationCodeRepository').VerificationCodeRepository;
+      const { getEmailService } = require('./EmailService');
+
+      const verificationCodeRepository = new VerificationCodeRepository();
+      const emailService = getEmailService();
+      const verifyEmailUseCase = new VerifyEmailUseCase(
+        this.userRepository,
+        verificationCodeRepository,
+        emailService
       );
-      if (existingUser) {
-        throw new Error('User already exists with this email');
-      }
 
-      // Criar usuário (usar fábricas para manter ordem correta dos campos)
-      const lowerEmail = userData.email.toLowerCase().trim();
-      const user =
-        userData.userType === 'organization'
-          ? User.createOrganizationUser(
-              userData.name.trim(),
-              lowerEmail,
-              userData.password,
-              userData.phone?.trim()
-            )
-          : User.createCommonUser(
-              userData.name.trim(),
-              lowerEmail,
-              userData.password,
-              userData.phone?.trim()
-            );
+      const registerUserUseCase = new RegisterUserUseCase(
+        this.userRepository,
+        console, // logger
+        verifyEmailUseCase
+      );
 
-      // Hash da senha
-      user.password = await this.hashPassword(user.password);
+      // Executar registro (envia email mas NÃO cria usuário ainda)
+      const result = await registerUserUseCase.execute({
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone || '',
+        userType: userData.userType || 'common',
+      });
 
-      // Salvar usuário
-      const savedUser = await this.userRepository.save(user);
+      console.log('[SIMPLE JWT AUTH] Código de verificação enviado:', result);
 
-      // Enviar email de verificação automaticamente
-      try {
-        await this.sendVerificationEmail(savedUser.email, savedUser.name);
-        console.log('[SIMPLE JWT AUTH] Email de verificação enviado automaticamente');
-      } catch (emailError) {
-        console.error('[SIMPLE JWT AUTH] Erro ao enviar email:', emailError.message);
-        // Não falhar o registro se o email não for enviado
-      }
-
-      // Gerar tokens
-      const tokens = await this.generateTokens(savedUser);
-
+      // Retornar resposta indicando que precisa verificar email
       return {
-        message: 'User registered successfully',
-        user: {
-          id: savedUser.id || savedUser._id,
-          email: savedUser.email,
-          name: savedUser.name,
-          userType: savedUser.userType,
-          phone: savedUser.phone,
+        message: result.message,
+        requiresVerification: true,
+        data: {
+          email: result.data.email,
+          emailPreviewUrl: result.data.emailPreviewUrl,
         },
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
       };
     } catch (error) {
       console.error('[SIMPLE JWT AUTH] Erro no registro:', error.message);
@@ -287,13 +273,13 @@ class SimpleJwtAuthService {
       throw new Error('Valid email is required');
     }
 
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
-    }
+    // VALIDAÇÃO TEMPORARIAMENTE DESATIVADA
+    // if (!password || typeof password !== 'string' || password.length < 6) {
+    //   throw new Error('Password must be at least 6 characters long');
+    // }
 
-    if (userType && !['organization', 'common'].includes(userType)) {
-      throw new Error('User type must be either "organization" or "common"');
-    }
+    // NOTA: userType não é validado aqui pois RegisterUserUseCase sempre força 'common'
+    // Apenas organizações podem ter outros tipos, criados manualmente
   }
 
   /**

@@ -19,54 +19,57 @@ class RegisterUserUseCase {
         throw new Error('Email já está em uso');
       }
 
+      // IMPORTANTE: Forçar userType como 'common' (outros tipos são criados manualmente)
+      const userType = 'common';
+
       // Hash da senha
       const hashedPassword = await bcrypt.hash(createUserDTO.password, 10);
 
-      // Criar entidade de usuário
-      const user = new User(
-        null, // ID será gerado pelo banco
-        createUserDTO.name,
-        createUserDTO.email,
-        hashedPassword,
-        createUserDTO.userType || 'common',
-        createUserDTO.phone
-      );
+      // NÃO salvar usuário ainda - apenas armazenar dados temporariamente
+      // Vamos salvar os dados no metadata do código de verificação
+      const pendingUserData = {
+        name: createUserDTO.name,
+        email: createUserDTO.email,
+        password: hashedPassword,
+        userType: userType,
+        phone: createUserDTO.phone,
+      };
 
-      // Salvar usuário
-      const savedUser = await this.userRepository.save(user);
-
-      this.logger.info('Usuário registrado com sucesso', {
-        userId: savedUser.id,
-        email: savedUser.email,
-        userType: savedUser.userType,
+      this.logger.info('Iniciando registro de usuário (aguardando verificação)', {
+        email: createUserDTO.email,
+        userType: userType,
       });
 
-      // Enviar email de verificação automaticamente
+      // Enviar email de verificação com dados do usuário pendente
       let emailResult = null;
       if (this.verifyEmailUseCase) {
         try {
-          emailResult = await this.verifyEmailUseCase.sendVerificationCode(savedUser.email);
-          this.logger.info('Email de verificação enviado automaticamente', {
-            email: savedUser.email,
+          emailResult = await this.verifyEmailUseCase.sendVerificationCodeForRegistration(
+            createUserDTO.email,
+            createUserDTO.name,
+            pendingUserData
+          );
+          this.logger.info('Email de verificação enviado', {
+            email: createUserDTO.email,
             previewUrl: emailResult.data?.previewUrl,
           });
         } catch (emailError) {
           this.logger.error('Erro ao enviar email de verificação', {
             error: emailError.message,
-            email: savedUser.email,
+            email: createUserDTO.email,
           });
-          // Não falhar o registro se o email não for enviado
+          throw new Error('Erro ao enviar email de verificação. Tente novamente.');
         }
+      } else {
+        throw new Error('Serviço de verificação de email não disponível');
       }
-
-      // Remover senha da resposta
-      const { password, ...userWithoutPassword } = savedUser;
 
       return {
         success: true,
-        message: 'Usuário registrado com sucesso',
+        message: 'Código de verificação enviado para seu email. Verifique sua caixa de entrada.',
         data: {
-          user: userWithoutPassword,
+          email: createUserDTO.email,
+          requiresVerification: true,
           // Incluir preview URL em desenvolvimento
           ...(emailResult?.data?.previewUrl && {
             emailPreviewUrl: emailResult.data.previewUrl,

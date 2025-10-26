@@ -79,9 +79,19 @@ class SimpleAuthController {
       // Delega para o service
       const result = await this.authService.register(req.body);
 
-      console.log('[SIMPLE AUTH CONTROLLER] Registro concluído com sucesso');
+      console.log('[SIMPLE AUTH CONTROLLER] Registro concluído:', result);
 
-      // Resposta limpa
+      // Se requer verificação, retornar resposta apropriada
+      if (result.requiresVerification) {
+        return res.status(200).json({
+          success: true,
+          message: result.message,
+          requiresVerification: true,
+          data: result.data,
+        });
+      }
+
+      // Resposta antiga (caso não use verificação)
       res.status(201).json({
         success: true,
         message: result.message,

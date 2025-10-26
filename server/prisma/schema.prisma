@@ -304,9 +304,10 @@ model VerificationCode {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   email     String   // Email do usuário
   code      String   // Código de 6 dígitos
-  type      String   // 'email_verification' ou 'password_reset'
+  type      String   // 'email_verification' ou 'password_reset' ou 'registration'
   expiresAt DateTime // Data de expiração do código
   used      Boolean  @default(false) // Se o código já foi usado
+  metadata  Json     @default("{}") // Dados adicionais (ex: dados do usuário pendente)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

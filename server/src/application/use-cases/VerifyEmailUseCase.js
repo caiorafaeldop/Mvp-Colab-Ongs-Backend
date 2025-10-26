@@ -95,12 +95,24 @@ class VerifyEmailUseCase {
    */
   async verifyCode(email, code) {
     try {
-      // Buscar código válido
-      const verificationCode = await this.verificationCodeRepository.findValidCode(
+      // Tentar buscar código de registro primeiro
+      let verificationCode = await this.verificationCodeRepository.findValidCode(
         email,
         code,
-        'email_verification'
+        'registration'
       );
+
+      let isRegistration = false;
+      if (verificationCode) {
+        isRegistration = true;
+      } else {
+        // Se não for registro, buscar código de email_verification
+        verificationCode = await this.verificationCodeRepository.findValidCode(
+          email,
+          code,
+          'email_verification'
+        );
+      }
 
       if (!verificationCode) {
         throw new Error('Código inválido ou expirado');
@@ -109,16 +121,47 @@ class VerifyEmailUseCase {
       // Marcar código como usado
       await this.verificationCodeRepository.markAsUsed(verificationCode.id);
 
-      // Atualizar usuário como verificado
-      const user = await this.userRepository.findByEmail(email);
-      if (!user) {
-        throw new Error('Usuário não encontrado');
-      }
+      let user;
 
-      // Atualizar campo emailVerified
-      await this.userRepository.update(user.id, {
-        emailVerified: true,
-      });
+      if (isRegistration) {
+        // CRIAR USUÁRIO AGORA (dados estão no metadata)
+        const pendingUserData = verificationCode.metadata;
+        if (!pendingUserData || !pendingUserData.email) {
+          throw new Error('Dados do usuário pendente não encontrados');
+        }
+
+        const User = require('../../domain/entities/User');
+        const newUser = new User(
+          null,
+          pendingUserData.name,
+          pendingUserData.email,
+          pendingUserData.password, // Já está hasheado
+          pendingUserData.userType || 'common',
+          pendingUserData.phone
+        );
+
+        user = await this.userRepository.save(newUser);
+
+        // Marcar email como verificado
+        await this.userRepository.update(user.id, {
+          emailVerified: true,
+        });
+
+        logger.info('Usuário criado e verificado com sucesso', { email, userId: user.id });
+      } else {
+        // Atualizar usuário existente como verificado
+        user = await this.userRepository.findByEmail(email);
+        if (!user) {
+          throw new Error('Usuário não encontrado');
+        }
+
+        // Atualizar campo emailVerified
+        await this.userRepository.update(user.id, {
+          emailVerified: true,
+        });
+
+        logger.info('Email verificado com sucesso', { email, userId: user.id });
+      }
 
       // Gerar token JWT para login automático
       const token = jwt.sign(
@@ -131,11 +174,11 @@ class VerifyEmailUseCase {
         { expiresIn: '7d' }
       );
 
-      logger.info('Email verificado com sucesso', { email, userId: user.id });
-
       return {
         success: true,
-        message: 'Email verificado com sucesso',
+        message: isRegistration
+          ? 'Conta criada e verificada com sucesso'
+          : 'Email verificado com sucesso',
         data: {
           email,
           verified: true,
@@ -162,6 +205,67 @@ class VerifyEmailUseCase {
    */
   async resendVerificationCode(email) {
     return this.sendVerificationCode(email);
+  }
+
+  /**
+   * Enviar código de verificação para registro (antes de criar conta)
+   */
+  async sendVerificationCodeForRegistration(email, name, pendingUserData) {
+    try {
+      // Verificar rate limiting (máximo 3 códigos em 5 minutos)
+      const recentAttempts = await this.verificationCodeRepository.countRecentAttempts(
+        email,
+        'registration',
+        5
+      );
+
+      if (recentAttempts >= 3) {
+        throw new Error('Muitas tentativas. Aguarde 5 minutos antes de solicitar um novo código.');
+      }
+
+      // Invalidar códigos anteriores
+      await this.verificationCodeRepository.invalidatePreviousCodes(email, 'registration');
+
+      // Gerar novo código
+      const code = this.generateCode();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+      // Salvar código no banco com dados do usuário pendente
+      await this.verificationCodeRepository.create({
+        email,
+        code,
+        type: 'registration',
+        expiresAt,
+        metadata: pendingUserData,
+      });
+
+      // Enviar email
+      const emailResult = await this.emailService.sendVerificationEmail(email, name, code);
+
+      logger.info('Código de verificação de registro enviado', {
+        email,
+        previewUrl: emailResult.previewUrl,
+      });
+
+      return {
+        success: true,
+        message: 'Código de verificação enviado para seu email',
+        data: {
+          email,
+          expiresIn: '15 minutos',
+          // Em desenvolvimento, retornar preview URL
+          ...(process.env.NODE_ENV !== 'production' && {
+            previewUrl: emailResult.previewUrl,
+          }),
+        },
+      };
+    } catch (error) {
+      logger.error('Erro ao enviar código de verificação de registro', {
+        error: error.message,
+        email,
+      });
+      throw error;
+    }
   }
 }
 
