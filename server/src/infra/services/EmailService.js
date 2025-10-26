@@ -226,6 +226,8 @@ class EmailService {
           email: fromAddress,
           name: fromName,
         },
+        // (Opcional) reply_to pode ajudar em alguns fluxos
+        // reply_to: { email: process.env.REPLY_TO_EMAIL || fromAddress },
         content: [
           {
             type: 'text/html',
@@ -242,7 +244,7 @@ class EmailService {
         from: fromAddress,
         fromName,
         subject,
-        payloadSize: data.length,
+        payloadSize: Buffer.byteLength(data, 'utf8'),
         payload: JSON.stringify(payload, null, 2),
       });
 
@@ -254,7 +256,7 @@ class EmailService {
         headers: {
           Authorization: `Bearer ${this.sendgridApiKey}`,
           'Content-Type': 'application/json',
-          'Content-Length': data.length,
+          'Content-Length': Buffer.byteLength(data, 'utf8'),
         },
       };
 
@@ -271,11 +273,28 @@ class EmailService {
             });
             resolve({ messageId, accepted: [to] });
           } else {
+            // Parse amigável do erro da SendGrid
+            let parsed;
+            try {
+              parsed = JSON.parse(body);
+            } catch {
+              /* noop */
+            }
+            const sgErrors = parsed?.errors
+              ?.map((e) =>
+                [e.message, e.field && `field: ${e.field}`, e.help && `help: ${e.help}`]
+                  .filter(Boolean)
+                  .join(' | ')
+              )
+              .join(' ; ');
+            const errorMsg = `SendGrid API error ${res.statusCode}: ${sgErrors || body || 'unknown error'}`;
+
             logger.error('❌ SendGrid API retornou erro', {
               statusCode: res.statusCode,
-              body,
+              errors: sgErrors || body,
             });
-            reject(new Error(`SendGrid API error: ${res.statusCode} - ${body}`));
+
+            reject(new Error(errorMsg));
           }
         });
       });
