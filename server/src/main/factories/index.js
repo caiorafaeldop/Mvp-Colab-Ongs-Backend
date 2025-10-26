@@ -299,12 +299,10 @@ class AppFactory {
       MongoVerificationCodeRepository,
     } = require('../../infra/repositories/MongoVerificationCodeRepository');
     const { getEmailService } = require('../../infra/services/EmailService');
-    const { getDatabase } = require('../../infra/database/mongodb');
 
     // Criar repositórios e serviços
     const userRepository = this.createUserRepository();
-    const db = getDatabase();
-    const verificationCodeRepository = new MongoVerificationCodeRepository(db);
+    const verificationCodeRepository = new MongoVerificationCodeRepository();
     const emailService = getEmailService();
 
     // Criar Use Cases

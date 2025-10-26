@@ -176,10 +176,8 @@ class SimpleJwtAuthService {
         MongoVerificationCodeRepository,
       } = require('../repositories/MongoVerificationCodeRepository');
       const { getEmailService } = require('./EmailService');
-      const { getDatabase } = require('../database/mongodb');
 
-      const db = getDatabase();
-      const verificationCodeRepository = new MongoVerificationCodeRepository(db);
+      const verificationCodeRepository = new MongoVerificationCodeRepository();
       const emailService = getEmailService();
       const verifyEmailUseCase = new VerifyEmailUseCase(
         this.userRepository,

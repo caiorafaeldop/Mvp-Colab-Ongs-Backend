@@ -1,13 +1,12 @@
-const { ObjectId } = require('mongodb');
+const VerificationCodeModel = require('../database/models/VerificationCodeModel');
 const { logger } = require('../logger');
 
 /**
  * Repositório MongoDB para gerenciar códigos de verificação
  */
 class MongoVerificationCodeRepository {
-  constructor(db) {
-    this.db = db;
-    this.collection = db.collection('verificationCodes');
+  constructor() {
+    // Usa Mongoose Model
   }
 
   /**
@@ -15,27 +14,30 @@ class MongoVerificationCodeRepository {
    */
   async create(data) {
     try {
-      const verificationCode = {
+      const verificationCode = await VerificationCodeModel.create({
         email: data.email,
         code: data.code,
         type: data.type,
         expiresAt: data.expiresAt,
         used: false,
         metadata: data.metadata || {},
-        createdAt: new Date(),
-      };
-
-      const result = await this.collection.insertOne(verificationCode);
+      });
 
       logger.info('Código de verificação criado', {
-        id: result.insertedId.toString(),
+        id: verificationCode._id.toString(),
         email: data.email,
         type: data.type,
       });
 
       return {
-        id: result.insertedId.toString(),
-        ...verificationCode,
+        id: verificationCode._id.toString(),
+        email: verificationCode.email,
+        code: verificationCode.code,
+        type: verificationCode.type,
+        expiresAt: verificationCode.expiresAt,
+        used: verificationCode.used,
+        metadata: verificationCode.metadata,
+        createdAt: verificationCode.createdAt,
       };
     } catch (error) {
       logger.error('Erro ao criar código de verificação', {
@@ -51,7 +53,7 @@ class MongoVerificationCodeRepository {
    */
   async findValidCode(email, code, type) {
     try {
-      const verificationCode = await this.collection.findOne({
+      const verificationCode = await VerificationCodeModel.findOne({
         email,
         code,
         type,
@@ -59,7 +61,7 @@ class MongoVerificationCodeRepository {
         expiresAt: {
           $gte: new Date(), // Código não expirado
         },
-      });
+      }).sort({ createdAt: -1 });
 
       if (!verificationCode) {
         return null;
@@ -90,9 +92,10 @@ class MongoVerificationCodeRepository {
    */
   async markAsUsed(id) {
     try {
-      const result = await this.collection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { used: true } }
+      const result = await VerificationCodeModel.findByIdAndUpdate(
+        id,
+        { used: true },
+        { new: true }
       );
 
       logger.info('Código de verificação marcado como usado', { id });
@@ -112,14 +115,14 @@ class MongoVerificationCodeRepository {
    */
   async invalidatePreviousCodes(email, type) {
     try {
-      const result = await this.collection.updateMany(
+      const result = await VerificationCodeModel.updateMany(
         {
           email,
           type,
           used: false,
         },
         {
-          $set: { used: true },
+          used: true,
         }
       );
 
@@ -147,7 +150,7 @@ class MongoVerificationCodeRepository {
     try {
       const since = new Date(Date.now() - minutesAgo * 60 * 1000);
 
-      const count = await this.collection.countDocuments({
+      const count = await VerificationCodeModel.countDocuments({
         email,
         type,
         createdAt: {
@@ -171,7 +174,7 @@ class MongoVerificationCodeRepository {
    */
   async cleanExpiredCodes() {
     try {
-      const result = await this.collection.deleteMany({
+      const result = await VerificationCodeModel.deleteMany({
         expiresAt: {
           $lt: new Date(),
         },
