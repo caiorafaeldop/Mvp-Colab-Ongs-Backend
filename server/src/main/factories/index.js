@@ -296,13 +296,15 @@ class AppFactory {
     const VerificationController = require('../../presentation/controllers/VerificationController');
     const { VerifyEmailUseCase, PasswordResetUseCase } = require('../../application/use-cases');
     const {
-      VerificationCodeRepository,
-    } = require('../../infra/repositories/VerificationCodeRepository');
+      MongoVerificationCodeRepository,
+    } = require('../../infra/repositories/MongoVerificationCodeRepository');
     const { getEmailService } = require('../../infra/services/EmailService');
+    const { getDatabase } = require('../../infra/database/mongodb');
 
     // Criar repositórios e serviços
     const userRepository = this.createUserRepository();
-    const verificationCodeRepository = new VerificationCodeRepository();
+    const db = getDatabase();
+    const verificationCodeRepository = new MongoVerificationCodeRepository(db);
     const emailService = getEmailService();
 
     // Criar Use Cases

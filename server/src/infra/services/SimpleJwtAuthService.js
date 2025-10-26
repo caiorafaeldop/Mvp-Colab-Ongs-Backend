@@ -172,11 +172,14 @@ class SimpleJwtAuthService {
       // USAR RegisterUserUseCase com VerifyEmailUseCase
       const RegisterUserUseCase = require('../../application/use-cases/RegisterUserUseCase');
       const VerifyEmailUseCase = require('../../application/use-cases/VerifyEmailUseCase');
-      const VerificationCodeRepository =
-        require('../repositories/VerificationCodeRepository').VerificationCodeRepository;
+      const {
+        MongoVerificationCodeRepository,
+      } = require('../repositories/MongoVerificationCodeRepository');
       const { getEmailService } = require('./EmailService');
+      const { getDatabase } = require('../database/mongodb');
 
-      const verificationCodeRepository = new VerificationCodeRepository();
+      const db = getDatabase();
+      const verificationCodeRepository = new MongoVerificationCodeRepository(db);
       const emailService = getEmailService();
       const verifyEmailUseCase = new VerifyEmailUseCase(
         this.userRepository,

@@ -241,11 +241,23 @@ class VerifyEmailUseCase {
 
       // Enviar email DE FORMA ASSÍNCRONA (não esperar)
       logger.info('[VERIFY EMAIL] Agendando envio de email...', { email, code });
+      console.log(`\n${'='.repeat(80)}`);
+      console.log(`🚀 INICIANDO ENVIO DE EMAIL ASSÍNCRONO`);
+      console.log(`Email: ${email}`);
+      console.log(`Código: ${code}`);
+      console.log(`${'='.repeat(80)}\n`);
 
       // Enviar email em background (fire and forget)
       this.emailService
         .sendVerificationEmail(email, name, code)
         .then((emailResult) => {
+          console.log(`\n${'='.repeat(80)}`);
+          console.log(`✅ EMAIL ENVIADO COM SUCESSO!`);
+          console.log(`Email: ${email}`);
+          console.log(`MessageId: ${emailResult.messageId}`);
+          console.log(`Preview URL: ${emailResult.previewUrl || 'N/A'}`);
+          console.log(`${'='.repeat(80)}\n`);
+
           logger.info('[VERIFY EMAIL] Email enviado com sucesso!', {
             email,
             messageId: emailResult.messageId,
@@ -253,9 +265,17 @@ class VerifyEmailUseCase {
           });
         })
         .catch((error) => {
+          console.log(`\n${'='.repeat(80)}`);
+          console.log(`❌ ERRO AO ENVIAR EMAIL!`);
+          console.log(`Email: ${email}`);
+          console.log(`Erro: ${error.message}`);
+          console.log(`Stack: ${error.stack}`);
+          console.log(`${'='.repeat(80)}\n`);
+
           logger.error('[VERIFY EMAIL] Erro ao enviar email (background):', {
             email,
             error: error.message,
+            stack: error.stack,
           });
         });
 

@@ -118,15 +118,23 @@ class EmailService {
   async sendEmailWithRetry(mailOptions, maxRetries = 3) {
     let lastError;
 
+    console.log(`\n${'🔄'.repeat(40)}`);
+    console.log(`[EMAIL RETRY] Iniciando envio com retry para: ${mailOptions.to}`);
+    console.log(`${'🔄'.repeat(40)}\n`);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        console.log(`\n⏳ [TENTATIVA ${attempt}/${maxRetries}] Enviando para: ${mailOptions.to}`);
+
         logger.info(`[EMAIL RETRY] Tentativa ${attempt}/${maxRetries}`, {
           to: mailOptions.to,
         });
 
         // Timeout progressivo: 5s, 8s, 12s
         const timeout = 5000 + (attempt - 1) * 3000;
+        console.log(`   Timeout configurado: ${timeout}ms`);
 
+        const startTime = Date.now();
         const info = await Promise.race([
           this.transporter.sendMail(mailOptions),
           new Promise((_, reject) =>
@@ -136,15 +144,25 @@ class EmailService {
             )
           ),
         ]);
+        const duration = Date.now() - startTime;
+
+        console.log(`\n✅ [SUCESSO NA TENTATIVA ${attempt}!]`);
+        console.log(`   Duração: ${duration}ms`);
+        console.log(`   MessageId: ${info.messageId}`);
 
         logger.info(`[EMAIL RETRY] ✅ Sucesso na tentativa ${attempt}!`, {
           to: mailOptions.to,
           messageId: info.messageId,
+          duration,
         });
 
         return info;
       } catch (error) {
         lastError = error;
+
+        console.log(`\n❌ [FALHA NA TENTATIVA ${attempt}/${maxRetries}]`);
+        console.log(`   Erro: ${error.message}`);
+
         logger.warn(`[EMAIL RETRY] ❌ Falha na tentativa ${attempt}/${maxRetries}`, {
           to: mailOptions.to,
           error: error.message,
@@ -153,6 +171,7 @@ class EmailService {
         // Se não for a última tentativa, aguardar antes de retry
         if (attempt < maxRetries) {
           const backoffMs = Math.pow(2, attempt) * 1000; // 2s, 4s
+          console.log(`   ⏳ Aguardando ${backoffMs}ms antes do retry...\n`);
           logger.info(`[EMAIL RETRY] Aguardando ${backoffMs}ms antes do retry...`);
           await new Promise((resolve) => setTimeout(resolve, backoffMs));
         }
@@ -160,14 +179,27 @@ class EmailService {
     }
 
     // Se todas as tentativas falharam, tentar fallback para Ethereal
+    console.log(`\n${'🚨'.repeat(40)}`);
+    console.log(`[FALLBACK ETHEREAL] Todas tentativas SMTP falharam!`);
+    console.log(`[FALLBACK ETHEREAL] Tentando enviar via Ethereal...`);
+    console.log(`${'🚨'.repeat(40)}\n`);
+
     logger.warn('[EMAIL RETRY] Todas tentativas falharam, tentando fallback Ethereal...', {
       to: mailOptions.to,
     });
 
     try {
+      console.log(`⏳ Criando conta Ethereal temporária...`);
       const fallbackTransporter = await this.createEtherealFallback();
+
+      console.log(`⏳ Enviando email via Ethereal...`);
       const info = await fallbackTransporter.sendMail(mailOptions);
       const previewUrl = nodemailer.getTestMessageUrl(info);
+
+      console.log(`\n✅ [FALLBACK ETHEREAL FUNCIONOU!]`);
+      console.log(`   MessageId: ${info.messageId}`);
+      console.log(`   Preview URL: ${previewUrl}`);
+      console.log(`\n${'🎉'.repeat(40)}\n`);
 
       logger.info('[EMAIL RETRY] ✅ Fallback Ethereal funcionou!', {
         to: mailOptions.to,
@@ -176,6 +208,11 @@ class EmailService {
 
       return { ...info, previewUrl, usedFallback: true };
     } catch (fallbackError) {
+      console.log(`\n❌ [FALLBACK ETHEREAL TAMBÉM FALHOU!]`);
+      console.log(`   Erro: ${fallbackError.message}`);
+      console.log(`   Stack: ${fallbackError.stack}`);
+      console.log(`\n${'💀'.repeat(40)}\n`);
+
       logger.error('[EMAIL RETRY] Fallback também falhou!', {
         to: mailOptions.to,
         error: fallbackError.message,
@@ -188,7 +225,14 @@ class EmailService {
    * Criar transporter Ethereal para fallback
    */
   async createEtherealFallback() {
-    const testAccount = await nodemailer.createTestAccount();
+    // Timeout de 10s para criar conta Ethereal
+    const testAccount = await Promise.race([
+      nodemailer.createTestAccount(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout ao criar conta Ethereal (10s)')), 10000)
+      ),
+    ]);
+
     return nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
@@ -244,7 +288,6 @@ class EmailService {
         data: {
           previewUrl,
         },
-        previewUrl, // URL para visualizar no Ethereal
       };
     } catch (error) {
       logger.error('Erro ao enviar email de verificação', {
