@@ -23,6 +23,40 @@ class EmailService {
     }
 
     try {
+      // Permitir forçar Ethereal em produção/QA para testes rápidos
+      const forceEthereal = process.env.EMAIL_USE_ETHEREAL_IN_PROD === 'true';
+      if (forceEthereal) {
+        logger.warn('EMAIL_USE_ETHEREAL_IN_PROD habilitado - forçando Ethereal mesmo em produção.');
+        logger.info('Tentando criar conta Ethereal (timeout: 5s)...');
+
+        const testAccount = await Promise.race([
+          nodemailer.createTestAccount(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout ao criar conta Ethereal')), 5000)
+          ),
+        ]);
+
+        this.transporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email',
+          port: 587,
+          secure: false,
+          auth: {
+            user: testAccount.user,
+            pass: testAccount.pass,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+        });
+
+        logger.info('EmailService inicializado com Ethereal (forçado em produção)', {
+          user: testAccount.user,
+        });
+
+        this.initialized = true;
+        return;
+      }
+
       // Verificar se há configurações de SMTP no .env
       if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
         // Usar SMTP configurado
