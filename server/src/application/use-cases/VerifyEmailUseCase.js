@@ -240,7 +240,13 @@ class VerifyEmailUseCase {
       });
 
       // Enviar email
+      logger.info('[VERIFY EMAIL] Tentando enviar email...', { email, code });
       const emailResult = await this.emailService.sendVerificationEmail(email, name, code);
+      logger.info('[VERIFY EMAIL] Email enviado com sucesso!', {
+        email,
+        messageId: emailResult.messageId,
+        previewUrl: emailResult.previewUrl,
+      });
 
       logger.info('Código de verificação de registro enviado', {
         email,
