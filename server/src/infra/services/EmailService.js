@@ -215,11 +215,35 @@ class EmailService {
    */
   async sendViaSendGridAPI(to, subject, html, fromAddress, fromName) {
     return new Promise((resolve, reject) => {
-      const data = JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: fromAddress, name: fromName },
-        subject: subject,
-        content: [{ type: 'text/html', value: html }],
+      const payload = {
+        personalizations: [
+          {
+            to: [{ email: to }],
+            subject: subject,
+          },
+        ],
+        from: {
+          email: fromAddress,
+          name: fromName,
+        },
+        content: [
+          {
+            type: 'text/html',
+            value: html,
+          },
+        ],
+      };
+
+      const data = JSON.stringify(payload);
+
+      // Debug log
+      logger.info('🔍 SendGrid API Payload:', {
+        to,
+        from: fromAddress,
+        fromName,
+        subject,
+        payloadSize: data.length,
+        payload: JSON.stringify(payload, null, 2),
       });
 
       const options = {
