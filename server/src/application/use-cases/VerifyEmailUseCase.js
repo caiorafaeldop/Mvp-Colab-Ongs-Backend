@@ -239,48 +239,21 @@ class VerifyEmailUseCase {
         metadata: pendingUserData,
       });
 
-      // Enviar email DE FORMA ASSÍNCRONA (não esperar)
-      logger.info('[VERIFY EMAIL] Agendando envio de email...', { email, code });
+      // Enviar email de forma SINCRÔNICA para unificar comportamento com localhost
+      logger.info('[VERIFY EMAIL] Enviando email de verificação (sincrono)...', { email, code });
+      const emailResult = await this.emailService.sendVerificationEmail(email, name, code);
+
       console.log(`\n${'='.repeat(80)}`);
-      console.log(`🚀 INICIANDO ENVIO DE EMAIL ASSÍNCRONO`);
+      console.log(`✅ EMAIL ENVIADO COM SUCESSO!`);
       console.log(`Email: ${email}`);
-      console.log(`Código: ${code}`);
+      console.log(`MessageId: ${emailResult.messageId}`);
+      console.log(`Preview URL: ${emailResult.previewUrl || 'N/A'}`);
       console.log(`${'='.repeat(80)}\n`);
 
-      // Enviar email em background (fire and forget)
-      this.emailService
-        .sendVerificationEmail(email, name, code)
-        .then((emailResult) => {
-          console.log(`\n${'='.repeat(80)}`);
-          console.log(`✅ EMAIL ENVIADO COM SUCESSO!`);
-          console.log(`Email: ${email}`);
-          console.log(`MessageId: ${emailResult.messageId}`);
-          console.log(`Preview URL: ${emailResult.previewUrl || 'N/A'}`);
-          console.log(`${'='.repeat(80)}\n`);
-
-          logger.info('[VERIFY EMAIL] Email enviado com sucesso!', {
-            email,
-            messageId: emailResult.messageId,
-            previewUrl: emailResult.previewUrl,
-          });
-        })
-        .catch((error) => {
-          console.log(`\n${'='.repeat(80)}`);
-          console.log(`❌ ERRO AO ENVIAR EMAIL!`);
-          console.log(`Email: ${email}`);
-          console.log(`Erro: ${error.message}`);
-          console.log(`Stack: ${error.stack}`);
-          console.log(`${'='.repeat(80)}\n`);
-
-          logger.error('[VERIFY EMAIL] Erro ao enviar email (background):', {
-            email,
-            error: error.message,
-            stack: error.stack,
-          });
-        });
-
-      logger.info('Código de verificação de registro criado (email sendo enviado em background)', {
+      logger.info('[VERIFY EMAIL] Email enviado com sucesso!', {
         email,
+        messageId: emailResult.messageId,
+        previewUrl: emailResult.previewUrl,
       });
 
       return {
@@ -289,6 +262,7 @@ class VerifyEmailUseCase {
         data: {
           email,
           expiresIn: '15 minutos',
+          ...(emailResult?.previewUrl && { previewUrl: emailResult.previewUrl }),
         },
       };
     } catch (error) {

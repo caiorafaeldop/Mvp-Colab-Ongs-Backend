@@ -23,126 +23,42 @@ class EmailService {
     }
 
     try {
-      // Permitir forçar Ethereal em produção/QA para testes rápidos
-      const forceEthereal = process.env.EMAIL_USE_ETHEREAL_IN_PROD === 'true';
-      if (forceEthereal) {
-        logger.warn('EMAIL_USE_ETHEREAL_IN_PROD habilitado - forçando Ethereal mesmo em produção.');
-        logger.info('Tentando criar conta Ethereal (timeout: 5s)...');
+      // Leadsim-style: SMTP único, sem Ethereal, sem mock
+      const host = process.env.MAIL_HOST || process.env.SMTP_HOST;
+      const user = process.env.MAIL_USERNAME || process.env.SMTP_USER;
+      const pass =
+        process.env.SENDGRID_API_KEY || process.env.MAIL_PASSWORD || process.env.SMTP_PASS;
+      const port = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '587');
+      const secure = (process.env.MAIL_SECURE || process.env.SMTP_SECURE) === 'true';
 
-        const testAccount = await Promise.race([
-          nodemailer.createTestAccount(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout ao criar conta Ethereal')), 5000)
-          ),
-        ]);
-
-        this.transporter = nodemailer.createTransport({
-          host: 'smtp.ethereal.email',
-          port: 587,
-          secure: false,
-          auth: {
-            user: testAccount.user,
-            pass: testAccount.pass,
-          },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-        });
-
-        logger.info('EmailService inicializado com Ethereal (forçado em produção)', {
-          user: testAccount.user,
-        });
-
-        this.initialized = true;
-        return;
+      if (!host || !user || !pass) {
+        const msg =
+          'SMTP não configurado. Defina MAIL_HOST/MAIL_USERNAME/SENDGRID_API_KEY (ou SMTP_HOST/SMTP_USER/SMTP_PASS).';
+        logger.error(msg, { host, userPresent: !!user, passPresent: !!pass });
+        throw new Error(msg);
       }
 
-      // Verificar se há configurações de SMTP no .env
-      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        // Usar SMTP configurado
-        this.transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-          // TIMEOUTS AGRESSIVOS para não travar
-          connectionTimeout: 5000, // 5s para conectar
-          greetingTimeout: 5000, // 5s para greeting
-          socketTimeout: 10000, // 10s para socket
-        });
+      this.transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass },
+        connectionTimeout: 7000,
+        greetingTimeout: 7000,
+        socketTimeout: 12000,
+      });
 
-        logger.info('EmailService inicializado com SMTP configurado');
-      } else {
-        // FALLBACK: Em produção sem SMTP, usar modo mock (não envia email real)
-        if (process.env.NODE_ENV === 'production') {
-          logger.warn('⚠️ SMTP não configurado em produção! Emails NÃO serão enviados!');
-          logger.warn('Configure SMTP_HOST, SMTP_USER, SMTP_PASS no .env');
-
-          // Criar transporter mock que não envia nada
-          this.transporter = {
-            sendMail: async (mailOptions) => {
-              logger.info('📧 [MOCK] Email que seria enviado:', {
-                to: mailOptions.to,
-                subject: mailOptions.subject,
-              });
-              return {
-                messageId: 'mock-' + Date.now(),
-                accepted: [mailOptions.to],
-              };
-            },
-          };
-
-          this.initialized = true;
-          return;
-        }
-
-        // Desenvolvimento: tentar Ethereal com timeout
-        logger.info('Tentando criar conta Ethereal (timeout: 5s)...');
-
-        const testAccount = await Promise.race([
-          nodemailer.createTestAccount(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout ao criar conta Ethereal')), 5000)
-          ),
-        ]);
-
-        this.transporter = nodemailer.createTransport({
-          host: 'smtp.ethereal.email',
-          port: 587,
-          secure: false,
-          auth: {
-            user: testAccount.user,
-            pass: testAccount.pass,
-          },
-        });
-
-        logger.info('EmailService inicializado com Ethereal Email (teste)', {
-          user: testAccount.user,
-        });
-      }
+      logger.info('EmailService inicializado com SMTP (Leadsim-style)', {
+        host,
+        port,
+        secure,
+        userConfigured: !!user,
+      });
 
       this.initialized = true;
     } catch (error) {
       logger.error('Erro ao inicializar EmailService', { error: error.message });
-
-      // FALLBACK FINAL: criar transporter mock
-      logger.warn('Usando modo MOCK - emails não serão enviados!');
-      this.transporter = {
-        sendMail: async (mailOptions) => {
-          logger.info('📧 [MOCK FALLBACK] Email que seria enviado:', {
-            to: mailOptions.to,
-            subject: mailOptions.subject,
-          });
-          return {
-            messageId: 'mock-fallback-' + Date.now(),
-            accepted: [mailOptions.to],
-          };
-        },
-      };
-      this.initialized = true;
+      throw error;
     }
   }
 
@@ -293,24 +209,26 @@ class EmailService {
     logger.info('[EMAIL SERVICE] Inicialização completa, enviando email...');
 
     try {
+      const fromAddress =
+        process.env.MAIL_FROM || process.env.EMAIL_FROM || 'noreply@plataformaongs.com';
+      const fromName = process.env.EMAIL_FROM_NAME || 'Plataforma ONGs';
+
       const mailOptions = {
-        from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
+        from: `"${fromName}" <${fromAddress}>`,
         to: email,
         subject: 'Verificação de Email - Código de Confirmação',
         html: this.getVerificationEmailTemplate(name, code),
       };
 
-      const info = await this.sendEmailWithRetry(mailOptions);
-      const previewUrl = info.previewUrl || nodemailer.getTestMessageUrl(info);
+      const info = await this.transporter.sendMail(mailOptions);
+      const previewUrl = nodemailer.getTestMessageUrl(info) || false;
 
       logger.info('Email de verificação enviado', {
         email,
         messageId: info.messageId,
         previewUrl,
-        usedFallback: info.usedFallback || false,
       });
 
-      // Log adicional para facilitar visualização
       if (previewUrl) {
         logger.info(`📧 Preview do email: ${previewUrl}`);
       }
@@ -319,15 +237,10 @@ class EmailService {
         success: true,
         messageId: info.messageId,
         previewUrl,
-        data: {
-          previewUrl,
-        },
+        data: { previewUrl },
       };
     } catch (error) {
-      logger.error('Erro ao enviar email de verificação', {
-        email,
-        error: error.message,
-      });
+      logger.error('Erro ao enviar email de verificação', { email, error: error.message });
       throw error;
     }
   }
@@ -339,24 +252,26 @@ class EmailService {
     await this.initialize();
 
     try {
+      const fromAddress =
+        process.env.MAIL_FROM || process.env.EMAIL_FROM || 'noreply@plataformaongs.com';
+      const fromName = process.env.EMAIL_FROM_NAME || 'Plataforma ONGs';
+
       const mailOptions = {
-        from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
+        from: `"${fromName}" <${fromAddress}>`,
         to: email,
         subject: 'Recuperação de Senha - Código de Verificação',
         html: this.getPasswordResetEmailTemplate(name, code),
       };
 
-      const info = await this.sendEmailWithRetry(mailOptions);
-      const previewUrl = info.previewUrl || nodemailer.getTestMessageUrl(info);
+      const info = await this.transporter.sendMail(mailOptions);
+      const previewUrl = nodemailer.getTestMessageUrl(info) || false;
 
       logger.info('Email de recuperação de senha enviado', {
         email,
         messageId: info.messageId,
         previewUrl,
-        usedFallback: info.usedFallback || false,
       });
 
-      // Log adicional para facilitar visualização
       if (previewUrl) {
         console.log('\n' + '='.repeat(80));
         console.log('🔑 EMAIL DE RECUPERAÇÃO DE SENHA ENVIADO');
@@ -374,10 +289,7 @@ class EmailService {
         previewUrl,
       };
     } catch (error) {
-      logger.error('Erro ao enviar email de recuperação de senha', {
-        email,
-        error: error.message,
-      });
+      logger.error('Erro ao enviar email de recuperação de senha', { email, error: error.message });
       throw error;
     }
   }
