@@ -113,6 +113,97 @@ class EmailService {
   }
 
   /**
+   * Tentar enviar email com retry e backoff
+   */
+  async sendEmailWithRetry(mailOptions, maxRetries = 3) {
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.info(`[EMAIL RETRY] Tentativa ${attempt}/${maxRetries}`, {
+          to: mailOptions.to,
+        });
+
+        // Timeout progressivo: 5s, 8s, 12s
+        const timeout = 5000 + (attempt - 1) * 3000;
+
+        const info = await Promise.race([
+          this.transporter.sendMail(mailOptions),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`Timeout na tentativa ${attempt} (${timeout}ms)`)),
+              timeout
+            )
+          ),
+        ]);
+
+        logger.info(`[EMAIL RETRY] ✅ Sucesso na tentativa ${attempt}!`, {
+          to: mailOptions.to,
+          messageId: info.messageId,
+        });
+
+        return info;
+      } catch (error) {
+        lastError = error;
+        logger.warn(`[EMAIL RETRY] ❌ Falha na tentativa ${attempt}/${maxRetries}`, {
+          to: mailOptions.to,
+          error: error.message,
+        });
+
+        // Se não for a última tentativa, aguardar antes de retry
+        if (attempt < maxRetries) {
+          const backoffMs = Math.pow(2, attempt) * 1000; // 2s, 4s
+          logger.info(`[EMAIL RETRY] Aguardando ${backoffMs}ms antes do retry...`);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+        }
+      }
+    }
+
+    // Se todas as tentativas falharam, tentar fallback para Ethereal
+    logger.warn('[EMAIL RETRY] Todas tentativas falharam, tentando fallback Ethereal...', {
+      to: mailOptions.to,
+    });
+
+    try {
+      const fallbackTransporter = await this.createEtherealFallback();
+      const info = await fallbackTransporter.sendMail(mailOptions);
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+
+      logger.info('[EMAIL RETRY] ✅ Fallback Ethereal funcionou!', {
+        to: mailOptions.to,
+        previewUrl,
+      });
+
+      return { ...info, previewUrl, usedFallback: true };
+    } catch (fallbackError) {
+      logger.error('[EMAIL RETRY] Fallback também falhou!', {
+        to: mailOptions.to,
+        error: fallbackError.message,
+      });
+      throw lastError; // Lançar erro original
+    }
+  }
+
+  /**
+   * Criar transporter Ethereal para fallback
+   */
+  async createEtherealFallback() {
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    });
+  }
+
+  /**
    * Enviar email de verificação com código de 6 dígitos
    */
   async sendVerificationEmail(email, name, code) {
@@ -124,42 +215,35 @@ class EmailService {
     logger.info('[EMAIL SERVICE] Inicialização completa, enviando email...');
 
     try {
-      // Timeout de 5s para envio de email
-      const info = await Promise.race([
-        this.transporter.sendMail({
-          from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
-          to: email,
-          subject: 'Verificação de Email - Código de Confirmação',
-          html: this.getVerificationEmailTemplate(name, code),
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout ao enviar email (5s)')), 5000)
-        ),
-      ]);
+      const mailOptions = {
+        from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
+        to: email,
+        subject: 'Verificação de Email - Código de Confirmação',
+        html: this.getVerificationEmailTemplate(name, code),
+      };
 
-      const previewUrl = nodemailer.getTestMessageUrl(info);
+      const info = await this.sendEmailWithRetry(mailOptions);
+      const previewUrl = info.previewUrl || nodemailer.getTestMessageUrl(info);
 
       logger.info('Email de verificação enviado', {
         email,
         messageId: info.messageId,
         previewUrl,
+        usedFallback: info.usedFallback || false,
       });
 
       // Log adicional para facilitar visualização
       if (previewUrl) {
-        console.log('\n' + '='.repeat(80));
-        console.log('📧 EMAIL DE VERIFICAÇÃO ENVIADO');
-        console.log('='.repeat(80));
-        console.log(`Para: ${email}`);
-        console.log(`Código: ${code}`);
-        console.log(`\n🔗 Visualizar email:`);
-        console.log(`   ${previewUrl}`);
-        console.log('='.repeat(80) + '\n');
+        logger.info(`📧 Preview do email: ${previewUrl}`);
       }
 
       return {
         success: true,
         messageId: info.messageId,
+        previewUrl,
+        data: {
+          previewUrl,
+        },
         previewUrl, // URL para visualizar no Ethereal
       };
     } catch (error) {
@@ -178,25 +262,21 @@ class EmailService {
     await this.initialize();
 
     try {
-      // Timeout de 5s para envio de email
-      const info = await Promise.race([
-        this.transporter.sendMail({
-          from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
-          to: email,
-          subject: 'Recuperação de Senha - Código de Verificação',
-          html: this.getPasswordResetEmailTemplate(name, code),
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout ao enviar email (5s)')), 5000)
-        ),
-      ]);
+      const mailOptions = {
+        from: `"${process.env.EMAIL_FROM_NAME || 'Plataforma ONGs'}" <${process.env.EMAIL_FROM || 'noreply@plataformaongs.com'}>`,
+        to: email,
+        subject: 'Recuperação de Senha - Código de Verificação',
+        html: this.getPasswordResetEmailTemplate(name, code),
+      };
 
-      const previewUrl = nodemailer.getTestMessageUrl(info);
+      const info = await this.sendEmailWithRetry(mailOptions);
+      const previewUrl = info.previewUrl || nodemailer.getTestMessageUrl(info);
 
       logger.info('Email de recuperação de senha enviado', {
         email,
         messageId: info.messageId,
         previewUrl,
+        usedFallback: info.usedFallback || false,
       });
 
       // Log adicional para facilitar visualização
