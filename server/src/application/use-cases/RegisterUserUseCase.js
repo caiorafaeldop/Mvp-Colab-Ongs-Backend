@@ -22,8 +22,9 @@ class RegisterUserUseCase {
       // IMPORTANTE: Forçar userType como 'common' (outros tipos são criados manualmente)
       const userType = 'common';
 
-      // Hash da senha
-      const hashedPassword = await bcrypt.hash(createUserDTO.password, 10);
+      // Hash da senha (rounds reduzidos para performance no Render)
+      const saltRounds = process.env.NODE_ENV === 'production' ? 8 : 10;
+      const hashedPassword = await bcrypt.hash(createUserDTO.password, saltRounds);
 
       // NÃO salvar usuário ainda - apenas armazenar dados temporariamente
       // Vamos salvar os dados no metadata do código de verificação

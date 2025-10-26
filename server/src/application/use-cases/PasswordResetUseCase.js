@@ -154,8 +154,9 @@ class PasswordResetUseCase {
         throw new Error('Usuário não encontrado');
       }
 
-      // Hash da nova senha
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      // Hash da nova senha (rounds reduzidos para performance no Render)
+      const saltRounds = process.env.NODE_ENV === 'production' ? 8 : 10;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
       // Atualizar senha do usuário
       await this.userRepository.update(user.id, {

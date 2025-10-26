@@ -49,7 +49,8 @@ userSchema.pre('save', async function (next) {
 
   try {
     console.log('[MONGOOSE PRE-SAVE] Hasheando senha:', this.password);
-    const salt = await bcrypt.genSalt(10);
+    const saltRounds = process.env.NODE_ENV === 'production' ? 8 : 10;
+    const salt = await bcrypt.genSalt(saltRounds);
     this.password = await bcrypt.hash(this.password, salt);
     console.log('[MONGOOSE PRE-SAVE] Novo hash:', this.password);
     next();

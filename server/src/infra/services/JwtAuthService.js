@@ -135,7 +135,8 @@ class JwtAuthService extends IAuthService {
 
   async hashPassword(password) {
     try {
-      const salt = await bcrypt.genSalt(10);
+      const saltRounds = process.env.NODE_ENV === 'production' ? 8 : 10;
+      const salt = await bcrypt.genSalt(saltRounds);
       return await bcrypt.hash(password, salt);
     } catch (error) {
       throw new Error(`Password hashing failed: ${error.message}`);
