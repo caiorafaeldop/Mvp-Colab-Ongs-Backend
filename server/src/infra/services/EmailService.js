@@ -215,6 +215,24 @@ class EmailService {
    */
   async sendViaSendGridAPI(to, subject, html, fromAddress, fromName) {
     return new Promise((resolve, reject) => {
+      // Aviso preventivo: gmail.com como FROM tende a falhar em entrega (DMARC)
+      const fromDomain = String(fromAddress).split('@')[1] || '';
+      if (fromDomain.toLowerCase() === 'gmail.com') {
+        logger.warn(
+          'FROM usando gmail.com. Recomenda-se usar domínio autenticado (SPF/DKIM/DMARC) na SendGrid para melhor entrega.',
+          { fromAddress }
+        );
+      }
+
+      // Gera versão texto simples
+      const plain = String(html)
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<\/(p|div|br|h\d)>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
       const payload = {
         personalizations: [
           {
@@ -226,13 +244,9 @@ class EmailService {
           email: fromAddress,
           name: fromName,
         },
-        // (Opcional) reply_to pode ajudar em alguns fluxos
-        // reply_to: { email: process.env.REPLY_TO_EMAIL || fromAddress },
         content: [
-          {
-            type: 'text/html',
-            value: html,
-          },
+          { type: 'text/plain', value: plain || subject },
+          { type: 'text/html', value: html },
         ],
       };
 
@@ -273,7 +287,6 @@ class EmailService {
             });
             resolve({ messageId, accepted: [to] });
           } else {
-            // Parse amigável do erro da SendGrid
             let parsed;
             try {
               parsed = JSON.parse(body);
