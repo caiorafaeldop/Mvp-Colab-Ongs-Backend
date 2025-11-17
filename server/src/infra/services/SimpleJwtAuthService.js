@@ -160,7 +160,7 @@ class SimpleJwtAuthService {
   }
 
   /**
-   * Registro simplificado - NOVO FLUXO COM VERIFICAÇÃO DE EMAIL
+   * Registro simplificado - SEM VERIFICAÇÃO DE EMAIL
    */
   async register(userData) {
     try {
@@ -169,48 +169,90 @@ class SimpleJwtAuthService {
       // Validação básica
       this.validateRegistrationData(userData);
 
-      // USAR RegisterUserUseCase com VerifyEmailUseCase
-      const RegisterUserUseCase = require('../../application/use-cases/RegisterUserUseCase');
-      const VerifyEmailUseCase = require('../../application/use-cases/VerifyEmailUseCase');
-      const {
-        MongoVerificationCodeRepository,
-      } = require('../repositories/MongoVerificationCodeRepository');
-      const { getEmailService } = require('./EmailService');
-
-      const verificationCodeRepository = new MongoVerificationCodeRepository();
-      const emailService = getEmailService();
-      const verifyEmailUseCase = new VerifyEmailUseCase(
-        this.userRepository,
-        verificationCodeRepository,
-        emailService
+      // Verificar se o email já existe
+      const existingUser = await this.userRepository.findByEmail(
+        userData.email.toLowerCase().trim()
       );
+      if (existingUser) {
+        throw new Error('Email already registered');
+      }
 
-      const registerUserUseCase = new RegisterUserUseCase(
-        this.userRepository,
-        console, // logger
-        verifyEmailUseCase
-      );
+      // Hash da senha
+      const hashedPassword = await this.hashPassword(userData.password);
 
-      // Executar registro (envia email mas NÃO cria usuário ainda)
-      const result = await registerUserUseCase.execute({
+      // Criar usuário diretamente
+      const newUser = await this.userRepository.create({
         name: userData.name,
-        email: userData.email,
-        password: userData.password,
+        email: userData.email.toLowerCase().trim(),
+        password: hashedPassword,
         phone: userData.phone || '',
         userType: userData.userType || 'common',
+        isEmailVerified: false, // Ainda não verificado, mas não exigimos verificação
       });
 
-      console.log('[SIMPLE JWT AUTH] Código de verificação enviado:', result);
+      // Gerar tokens
+      const tokens = await this.generateTokens(newUser);
 
-      // Retornar resposta indicando que precisa verificar email
+      console.log('[SIMPLE JWT AUTH] Usuário criado com sucesso:', { id: newUser.id });
+
+      // Retornar resposta com tokens (login automático após registro)
       return {
-        message: result.message,
-        requiresVerification: true,
-        data: {
-          email: result.data.email,
-          emailPreviewUrl: result.data.emailPreviewUrl,
+        message: 'Registration successful',
+        user: {
+          id: newUser.id || newUser._id,
+          email: newUser.email,
+          name: newUser.name,
+          userType: newUser.userType,
+          phone: newUser.phone,
         },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       };
+
+      // ====== CÓDIGO DE VERIFICAÇÃO DE EMAIL COMENTADO ======
+      // // USAR RegisterUserUseCase com VerifyEmailUseCase
+      // const RegisterUserUseCase = require('../../application/use-cases/RegisterUserUseCase');
+      // const VerifyEmailUseCase = require('../../application/use-cases/VerifyEmailUseCase');
+      // const {
+      //   MongoVerificationCodeRepository,
+      // } = require('../repositories/MongoVerificationCodeRepository');
+      // const { getEmailService } = require('./EmailService');
+
+      // const verificationCodeRepository = new MongoVerificationCodeRepository();
+      // const emailService = getEmailService();
+      // const verifyEmailUseCase = new VerifyEmailUseCase(
+      //   this.userRepository,
+      //   verificationCodeRepository,
+      //   emailService
+      // );
+
+      // const registerUserUseCase = new RegisterUserUseCase(
+      //   this.userRepository,
+      //   console, // logger
+      //   verifyEmailUseCase
+      // );
+
+      // // Executar registro (envia email mas NÃO cria usuário ainda)
+      // const result = await registerUserUseCase.execute({
+      //   name: userData.name,
+      //   email: userData.email,
+      //   password: userData.password,
+      //   phone: userData.phone || '',
+      //   userType: userData.userType || 'common',
+      // });
+
+      // console.log('[SIMPLE JWT AUTH] Código de verificação enviado:', result);
+
+      // // Retornar resposta indicando que precisa verificar email
+      // return {
+      //   message: result.message,
+      //   requiresVerification: true,
+      //   data: {
+      //     email: result.data.email,
+      //     emailPreviewUrl: result.data.emailPreviewUrl,
+      //   },
+      // };
+      // ====== FIM DO CÓDIGO COMENTADO ======
     } catch (error) {
       console.error('[SIMPLE JWT AUTH] Erro no registro:', error.message);
       throw new Error(`Registration failed: ${error.message}`);

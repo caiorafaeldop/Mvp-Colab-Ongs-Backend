@@ -81,17 +81,7 @@ class SimpleAuthController {
 
       console.log('[SIMPLE AUTH CONTROLLER] Registro concluído:', result);
 
-      // Se requer verificação, retornar resposta apropriada
-      if (result.requiresVerification) {
-        return res.status(200).json({
-          success: true,
-          message: result.message,
-          requiresVerification: true,
-          data: result.data,
-        });
-      }
-
-      // Resposta antiga (caso não use verificação)
+      // Resposta com tokens (login automático após registro)
       res.status(201).json({
         success: true,
         message: result.message,
