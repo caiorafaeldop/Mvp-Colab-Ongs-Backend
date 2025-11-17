@@ -180,15 +180,19 @@ class SimpleJwtAuthService {
       // Hash da senha
       const hashedPassword = await this.hashPassword(userData.password);
 
-      // Criar usuário diretamente
-      const newUser = await this.userRepository.create({
-        name: userData.name,
-        email: userData.email.toLowerCase().trim(),
-        password: hashedPassword,
-        phone: userData.phone || '',
-        userType: userData.userType || 'common',
-        isEmailVerified: false, // Ainda não verificado, mas não exigimos verificação
-      });
+      // Criar usuário diretamente usando User entity
+      const User = require('../../domain/entities/User');
+      const newUserEntity = new User(
+        null, // id será gerado pelo banco
+        userData.name,
+        userData.email.toLowerCase().trim(),
+        hashedPassword,
+        userData.userType || 'common',
+        userData.phone || ''
+      );
+
+      // Salvar no banco
+      const newUser = await this.userRepository.save(newUserEntity);
 
       // Gerar tokens
       const tokens = await this.generateTokens(newUser);
