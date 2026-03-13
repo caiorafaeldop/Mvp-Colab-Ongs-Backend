@@ -319,6 +319,28 @@ app.use('/api/public/supporters', (req, res, next) => {
   return appFactory.createPublicSupporterRoutes()(req, res, next);
 });
 
+// Rotas de slides do carrossel (Admin only)
+app.use('/api/carousel-slides', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createCarouselSlideRoutes()(req, res, next);
+});
+
+// Rotas públicas de slides do carrossel
+app.use('/api/public/carousel-slides', (req, res, next) => {
+  if (!appFactory || !appFactory.initialized) {
+    return res.status(503).json({
+      success: false,
+      message: 'Server is still initializing, please try again in a moment',
+    });
+  }
+  return appFactory.createPublicCarouselSlideRoutes()(req, res, next);
+});
+
 // Rotas de prestação de contas
 app.use('/api/prestacao-contas', (req, res, next) => {
   if (!appFactory || !appFactory.initialized) {

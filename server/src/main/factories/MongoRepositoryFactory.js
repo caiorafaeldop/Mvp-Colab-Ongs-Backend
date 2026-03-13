@@ -9,6 +9,8 @@ const MongoDonationRepository = require('../../infra/repositories/MongoDonationR
 // Prisma Repository para TopDonor (usa Prisma com MongoDB)
 const PrismaTopDonorRepository = require('../../infra/repositories/PrismaTopDonorRepository');
 const PrismaSupporterRepository = require('../../infra/repositories/PrismaSupporterRepository');
+const PrismaCarouselSlideRepository = require('../../infra/repositories/PrismaCarouselSlideRepository');
+const PrismaCarouselSectionSettingsRepository = require('../../infra/repositories/PrismaCarouselSectionSettingsRepository');
 const PrismaPrestacaoContasRepository = require('../../infra/repositories/PrismaPrestacaoContasRepository');
 const PrismaFAQRepository = require('../../infra/repositories/PrismaFAQRepository');
 const PrismaTestimonialRepository = require('../../infra/repositories/PrismaTestimonialRepository');
@@ -123,6 +125,30 @@ class MongoRepositoryFactory {
   }
 
   /**
+   * Cria repository de slides do carrossel (Prisma)
+   * @returns {PrismaCarouselSlideRepository}
+   */
+  createCarouselSlideRepository() {
+    if (!this.repositories.carouselSlide) {
+      this.repositories.carouselSlide = new PrismaCarouselSlideRepository();
+      console.log('[MongoRepositoryFactory] PrismaCarouselSlideRepository criado');
+    }
+    return this.repositories.carouselSlide;
+  }
+
+  /**
+   * Cria repository de configuração de seção dos slides (Prisma)
+   * @returns {PrismaCarouselSectionSettingsRepository}
+   */
+  createCarouselSectionSettingsRepository() {
+    if (!this.repositories.carouselSectionSettings) {
+      this.repositories.carouselSectionSettings = new PrismaCarouselSectionSettingsRepository();
+      console.log('[MongoRepositoryFactory] PrismaCarouselSectionSettingsRepository criado');
+    }
+    return this.repositories.carouselSectionSettings;
+  }
+
+  /**
    * Cria repository de prestação de contas (Prisma)
    * @returns {PrismaPrestacaoContasRepository}
    */
@@ -172,6 +198,8 @@ class MongoRepositoryFactory {
       donationRepository: this.createDonationRepository(),
       topDonorRepository: this.createTopDonorRepository(),
       supporterRepository: this.createSupporterRepository(),
+      carouselSlideRepository: this.createCarouselSlideRepository(),
+      carouselSectionSettingsRepository: this.createCarouselSectionSettingsRepository(),
       prestacaoContasRepository: this.createPrestacaoContasRepository(),
       faqRepository: this.createFAQRepository(),
       testimonialRepository: this.createTestimonialRepository(),

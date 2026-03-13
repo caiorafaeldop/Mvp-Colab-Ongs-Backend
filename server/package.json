@@ -20,6 +20,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
+    "carousel:seed": "node scripts/seed-carousel-slides.js",
     "patterns:singleton": "node scripts/verify-singleton-usage.js",
     "docs:singleton": "cat docs/patterns/SINGLETON-SUMMARY.md",
     "lint": "eslint \"src/**/*.js\"",
