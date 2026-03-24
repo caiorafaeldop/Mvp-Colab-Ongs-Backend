@@ -20,6 +20,7 @@ class PrismaCarouselSlideRepository {
       imageUrl: data.imageUrl,
       caption: data.caption || null,
       altText: data.altText || null,
+      theme: data.theme || null,
       order: data.order ?? 0,
       visible: data.visible ?? true,
     };
@@ -27,12 +28,16 @@ class PrismaCarouselSlideRepository {
     return prisma.carouselSlide.create({ data: payload });
   }
 
-  async findAll({ visible } = {}) {
+  async findAll({ visible, theme } = {}) {
     const prisma = this._getPrismaClient();
     const where = {};
 
     if (typeof visible === 'boolean') {
       where.visible = visible;
+    }
+
+    if (typeof theme === 'string') {
+      where.theme = theme;
     }
 
     return prisma.carouselSlide.findMany({
@@ -69,6 +74,9 @@ class PrismaCarouselSlideRepository {
     }
     if (data.order !== undefined) {
       updateData.order = Number(data.order);
+    }
+    if (data.theme !== undefined) {
+      updateData.theme = data.theme || null;
     }
     if (data.visible !== undefined) {
       updateData.visible = !!data.visible;

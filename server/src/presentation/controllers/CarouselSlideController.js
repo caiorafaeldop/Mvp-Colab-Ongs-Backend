@@ -9,6 +9,7 @@ class CarouselSlideController {
     this.listPublic = this.listPublic.bind(this);
     this.getPublicSettings = this.getPublicSettings.bind(this);
     this.list = this.list.bind(this);
+    this.listThemes = this.listThemes.bind(this);
     this.getSettings = this.getSettings.bind(this);
     this.updateSettings = this.updateSettings.bind(this);
     this.create = this.create.bind(this);
@@ -37,9 +38,23 @@ class CarouselSlideController {
 
   async list(req, res) {
     try {
-      const data = await this.service.listSlides({
-        visible: req.query.visible !== undefined ? req.query.visible === 'true' : undefined,
-      });
+      const filters = {};
+      if (req.query.visible !== undefined) {
+        filters.visible = req.query.visible === 'true';
+      }
+      if (req.query.theme !== undefined) {
+        filters.theme = req.query.theme;
+      }
+      const data = await this.service.listSlides(filters);
+      return res.status(200).json({ success: true, data });
+    } catch (e) {
+      return res.status(400).json({ success: false, message: e.message });
+    }
+  }
+
+  async listThemes(req, res) {
+    try {
+      const data = await this.service.listThemes();
       return res.status(200).json({ success: true, data });
     } catch (e) {
       return res.status(400).json({ success: false, message: e.message });

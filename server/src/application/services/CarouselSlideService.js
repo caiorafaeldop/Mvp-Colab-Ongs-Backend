@@ -31,6 +31,34 @@ class CarouselSlideService {
     return this.carouselSlideRepository.findAll(filters || {});
   }
 
+  async listThemes() {
+    const slides = await this.carouselSlideRepository.findAll({});
+    const themeMap = new Map();
+
+    for (const slide of slides) {
+      const theme = slide.theme || null;
+      const key = theme || '__none__';
+      if (!themeMap.has(key)) {
+        themeMap.set(key, { theme, count: 0, visibleCount: 0 });
+      }
+      const entry = themeMap.get(key);
+      entry.count += 1;
+      if (slide.visible) {
+        entry.visibleCount += 1;
+      }
+    }
+
+    return Array.from(themeMap.values()).sort((a, b) => {
+      if (!a.theme) {
+        return 1;
+      }
+      if (!b.theme) {
+        return -1;
+      }
+      return a.theme.localeCompare(b.theme, 'pt-BR');
+    });
+  }
+
   async getSectionSettings() {
     if (!this.carouselSectionSettingsRepository) {
       return { ...DEFAULT_CAROUSEL_SECTION_SETTINGS };
@@ -90,6 +118,7 @@ class CarouselSlideService {
         imageUrl: defaultSlide.imageUrl,
         caption: this._normalizeText(defaultSlide.caption),
         altText: this._normalizeText(defaultSlide.altText),
+        theme: this._normalizeText(defaultSlide.theme),
         order: Number(defaultSlide.order) || 0,
         visible: defaultSlide.visible !== undefined ? !!defaultSlide.visible : true,
       };
@@ -105,6 +134,7 @@ class CarouselSlideService {
       const hasChanges =
         existing.caption !== payload.caption ||
         existing.altText !== payload.altText ||
+        existing.theme !== payload.theme ||
         Number(existing.order) !== Number(payload.order) ||
         !!existing.visible !== !!payload.visible;
 
@@ -136,6 +166,7 @@ class CarouselSlideService {
       imageUrl: String(data.imageUrl).trim(),
       caption: this._normalizeText(data.caption),
       altText: this._normalizeText(data.altText),
+      theme: this._normalizeText(data.theme),
       order: data.order !== undefined ? Number(data.order) : 0,
       visible: data.visible !== undefined ? !!data.visible : true,
     };
@@ -162,6 +193,9 @@ class CarouselSlideService {
     }
     if (data.altText !== undefined) {
       payload.altText = this._normalizeText(data.altText);
+    }
+    if (data.theme !== undefined) {
+      payload.theme = this._normalizeText(data.theme);
     }
     if (data.order !== undefined) {
       payload.order = Number(data.order);

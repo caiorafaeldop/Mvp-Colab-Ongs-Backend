@@ -225,6 +225,7 @@ model CarouselSlide {
   imageUrl  String
   caption   String?
   altText   String?
+  theme     String?
   order     Int      @default(0)
   visible   Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -232,6 +233,7 @@ model CarouselSlide {
 
   @@index([visible])
   @@index([order])
+  @@index([theme])
   @@map("carousel_slides")
 }
 
