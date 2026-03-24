@@ -21,6 +21,8 @@ class PrismaCarouselSlideRepository {
       caption: data.caption || null,
       altText: data.altText || null,
       theme: data.theme || null,
+      albumTitle: data.albumTitle || null,
+      albumSubtitle: data.albumSubtitle || null,
       order: data.order ?? 0,
       visible: data.visible ?? true,
     };
@@ -77,6 +79,12 @@ class PrismaCarouselSlideRepository {
     }
     if (data.theme !== undefined) {
       updateData.theme = data.theme || null;
+    }
+    if (data.albumTitle !== undefined) {
+      updateData.albumTitle = data.albumTitle || null;
+    }
+    if (data.albumSubtitle !== undefined) {
+      updateData.albumSubtitle = data.albumSubtitle || null;
     }
     if (data.visible !== undefined) {
       updateData.visible = !!data.visible;

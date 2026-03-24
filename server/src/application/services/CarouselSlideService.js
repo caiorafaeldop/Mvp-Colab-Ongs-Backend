@@ -119,6 +119,8 @@ class CarouselSlideService {
         caption: this._normalizeText(defaultSlide.caption),
         altText: this._normalizeText(defaultSlide.altText),
         theme: this._normalizeText(defaultSlide.theme),
+        albumTitle: this._normalizeText(defaultSlide.albumTitle),
+        albumSubtitle: this._normalizeText(defaultSlide.albumSubtitle),
         order: Number(defaultSlide.order) || 0,
         visible: defaultSlide.visible !== undefined ? !!defaultSlide.visible : true,
       };
@@ -135,6 +137,8 @@ class CarouselSlideService {
         existing.caption !== payload.caption ||
         existing.altText !== payload.altText ||
         existing.theme !== payload.theme ||
+        existing.albumTitle !== payload.albumTitle ||
+        existing.albumSubtitle !== payload.albumSubtitle ||
         Number(existing.order) !== Number(payload.order) ||
         !!existing.visible !== !!payload.visible;
 
@@ -167,6 +171,8 @@ class CarouselSlideService {
       caption: this._normalizeText(data.caption),
       altText: this._normalizeText(data.altText),
       theme: this._normalizeText(data.theme),
+      albumTitle: this._normalizeText(data.albumTitle),
+      albumSubtitle: this._normalizeText(data.albumSubtitle),
       order: data.order !== undefined ? Number(data.order) : 0,
       visible: data.visible !== undefined ? !!data.visible : true,
     };
@@ -196,6 +202,12 @@ class CarouselSlideService {
     }
     if (data.theme !== undefined) {
       payload.theme = this._normalizeText(data.theme);
+    }
+    if (data.albumTitle !== undefined) {
+      payload.albumTitle = this._normalizeText(data.albumTitle);
+    }
+    if (data.albumSubtitle !== undefined) {
+      payload.albumSubtitle = this._normalizeText(data.albumSubtitle);
     }
     if (data.order !== undefined) {
       payload.order = Number(data.order);

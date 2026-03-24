@@ -223,10 +223,12 @@ model Supporter {
 model CarouselSlide {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   imageUrl  String
-  caption   String?
-  altText   String?
-  theme     String?
-  order     Int      @default(0)
+  caption       String?
+  altText       String?
+  theme         String?
+  albumTitle    String?
+  albumSubtitle String?
+  order         Int      @default(0)
   visible   Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
