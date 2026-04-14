@@ -17,11 +17,6 @@ const {
   createPublicSupporterRoutes,
 } = require('../../presentation/routes/supporterRoutes');
 const SupporterController = require('../../presentation/controllers/SupporterController');
-const {
-  createAuthenticatedCarouselSlideRoutes,
-  createPublicCarouselSlideRoutes,
-} = require('../../presentation/routes/carouselSlideRoutes');
-const CarouselSlideController = require('../../presentation/controllers/CarouselSlideController');
 const createPrestacaoContasRoutes = require('../../presentation/routes/prestacaoContasRoutes');
 const createFAQRoutes = require('../../presentation/routes/faqRoutes');
 const createTestimonialRoutes = require('../../presentation/routes/testimonialRoutes');
@@ -114,10 +109,6 @@ class AppFactory {
     return this.repositoryFactory.createPrestacaoContasRepository();
   }
 
-  createCarouselSlideRepository() {
-    return this.repositoryFactory.createCarouselSlideRepository();
-  }
-
   /**
    * Métodos de criação de services usando ServiceFactory
    */
@@ -161,13 +152,6 @@ class AppFactory {
       throw new Error('AppFactory must be initialized before creating services');
     }
     return this.serviceFactory.createSupporterService();
-  }
-
-  createCarouselSlideService() {
-    if (!this.initialized) {
-      throw new Error('AppFactory must be initialized before creating services');
-    }
-    return this.serviceFactory.createCarouselSlideService();
   }
 
   createPrestacaoContasService() {
@@ -276,25 +260,6 @@ class AppFactory {
     const supporterService = this.createSupporterService();
     const supporterController = new SupporterController(supporterService);
     const routes = createPublicSupporterRoutes(supporterController);
-    return routes;
-  }
-
-  createCarouselSlideRoutes() {
-    console.log('[APP FACTORY] Criando rotas de CarouselSlide...');
-
-    const carouselSlideService = this.createCarouselSlideService();
-    const authService = this.createSimpleAuthService();
-    const carouselSlideController = new CarouselSlideController(carouselSlideService);
-    const routes = createAuthenticatedCarouselSlideRoutes(authService, carouselSlideController);
-    return routes;
-  }
-
-  createPublicCarouselSlideRoutes() {
-    console.log('[APP FACTORY] Criando rotas públicas de CarouselSlide...');
-
-    const carouselSlideService = this.createCarouselSlideService();
-    const carouselSlideController = new CarouselSlideController(carouselSlideService);
-    const routes = createPublicCarouselSlideRoutes(carouselSlideController);
     return routes;
   }
 

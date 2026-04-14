@@ -4,7 +4,6 @@ const ProductService = require('../../application/services/ProductService');
 const DonationService = require('../../application/services/DonationService');
 const TopDonorService = require('../../application/services/TopDonorService');
 const SupporterService = require('../../application/services/SupporterService');
-const CarouselSlideService = require('../../application/services/CarouselSlideService');
 const PrestacaoContasService = require('../../application/services/PrestacaoContasService');
 const FAQService = require('../../application/services/FAQService');
 const TestimonialService = require('../../application/services/TestimonialService');
@@ -209,35 +208,6 @@ class ServiceFactory {
   }
 
   /**
-   * Cria ou retorna instância existente do CarouselSlideService
-   * @returns {CarouselSlideService}
-   */
-  createCarouselSlideService() {
-    if (!this.services.has('carouselSlideService')) {
-      console.log('[SERVICE FACTORY] Criando CarouselSlideService');
-
-      const carouselSlideRepository = this.dependencies.get('carouselSlideRepository');
-      const carouselSectionSettingsRepository = this.dependencies.get(
-        'carouselSectionSettingsRepository'
-      );
-
-      if (!carouselSlideRepository) {
-        throw new Error('CarouselSlideRepository dependency not found');
-      }
-
-      const carouselSlideService = new CarouselSlideService(
-        carouselSlideRepository,
-        carouselSectionSettingsRepository || null
-      );
-
-      this.services.set('carouselSlideService', carouselSlideService);
-      console.log('[SERVICE FACTORY] CarouselSlideService criado com sucesso');
-    }
-
-    return this.services.get('carouselSlideService');
-  }
-
-  /**
    * Cria ou retorna instância existente do PrestacaoContasService
    * @returns {PrestacaoContasService}
    */
@@ -328,7 +298,6 @@ class ServiceFactory {
       donationservice: () => this.createDonationService(),
       topdonorservice: () => this.createTopDonorService(),
       supporterservice: () => this.createSupporterService(),
-      carouselslideservice: () => this.createCarouselSlideService(),
       prestacaocontasservice: () => this.createPrestacaoContasService(),
       faqservice: () => this.createFAQService(),
       testimonialservice: () => this.createTestimonialService(),

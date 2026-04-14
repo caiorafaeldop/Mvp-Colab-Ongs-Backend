@@ -219,38 +219,6 @@ model Supporter {
   @@map("supporters")
 }
 
-// CarouselSlide model - Slides do carrossel da página de doações
-model CarouselSlide {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  imageUrl  String
-  caption       String?
-  altText       String?
-  theme         String?
-  albumTitle    String?
-  albumSubtitle String?
-  order         Int      @default(0)
-  visible   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([visible])
-  @@index([order])
-  @@index([theme])
-  @@map("carousel_slides")
-}
-
-// CarouselSectionSettings model - Textos de destaque da seção de doações
-model CarouselSectionSettings {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  section   String   @unique @default("donations")
-  title     String
-  subtitle  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("carousel_section_settings")
-}
-
 // PrestacaoContas model - Prestação de Contas com estrutura flexível tipo planilha
 model PrestacaoContas {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
